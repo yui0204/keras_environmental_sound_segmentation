@@ -430,7 +430,7 @@ def event_plot(Y_true, Y_pred, no=0):
     plt.colorbar()
     plt.savefig(pred_dir + "pred.png")
     plt.show()
-    plt.close()
+    
 
 
 def plot_stft(Y_true, Y_pred, no=0):
@@ -702,9 +702,12 @@ def load_npy():
 
 
 if __name__ == '__main__':
-    for datadir in ["segdata75_256_no_sound/", "segdata76_256_-30dB/", 
-                    "segdata76_256_-20dB/", "segdata75_256_-10dB/", 
-                    "segdata76_256_0dB/"]:
+    for datadir in ["segdata75_256_no_sound/", 
+                    #"segdata76_256_-30dB/", 
+                    #"segdata76_256_-20dB/", 
+                    #"segdata76_256_-10dB/", 
+                    #"segdata76_256_0dB/"
+                    ]:
         train_mode = "class"
         classes = 75
         image_size = 256
@@ -718,8 +721,8 @@ if __name__ == '__main__':
             gpu_count = 1
             BATCH_SIZE = 8
             NUM_EPOCH = 10
-            load_number = 1
-            mode = "train"
+            load_number = 20
+            mode = "2019_0306"
             plot = True
         else:
             root_dir = "/misc/export2/sudou/sound_data/"+datadir
@@ -799,21 +802,21 @@ if __name__ == '__main__':
             
         elif not mode == "train":
             date = mode
-            results_dir = "./model_results/" + date + "/" + model_name + "/"
+            results_dir = "./model_results/" + date + "/" + model_name + "_"+datadir+"/"
             print("Prediction mode using", date, model_name, "\n")
         
         
         if load_number >= 1000:
             load_number = 1000
-        if os.path.exists(root_dir+npfile):
-            X_test, Y_test, max, phase = load_npy()
-            Y_test_r, Y_test_i = 1,1
-        else:
-            X_test, Y_test, max, phase, Y_test_r, Y_test_i = load(valdata_dir, 
+       # if os.path.exists(root_dir+npfile):
+       #     X_test, Y_test, max, phase = load_npy()
+       #     Y_test_r, Y_test_i = 1,1
+        #else:
+        X_test, Y_test, max, phase, Y_test_r, Y_test_i = load(valdata_dir, 
                                                               n_classes=classes, 
                                                               load_number=load_number, 
                                                               complex_input=complex_input)
-            save_npy(X_test, Y_test, max, phase)
+        #    save_npy(X_test, Y_test, max, phase)
     
         Y_pred = predict(X_test, Model)
         #if task == "event":
@@ -821,7 +824,10 @@ if __name__ == '__main__':
         #    f1 = f1_score(Y_test.ravel(), Y_pred.ravel())
         #Y_pred = np.argmax(Y_pred, axis=3)
         #print(f1)
-    
+        
+        
+        
+        """
         rms = RMS(Y_test, Y_pred) 
         #print(rms)
              
@@ -861,4 +867,4 @@ if __name__ == '__main__':
             elif task == "event":
                 shutil.copy("CNN.py", results_dir)
             shutil.move("nohup.out", results_dir)
-            
+        """ 
