@@ -71,10 +71,16 @@ def log(inputs, labels):
 
 def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):   
     print("data loading\n")
-    if complex_input == True or VGG > 0:
-        input_dim = 3
+    if multi == False:
+        if complex_input == True or VGG > 0:
+            input_dim = 3
+        else:
+            input_dim = 1
     else:
-        input_dim = 1
+        if complex_input == True or VGG > 0:
+            input_dim = 24
+        else:
+            input_dim = 8        
         
     if train_mode == "category":
         cat = 2
@@ -97,30 +103,46 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
         data_dir = segdata_dir + str(i) + "/"
         filelist = os.listdir(data_dir)        
         for n in range(len(filelist)):
-            waveform, fs = sf.read(data_dir + filelist[n]) 
-            if filelist[n][0] == "0":           
-                freqs, t, stft = signal.stft(x=waveform, fs=fs, nperseg=512, 
-                                                       return_onesided=False)
-                stft = stft[:, 1:len(stft.T) - 1]
-                if not task == "event":
-                    inputs_phase[i] = np.angle(stft)
-                if complex_input == True:
-                    inputs[i][1] = stft[:256].real
-                    inputs[i][2] = stft[:256].imag
-                inputs[i][0] = abs(stft[:256])
+            if filelist[n][-4:] == ".wav":
+                waveform, fs = sf.read(data_dir + filelist[n]) 
+                if filelist[n][0:3] == "0__":
+                    if multi == False:
+                        freqs, t, stft = signal.stft(x=waveform, fs=fs, nperseg=512, 
+                                                               return_onesided=False)
+                        stft = stft[:, 1:len(stft.T) - 1]
+                        if not task == "event":
+                            inputs_phase[i] = np.angle(stft)
+                        if complex_input == True:
+                            inputs[i][1] = stft[:256].real
+                            inputs[i][2] = stft[:256].imag
+                        inputs[i][0] = abs(stft[:256])
                 
-            else:
-                if filelist[n][:-4] == "BGM":
-                    continue
-                freqs, t, stft = signal.stft(x=waveform, fs=fs, nperseg = 512, 
-                                             return_onesided=False)
-                stft = stft[:, 1:len(stft.T) - 1]
-                if complex_output == True:
-                    r_labels[i][label.T[filelist[n][:-4]][cat]] = stft[:256].real
-                    i_labels[i][label.T[filelist[n][:-4]][cat]] = stft[:256].imag
-                labels[i][label.T[filelist[n][:-4]][cat]] += abs(stft[:256])
-        
-
+                elif filelist[n][:7] == "0_multi":
+                    if multi == True:
+                        freqs, t, stft = signal.stft(x=waveform.T, fs=fs, nperseg=512, 
+                                                               return_onesided=False)
+                        stft = stft[:, :, 1:len(stft.T) - 1]
+                        if not task == "event":
+                            inputs_phase[i] = np.angle(stft[0])
+                        for nchan in range(8):
+                            if complex_input == True:
+                                inputs[i][nchan*3] = abs(stft[nchan][:256])
+                                inputs[i][nchan*3 + 1] = stft[nchan][:256].real
+                                inputs[i][nchan*3 + 2] = stft[nchan][:256].imag
+                            else:
+                                inputs[i][nchan] = abs(stft[nchan][:256])
+                                
+                else:
+                    if filelist[n][:-4] == "BGM":
+                        continue
+                    freqs, t, stft = signal.stft(x=waveform, fs=fs, nperseg = 512, 
+                                                 return_onesided=False)
+                    stft = stft[:, 1:len(stft.T) - 1]
+                    if complex_output == True:
+                        r_labels[i][label.T[filelist[n][:-4]][cat]] = stft[:256].real
+                        i_labels[i][label.T[filelist[n][:-4]][cat]] = stft[:256].imag
+                    labels[i][label.T[filelist[n][:-4]][cat]] += abs(stft[:256])
+            
     
     if complex_input == True:
         sign = (inputs > 0) * 2 - 1
@@ -702,7 +724,7 @@ def load_npy():
 
 
 if __name__ == '__main__':
-    for datadir in ["segdata75_256_no_sound/", 
+    for datadir in ["multi_segdata75_256_no_sound/", 
                     #"segdata76_256_-30dB/", 
                     #"segdata76_256_-20dB/", 
                     #"segdata76_256_-10dB/", 
@@ -721,8 +743,8 @@ if __name__ == '__main__':
             gpu_count = 1
             BATCH_SIZE = 8
             NUM_EPOCH = 10
-            load_number = 20
-            mode = "2019_0306"
+            load_number = 1
+            mode = "train"
             plot = True
         else:
             root_dir = "/misc/export2/sudou/sound_data/"+datadir
@@ -737,9 +759,10 @@ if __name__ == '__main__':
         
         labelfile = root_dir + "label.csv"
         label = pd.read_csv(filepath_or_buffer=labelfile, sep=",", index_col=0)    
-            
+        
+        multi = True
         soft = False
-        complex_input = False
+        complex_input = True
         complex_output = False
         VGG = 0                     #0: False, 1: Red 3: White
         task = "seg"
@@ -755,7 +778,7 @@ if __name__ == '__main__':
             date = datetime.datetime.today().strftime("%Y_%m%d")
             results_dir = "./model_results/" + date + "/" + model_name + "_"+datadir+"/"        
             if not os.path.exists(os.path.join("./model_results", date, 
-                                               model_name, "prediction")):
+                                               model_name + "_"+datadir, "prediction")):
                 os.makedirs(results_dir + "prediction/")
                 os.makedirs(results_dir + "checkpoint/")
                 print(results_dir, "was newly made")
@@ -768,15 +791,15 @@ if __name__ == '__main__':
                 npfile = "event_Y_"+mode+"_"+str(classes)+train_mode+"_"+str(load_number)+".npy"
             
             
-            if os.path.exists(root_dir+npfile):
-                X_train, Y_train, max, phase = load_npy()
-                Y_train_r, Y_train_i = 1,1
-            else:       
-                X_train, Y_train, max, phase, Y_train_r, Y_train_i = load(segdata_dir=segdata_dir, 
+            #if os.path.exists(root_dir+npfile):
+            #    X_train, Y_train, max, phase = load_npy()
+            #    Y_train_r, Y_train_i = 1,1
+            #else:       
+            X_train, Y_train, max, phase, Y_train_r, Y_train_i = load(segdata_dir=segdata_dir, 
                                                                       n_classes=classes, 
                                                                       load_number=load_number,
                                                                       complex_input=complex_input)
-                save_npy(X_train, Y_train, max, phase) 
+                #save_npy(X_train, Y_train, max, phase) 
     
             print("X", X_train.shape,"Y", Y_train.shape)
     
@@ -827,7 +850,7 @@ if __name__ == '__main__':
         
         
         
-        """
+        
         rms = RMS(Y_test, Y_pred) 
         #print(rms)
              
@@ -867,4 +890,4 @@ if __name__ == '__main__':
             elif task == "event":
                 shutil.copy("CNN.py", results_dir)
             shutil.move("nohup.out", results_dir)
-        """ 
+        
