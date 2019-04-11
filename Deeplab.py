@@ -239,6 +239,7 @@ def Deeplabv3(weights='None', input_tensor=None,
             img_input = Input(tensor=input_tensor, shape=input_shape)
         else:
             img_input = input_tensor
+            
 
 ################ event detection concatenation
     if mask == True:
@@ -363,11 +364,18 @@ def Deeplabv3(weights='None', input_tensor=None,
         inputs = get_source_inputs(input_tensor)
     else:
         inputs = img_input
-        
+    
     x = Activation('softmax')(x)
+    """
     x = multiply([inputs, x])
-
     model = Model(inputs, x, name='deeplabv3_plus')
+    """
+
+    inputs2 = Input((256, 256, 1))
+    x = multiply([inputs2, x])
+    
+    model = Model([inputs, inputs2], x, name='deeplabv3_plus')
+
 
     # load weights
     if weights == 'pascal_voc':

@@ -244,7 +244,15 @@ def read_model(Model):
                                     input_shape=(256,image_size), activation='softmax', 
                                     mask=True)
         elif Model == "Deeplab":
-            model = Deeplab.Deeplabv3(weights=None, input_tensor=None, 
+            if multi == True:
+                if complex_input == True:
+                    model = Deeplab.Deeplabv3(weights=None, input_tensor=None, 
+                                  input_shape=(256,image_size,24), classes=classes, OS=16)
+                else:
+                    model = Deeplab.Deeplabv3(weights=None, input_tensor=None, 
+                                  input_shape=(256,image_size,8), classes=classes, OS=16)
+            else:
+                model = Deeplab.Deeplabv3(weights=None, input_tensor=None, 
                                   input_shape=(256,image_size,1), classes=classes, OS=16)
         elif Model == "Mask_Deeplab":
             model = Deeplab.Deeplabv3(weights=None, input_tensor=None, 
@@ -336,7 +344,7 @@ def train(root_dir, X_train, Y_train, Model, Y_train2, Y_train3):
     model.summary()
 
     if complex_output == False:
-        if complex_input == True:
+        if complex_input == True  or multi == True:
             X_train = [X_train, X_train.transpose(3,0,1,2)[0][np.newaxis,:,:,:].transpose(1,2,3,0)]
         if gpu_count == 1:            
             history = model.fit(X_train, Y_train, batch_size=BATCH_SIZE, 
@@ -737,7 +745,7 @@ if __name__ == '__main__':
     #    datadir = "SMALL_STUFF9_"+str(image_size)+"/"
     
         if os.getcwd() == '/home/yui-sudo/document/segmentation/sound_segtest':
-            root_dir = "/home/yui-sudo/document/dataset/sound_segmentation/"+datadir
+            root_dir = "/home/yui-sudo/document/dataset/sound_segmentation/datasets/"+datadir
             segdata_dir = root_dir + "train/"
             valdata_dir = root_dir + "val/"
             gpu_count = 1
@@ -747,7 +755,7 @@ if __name__ == '__main__':
             mode = "train"
             plot = True
         else:
-            root_dir = "/misc/export2/sudou/sound_data/"+datadir
+            root_dir = "/misc/export2/sudou/sound_data/datasets/"+datadir
             segdata_dir = root_dir + "train/"
             valdata_dir = root_dir + "val/"
             gpu_count = 3
