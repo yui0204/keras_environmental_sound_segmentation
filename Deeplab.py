@@ -192,7 +192,7 @@ def xception_block(inputs, depth_list, prefix, skip_connection_type, stride,
 
 def Deeplabv3(weights='None', input_tensor=None, 
               input_shape=(256, 256, 1), classes=75, OS=16, 
-              mask=False, trainable=False):    
+              mask=False, trainable=False, soft=True, mul=True):    
     """ Instantiates the Deeplabv3+ architecture
 
     Optionally loads weights pre-trained on PASCAL VOC. 
@@ -365,24 +365,25 @@ def Deeplabv3(weights='None', input_tensor=None,
     else:
         inputs = img_input
     
-    x = Activation('softmax')(x)
-    """
-    x = multiply([inputs, x])
-    model = Model(inputs, x, name='deeplabv3_plus')
-    """
-
-    inputs2 = Input((256, 256, 1))
-    x = multiply([inputs2, x])
+    if soft == True:
+        x = Activation('softmax')(x)
     
-    model = Model([inputs, inputs2], x, name='deeplabv3_plus')
-
+    if input_shape[2] == 1:
+        if mul == True:
+            x = multiply([inputs, x])
+        model = Model(inputs, x, name='deeplabv3_plus')
+    else:
+        inputs2 = Input((256, 256, 1))
+        if mul == True:
+            x = multiply([inputs2, x])
+        model = Model([inputs, inputs2], x, name='deeplabv3_plus')
 
     # load weights
-    if weights == 'pascal_voc':
+    #if weights == 'pascal_voc':
         #weights_path = get_file('deeplabv3_xception_tf_dim_ordering_tf_kernels.h5',
         #                        TF_WEIGHTS_PATH, cache_subdir='models')
         #model.load_weights(weights_path, by_name=True)        
-        model.load_weights('deeplabv3_xception_tf_dim_ordering_tf_kernels.h5')
+        #model.load_weights('deeplabv3_xception_tf_dim_ordering_tf_kernels.h5')
         
     return model
 

@@ -71,7 +71,7 @@ def log(inputs, labels):
 
 def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):   
     print("data loading\n")
-    if multi == False:
+    if mic_num == 1:
         if complex_input == True or VGG > 0:
             input_dim = 3
         else:
@@ -106,7 +106,7 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
             if filelist[n][-4:] == ".wav":
                 waveform, fs = sf.read(data_dir + filelist[n]) 
                 if filelist[n][0:3] == "0__":
-                    if multi == False:
+                    if mic_num == 1:
                         freqs, t, stft = signal.stft(x=waveform, fs=fs, nperseg=512, 
                                                                return_onesided=False)
                         stft = stft[:, 1:len(stft.T) - 1]
@@ -118,15 +118,15 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
                         inputs[i][0] = abs(stft[:256])
                 
                 elif filelist[n][:7] == "0_multi":
-                    if multi == True:
+                    if mic_num == 8:
                         freqs, t, stft = signal.stft(x=waveform.T, fs=fs, nperseg=512, 
                                                                return_onesided=False)
                         stft = stft[:, :, 1:len(stft.T) - 1]
                         if not task == "event":
                             inputs_phase[i] = np.angle(stft[0])
-                        for nchan in range(8):
+                        for nchan in range(mic_num):
                             if complex_input == True:
-                                inputs[i][nchan*3] = abs(stft[nchan][:256])
+                                inputs[i][nchan * 3] = abs(stft[nchan][:256])
                                 inputs[i][nchan*3 + 1] = stft[nchan][:256].real
                                 inputs[i][nchan*3 + 2] = stft[nchan][:256].imag
                             else:
@@ -244,20 +244,19 @@ def read_model(Model):
                                     input_shape=(256,image_size), activation='softmax', 
                                     mask=True)
         elif Model == "Deeplab":
-            if multi == True:
-                if complex_input == True:
-                    model = Deeplab.Deeplabv3(weights=None, input_tensor=None, 
-                                  input_shape=(256,image_size,24), classes=classes, OS=16)
-                else:
-                    model = Deeplab.Deeplabv3(weights=None, input_tensor=None, 
-                                  input_shape=(256,image_size,8), classes=classes, OS=16)
+            if complex_input == False:
+                model = Deeplab.Deeplabv3(weights=None, input_tensor=None, 
+                                  input_shape=(256, image_size, mic_num), 
+                                  classes=classes, OS=16, mul=mul, soft=soft)
             else:
                 model = Deeplab.Deeplabv3(weights=None, input_tensor=None, 
-                                  input_shape=(256,image_size,1), classes=classes, OS=16)
+                                  input_shape=(256, image_size, mic_num * 3), 
+                                  classes=classes, OS=16, mul=mul, soft=soft)
+
         elif Model == "Mask_Deeplab":
             model = Deeplab.Deeplabv3(weights=None, input_tensor=None, 
                                   input_shape=(256,image_size,1), classes=classes, 
-                                  OS=16, mask=True)
+                                  OS=16, mask=True,mul=mul, soft=soft)
     
             
         elif Model == "CNN4":
@@ -303,30 +302,8 @@ def read_model(Model):
     return model, multi_model
 
 
-def affinitykmeans(Y, V):
-    def norm(tensor):
-        square_tensor = K.square(tensor)
-        frobenius_norm2 = K.sum(square_tensor, axis=(1, 2))
-        return frobenius_norm2
 
-    def dot(x, y):
-        return K.batch_dot(x, y, axes=(2, 1))
-
-    def T(x):
-        return K.permute_dimensions(x, [0, 2, 1])
-
-    V = K.l2_normalize(K.reshape(V, [BATCH_SIZE, -1,
-                                     classes]), axis=-1)
-    Y = K.reshape(Y, [BATCH_SIZE, -1, classes])
-
-    silence_mask = K.sum(Y, axis=2, keepdims=True)
-    V = silence_mask * V
-
-    return norm(dot(T(V), V)) - norm(dot(T(V), Y)) * 2 + norm(dot(T(Y), Y))
-
-
-
-def train(root_dir, X_train, Y_train, Model, Y_train2, Y_train3):
+def train(X_train, Y_train, Model, Y_train2, Y_train3):
     model, multi_model = read_model(Model)
     
     if gpu_count == 1:
@@ -337,15 +314,15 @@ def train(root_dir, X_train, Y_train, Model, Y_train2, Y_train3):
     plot_model(model, to_file = results_dir + model_name + '.png')
 
     early_stopping = EarlyStopping(monitor="val_loss", patience=20, verbose=1,mode="auto")
-    checkpoint = ModelCheckpoint(filepath=results_dir+"/checkpoint/"+model_name+"_{epoch}.hdf5",
-                                 save_best_only=False, period=100)
-
+    checkpoint = ModelCheckpoint(filepath=results_dir+"/checkpoint/"+model_name+"_{epoch}.hdf5", save_best_only=False, period=100)
     tensorboard = TensorBoard(log_dir=results_dir, histogram_freq=0, write_graph=True)
+
     model.summary()
 
     if complex_output == False:
-        if complex_input == True  or multi == True:
-            X_train = [X_train, X_train.transpose(3,0,1,2)[0][np.newaxis,:,:,:].transpose(1,2,3,0)]
+        if complex_input == True  or mic_num > 1:
+            X_train = [X_train, 
+                       X_train.transpose(3,0,1,2)[0][np.newaxis,:,:,:].transpose(1,2,3,0)]
         if gpu_count == 1:            
             history = model.fit(X_train, Y_train, batch_size=BATCH_SIZE, 
                                 epochs=NUM_EPOCH, verbose=1, validation_split=0.1,
@@ -353,8 +330,7 @@ def train(root_dir, X_train, Y_train, Model, Y_train2, Y_train3):
         else:       
             history = multi_model.fit(X_train, Y_train, batch_size=BATCH_SIZE, 
                                 epochs=NUM_EPOCH, verbose=1, validation_split=0.1,
-                                callbacks=[checkpoint, early_stopping, tensorboard])
-                        
+                                callbacks=[checkpoint, early_stopping, tensorboard])                 
     else:
         history = model.fit(X_train, [Y_train, Y_train2, Y_train3], 
                             batch_size=BATCH_SIZE, epochs=NUM_EPOCH, 
@@ -376,35 +352,36 @@ def train(root_dir, X_train, Y_train, Model, Y_train2, Y_train3):
 
 def plot_history(history, model_name):
     """
-    plt.plot(history['acc'])
-    plt.plot(history['val_acc'])
+    plt.plot(history.history['acc'])
+    plt.plot(history.history['val_acc'])
     plt.title('accuracy')
     plt.xlabel('epoch')
     plt.ylabel('accuracy')
     plt.legend(['acc', 'val_acc'], loc='lower right')
     plt.savefig(results_dir + model_name + "_accuracy.png")
-    plt.show()
+    #plt.show()
     plt.close()
     """
-    plt.plot(history['loss'])
-    plt.plot(history['val_loss'])
+    plt.plot(history.history['loss'])
+    plt.plot(history.history['val_loss'])
     plt.title('loss')
     plt.xlabel('epoch')
     plt.ylabel('loss')
     #plt.ylim(0.0,0.0025)
     plt.legend(['loss', 'val_loss'], loc='upper right')
     plt.savefig(results_dir + model_name + "_loss.png")
-    plt.show()
-    
+    #plt.show()
     plt.close()
+
 
 def predict(X_test, Model):
     model, multi_model = read_model(Model)
     model.load_weights(results_dir + model_name + '_weights.hdf5')
 
     print("\npredicting...")
-    if complex_input == True:
-        X_test = [X_test, X_test.transpose(3,0,1,2)[0][np.newaxis,:,:,:].transpose(1,2,3,0)]
+    if complex_input == True or mic_num > 1:
+        X_test = [X_test, 
+                  X_test.transpose(3,0,1,2)[0][np.newaxis,:,:,:].transpose(1,2,3,0)]
     Y_pred = model.predict(X_test, BATCH_SIZE * gpu_count)
     print("prediction finished\n")
     
@@ -439,7 +416,7 @@ def origin_stft(X, no=0):
     plt.clim(0, 1)
     plt.colorbar()
     plt.savefig(pred_dir + filename[:-4] + ".png")
-    plt.show()
+    #plt.show()
     plt.close()
 
 
@@ -451,7 +428,7 @@ def event_plot(Y_true, Y_pred, no=0):
     plt.clim(0,1)
     plt.colorbar()
     plt.savefig(pred_dir + "true.png")
-    plt.show()
+    #plt.show()
     plt.close()
     
     plt.pcolormesh((Y_pred[no][0].T))
@@ -459,7 +436,7 @@ def event_plot(Y_true, Y_pred, no=0):
     plt.clim(0,1)
     plt.colorbar()
     plt.savefig(pred_dir + "pred.png")
-    plt.show()
+    #plt.show()
     
 
 
@@ -484,7 +461,7 @@ def plot_stft(Y_true, Y_pred, no=0):
             plt.colorbar()
             plt.savefig(pred_dir + label.index[i] + "_true.png")
             #plt.savefig(pred_dir + "category_" + str(i) + "_truth.png")
-            plt.show()
+            #plt.show()
             plt.close()
             
             plt.pcolormesh((Y_pred[no][i]))
@@ -494,7 +471,7 @@ def plot_stft(Y_true, Y_pred, no=0):
             plt.colorbar()
             plt.savefig(pred_dir + label.index[i] + "_pred.png")
             #plt.savefig(pred_dir + "category_" + str(i) + "_pred.png")
-            plt.show()
+            #plt.show()
             plt.close()
             
         Y_true_total += (Y_true[no][i] > 0.45) * (i + 4)
@@ -506,14 +483,14 @@ def plot_stft(Y_true, Y_pred, no=0):
     plt.title(str(no) + "__" + filename + "_truth")
     plt.clim(0, Y_true_total.max())
     plt.savefig(pred_dir + filename + "_truht.png")
-    plt.show()
+    #plt.show()
     plt.close()
     
     plt.pcolormesh((Y_pred_total), cmap="gist_ncar")
     plt.title(str(no) + "__" + filename + "_prediction")
     plt.clim(0, Y_true_total.max())
     plt.savefig(pred_dir + filename + "_pred.png")
-    plt.show() 
+    #plt.show() 
     plt.close()
 
 
@@ -529,9 +506,9 @@ def restore(Y_true, Y_pred, max, phase, no=0, class_n=1):
     Y_true = Y_true.transpose(0, 3, 1, 2)    
     
     data_dir = valdata_dir + str(no)
-    sdr_array = np.zeros((classes,1))
-    sir_array = np.zeros((classes,1))
-    sar_array = np.zeros((classes,1))
+    sdr_array = np.zeros((classes, 1))
+    sir_array = np.zeros((classes, 1))
+    sar_array = np.zeros((classes, 1))
     
     for class_n in range(classes):
         if Y_true[no][class_n].max() > 0:
@@ -635,37 +612,36 @@ def RMS(Y_true, Y_pred):
     np.savetxt(results_dir+"prediction/class_area_"+str(load_number)+".csv", area_array)
     np.savetxt(results_dir+"prediction/total_num_"+str(load_number)+".csv", num_array)
     
-    if os.getcwd() == '/home/yui-sudo/document/segmentation/sound_segtest':
-        """
-        plt.plot(rms_array, marker='o', linestyle="None")
-        plt.plot(overlap_array, marker='o', linestyle="None")
-        #plt.plot(total_rms_array, marker='o', linestyle="None")
-        plt.title("rms_overlap")
-        plt.savefig(results_dir + "rms_laprms_result.png")
-        plt.ylim(0,50)
-        plt.show()
-        plt.close()
-        
-        plt.plot(rms_array, marker='o', linestyle="None")
-        plt.title("rms")
-        plt.savefig(results_dir + "rms_result.png")
-        plt.ylim(0,50)
-        plt.show()
-        plt.close()
-        """
-        plt.plot(area_array, rms_array, marker='o', linestyle="None")
-        plt.title("area-rms")
-        plt.savefig(results_dir + "area-rms_result.png")
-        plt.ylim(0,50)
-        plt.show()
-        plt.close()
-        
-        plt.plot(spl_array, overlap_array, marker='o', linestyle="None")
-        plt.title("spl-overlap")
-        plt.savefig(results_dir + "spl-rms_result.png")
-        plt.ylim(0,50)
-        plt.show()
-        plt.close()
+    
+    plt.plot(rms_array, marker='o', linestyle="None")
+    plt.plot(overlap_array, marker='o', linestyle="None")
+    #plt.plot(total_rms_array, marker='o', linestyle="None")
+    plt.title("rms_overlap")
+    plt.savefig(results_dir + "rms_laprms_result.png")
+    plt.ylim(0,50)
+    #plt.show()
+    plt.close()
+    
+    plt.plot(rms_array, marker='o', linestyle="None")
+    plt.title("rms")
+    plt.savefig(results_dir + "rms_result.png")
+    plt.ylim(0,50)
+    #plt.show()
+    plt.close()
+    
+    plt.plot(area_array, rms_array, marker='o', linestyle="None")
+    plt.title("area-rms")
+    plt.savefig(results_dir + "area-rms_result.png")
+    plt.ylim(0,50)
+    #plt.show()
+    plt.close()
+    
+    plt.plot(spl_array, overlap_array, marker='o', linestyle="None")
+    plt.title("spl-overlap")
+    plt.savefig(results_dir + "spl-rms_result.png")
+    plt.ylim(0,50)
+    #plt.show()
+    plt.close()
 
     """
     for i in range(75):
@@ -691,40 +667,38 @@ def save_npy(X, Y, max, phase):
         name = "test"
 
     if complex_input == False and VGG == 0:
-        np.save(root_dir+"X_"+name+"_dim1_"+str(load_number)+".npy", X)
+        np.save(dataset+"X_"+name+"_dim1_"+str(load_number)+".npy", X)
     else:
-        np.save(root_dir+"X_"+name+"_dim3_"+str(load_number)+".npy", X)
-    np.save(root_dir+name+"_max_"+str(load_number)+".npy", max)
+        np.save(dataset+"X_"+name+"_dim3_"+str(load_number)+".npy", X)
+    np.save(dataset+name+"_max_"+str(load_number)+".npy", max)
     
     if not task == "event":
-        np.save(root_dir+"Y_"+name+"_"+str(classes)+train_mode+"_"+str(load_number)+".npy", Y)
-        np.save(root_dir+name+"_phase_"+str(load_number)+".npy", phase)
+        np.save(dataset+"Y_"+name+"_"+str(classes)+train_mode+"_"+str(load_number)+".npy", Y)
+        np.save(dataset+name+"_phase_"+str(load_number)+".npy", phase)
     else:
-        np.save(root_dir+"event_Y_"+name+"_"+str(classes)+train_mode+"_"+str(load_number)+".npy", Y)
+        np.save(dataset+"event_Y_"+name+"_"+str(classes)+train_mode+"_"+str(load_number)+".npy", Y)
         
     print("npy files were saved\n")
         
         
 def load_npy():
-    start = time.time()
     name = "train"
     if not mode == "train":
         name = "test"
         
     if complex_input == False and VGG == 0:
-        X = np.load(root_dir+"X_"+name+"_dim1_"+str(load_number)+".npy")
+        X = np.load(dataset+"X_"+name+"_dim1_"+str(load_number)+".npy")
     else:
-        X = np.load(root_dir+"X_"+name+"_dim3_"+str(load_number)+".npy")
-    max = np.load(root_dir+name+"_max_"+str(load_number)+".npy")
+        X = np.load(dataset+"X_"+name+"_dim3_"+str(load_number)+".npy")
+    max = np.load(dataset+name+"_max_"+str(load_number)+".npy")
     
     if not task == "event":
-        Y = np.load(root_dir+"Y_"+name+"_"+str(classes)+train_mode+"_"+str(load_number)+".npy")
-        phase = np.load(root_dir+name+"_phase_"+str(load_number)+".npy")
+        Y = np.load(dataset+"Y_"+name+"_"+str(classes)+train_mode+"_"+str(load_number)+".npy")
+        phase = np.load(dataset+name+"_phase_"+str(load_number)+".npy")
     else:
-        Y = np.load(root_dir+"event_Y_"+name+"_"+str(classes)+train_mode+"_"+str(load_number)+".npy")
+        Y = np.load(dataset+"event_Y_"+name+"_"+str(classes)+train_mode+"_"+str(load_number)+".npy")
         phase = 1
-    b = time.time() - start
-    print(b, "sec")
+
     print("npy files were loaded\n")
     
     return X, Y, max, phase
@@ -732,140 +706,134 @@ def load_npy():
 
 
 if __name__ == '__main__':
-    for datadir in ["multi_segdata75_256_no_sound/", 
+    train_mode = "class"
+    classes = 3
+    image_size = 256
+    task = "segmentation"
+    
+    gpu_count = 1
+    BATCH_SIZE = 16 * gpu_count
+    NUM_EPOCH = 5
+    load_number = 5
+    lr = 0.01
+
+    mode = "train"            
+    plot = True
+    
+    if os.getcwd() == '/home/yui-sudo/document/segmentation/sound_segtest':
+        datasets_dir = "/home/yui-sudo/document/dataset/sound_segmentation/datasets/"
+    else:
+        datasets_dir = "/misc/export2/sudou/sound_data/datasets/"
+    
+    for datadir in ["multi_segdata"+str(classes) + "_"+str(image_size)+"_no_sound/", 
                     #"segdata76_256_-30dB/", 
                     #"segdata76_256_-20dB/", 
                     #"segdata76_256_-10dB/", 
                     #"segdata76_256_0dB/"
-                    ]:
-        train_mode = "class"
-        classes = 75
-        image_size = 256
-        #datadir = "segdata75_"+str(image_size)+"_new/"
-    #    datadir = "SMALL_STUFF9_"+str(image_size)+"/"
-    
-        if os.getcwd() == '/home/yui-sudo/document/segmentation/sound_segtest':
-            root_dir = "/home/yui-sudo/document/dataset/sound_segmentation/datasets/"+datadir
-            segdata_dir = root_dir + "train/"
-            valdata_dir = root_dir + "val/"
-            gpu_count = 1
-            BATCH_SIZE = 8
-            NUM_EPOCH = 10
-            load_number = 1
-            mode = "train"
-            plot = True
-        else:
-            root_dir = "/misc/export2/sudou/sound_data/datasets/"+datadir
-            segdata_dir = root_dir + "train/"
-            valdata_dir = root_dir + "val/"
-            gpu_count = 3
-            BATCH_SIZE = 16 * gpu_count
-            NUM_EPOCH = 100
-            load_number = 5000
-            mode = "train"
-            plot = False
+                    ]:    
+        dataset = datasets_dir + datadir    
+        segdata_dir = dataset + "train/"
+        valdata_dir = dataset + "val/"
         
-        labelfile = root_dir + "label.csv"
-        label = pd.read_csv(filepath_or_buffer=labelfile, sep=",", index_col=0)    
+        labelfile = dataset + "label.csv"
+        label = pd.read_csv(filepath_or_buffer=labelfile, sep=",", index_col=0)            
         
-        multi = True
+        Model = "Deeplab"        
+        mul = True
+        mic_num = 1 # 1 or 8
         soft = False
-        complex_input = True
+        complex_input = False
         complex_output = False
         VGG = 0                     #0: False, 1: Red 3: White
-        task = "seg"
-        Model = "Deeplab"
+
         loss = "mean_squared_error"
         if task == "event":
             loss = "binary_crossentropy"
-        lr = 0.01
+        
         model_name = Model + "_" + str(classes) + "_class"
-    
+
+        date = datetime.datetime.today().strftime("%Y_%m%d")
+        dir_name = model_name + "_"+datadir
+        results_dir = "./model_results/" + date + "/" + dir_name
+            
         if mode == "train":
-            print("\nDataset directory is", segdata_dir, "\n", "Training start...")
-            date = datetime.datetime.today().strftime("%Y_%m%d")
-            results_dir = "./model_results/" + date + "/" + model_name + "_"+datadir+"/"        
-            if not os.path.exists(os.path.join("./model_results", date, 
-                                               model_name + "_"+datadir, "prediction")):
+            print("\nTraining start...")
+            if not os.path.exists(results_dir + "prediction"):
                 os.makedirs(results_dir + "prediction/")
                 os.makedirs(results_dir + "checkpoint/")
-                print(results_dir, "was newly made")
-            print("Training mode using", date, model_name, "\n")
-            print("Loss function is " + loss + "\n")
             
+            """
             if not task == "event":
                 npfile = "Y_"+mode+"_"+str(classes)+train_mode+"_"+str(load_number)+".npy"
             elif task == "event":
-                npfile = "event_Y_"+mode+"_"+str(classes)+train_mode+"_"+str(load_number)+".npy"
-            
-            
-            #if os.path.exists(root_dir+npfile):
-            #    X_train, Y_train, max, phase = load_npy()
-            #    Y_train_r, Y_train_i = 1,1
-            #else:       
-            X_train, Y_train, max, phase, Y_train_r, Y_train_i = load(segdata_dir=segdata_dir, 
+                npfile = "event_Y_"+mode+"_"+str(classes)+train_mode+"_"+str(load_number)+".npy"    
+            if os.path.exists(dataset + npfile):
+                X_train, Y_train, max, phase = load_npy()
+                Y_train_r, Y_train_i = 1,1
+            else:
+            """
+            X_train, Y_train, max, phase, Y_train_r, Y_train_i = load(segdata_dir, 
                                                                       n_classes=classes, 
                                                                       load_number=load_number,
                                                                       complex_input=complex_input)
                 #save_npy(X_train, Y_train, max, phase) 
-    
-            print("X", X_train.shape,"Y", Y_train.shape)
-    
-            history = train(segdata_dir, X_train, Y_train, Model, Y_train_r, Y_train_i)
-            train_condition = "segdata_dir, " + segdata_dir + "\n" + \
-                              "valdata_dir, " + valdata_dir + "\n" + \
-                              "data_num," + str(load_number) + "\n" + \
-                              "image_size, " + str(image_size) + "\n" + \
-                              "data_byte, " + str(X_train.dtype) + "\n" + \
-                              "BATCH_SIZE," + str(BATCH_SIZE) + "\n" + \
-                              "Loss function," + loss + "\n" + \
-                              "Learning_rate," + str(lr) + "\n" + \
-                              "NUM_EPOCH," + str(NUM_EPOCH) + "\n" + \
-                              "Model," + Model + "\n" + \
-                              "classes," + str(classes) + "\n"
+
+            # save train condition
+            train_condition = date + "\t" + results_dir + "\n" + \
+                              "\t comment\t"+"comments here" + "\n\n" + \
+                              "\t segdata_dir, " + segdata_dir + "\n" + \
+                              "\t valdata_dir, " + valdata_dir + "\n" + \
+                              "\t X, "+str(X_train.shape)+" Y, "+str(Y_train.shape)+"\n" \
+                              "\t data_byte, " + str(X_train.dtype) + "\n" + \
+                              "\t BATCH_SIZE," + str(BATCH_SIZE) + "\n" + \
+                              "\t NUM_EPOCH," + str(NUM_EPOCH) + "\n" + \
+                              "\t Loss function," + loss + "\n" + \
+                              "\t Learning_rate," + str(lr) + "\n" + \
+                              "\t Mic num," + str(mic_num) + "\n" + \
+                              "\t Multiply," + mul + "\n" + \
+                              "\t Softmax," + soft + "\n" + \
+                              "\t Complex_input," + complex_input + "\n" + \
+                              "\t Complex_output," + complex_output + "\n" + \
+                              "\t Model," + Model + "\n" + \
+                              "\t classes," + str(classes) + "\n\n\n"            
+
+            print(train_condition)
             
             with open(results_dir + 'train_condition.txt','w') as f:
-                f.write(train_condition)
-                
-            del X_train, Y_train, max, phase, Y_train_r, Y_train_i
-            
-            
-            
+                f.write(train_condition)    
+            with open('reserch_log.txt','a') as f:
+                f.write(train_condition)    
+        
+            history = train(X_train, Y_train, Model, Y_train_r, Y_train_i)
+            plot_history(history, model_name)
+        
+
+        # prediction            
         elif not mode == "train":
+            print("Prediction\n")
+            with open(results_dir + 'train_condition.txt','r') as f:
+                train_condition = f.read() 
             date = mode
-            results_dir = "./model_results/" + date + "/" + model_name + "_"+datadir+"/"
-            print("Prediction mode using", date, model_name, "\n")
-        
-        
+            
         if load_number >= 1000:
-            load_number = 1000
-       # if os.path.exists(root_dir+npfile):
-       #     X_test, Y_test, max, phase = load_npy()
-       #     Y_test_r, Y_test_i = 1,1
-        #else:
+            load_number = 100
         X_test, Y_test, max, phase, Y_test_r, Y_test_i = load(valdata_dir, 
                                                               n_classes=classes, 
                                                               load_number=load_number, 
                                                               complex_input=complex_input)
-        #    save_npy(X_test, Y_test, max, phase)
-    
         Y_pred = predict(X_test, Model)
+        
         #if task == "event":
         #    Y_pred = (Y_pred > 0.5) * 1
         #    f1 = f1_score(Y_test.ravel(), Y_pred.ravel())
         #Y_pred = np.argmax(Y_pred, axis=3)
         #print(f1)
         
-        
-        
-        
         rms = RMS(Y_test, Y_pred) 
         #print(rms)
              
         if plot == True:
-            sdr_array = np.array(())
-            sir_array = np.array(())
-            sar_array = np.array(())
+            sdr_array, sir_array, sar_array = np.array(()) ,np.array(()), np.array(())
             for i in range (0, load_number):
                 origin_stft(X_test, no=i)
                 
@@ -883,11 +851,6 @@ if __name__ == '__main__':
                 sir_array = sir_array.reshape(load_number, classes)
                 sar_array = sar_array.reshape(load_number, classes)
     
-            history = None
-            with open(results_dir + 'history.pickle',mode='rb') as f:
-                history = pickle.load(f, encoding='latin1')
-            plot_history(history, model_name)
-            print("val_loss", np.array((history["val_loss"])).min())
             
         if not os.getcwd() == '/home/yui-sudo/document/segmentation/sound_segtest':
             shutil.copy("main.py", results_dir)
@@ -898,4 +861,8 @@ if __name__ == '__main__':
             elif task == "event":
                 shutil.copy("CNN.py", results_dir)
             shutil.move("nohup.out", results_dir)
+            
+            # copy to export2
+            shutil.copytree(results_dir, "/misc/export2/sudou/model_results/")
+
         
