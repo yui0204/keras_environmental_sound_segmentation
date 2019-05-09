@@ -843,7 +843,13 @@ if __name__ == '__main__':
                 shutil.copy("Deeplab.py", results_dir)
             elif task == "event":
                 shutil.copy("CNN.py", results_dir)
-            shutil.move("nohup.out", results_dir)
+            #shutil.move("nohup.out", results_dir)
+            
+            os.remove("Unet.pyc")
+            os.remove("PSPNet.pyc")
+            os.remove("Deeplab.pyc")
+            os.remove("DC.pyc")
+            os.remove("sound.pyc")
             
             # copy to export2
             shutil.copytree(results_dir, "/misc/export2/sudou/model_results/")
