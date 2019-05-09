@@ -849,6 +849,7 @@ if __name__ == '__main__':
             os.remove("PSPNet.pyc")
             os.remove("Deeplab.pyc")
             os.remove("DC.pyc")
+            os.remove("CNN.pyc"
             os.remove("sound.pyc")
             
             # copy to export2
