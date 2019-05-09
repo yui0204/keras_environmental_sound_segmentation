@@ -694,8 +694,8 @@ if __name__ == '__main__':
     
     gpu_count = 3
     BATCH_SIZE = 16 * gpu_count
-    NUM_EPOCH = 10
-    load_number = 50
+    NUM_EPOCH = 100
+    load_number = 500
     lr = 0.01
     
     loss = "mean_squared_error"
@@ -853,6 +853,6 @@ if __name__ == '__main__':
             os.remove("sound.pyc")
             
             # copy to export2
-            shutil.copytree(results_dir, "/misc/export2/sudou/model_results/" + date + "/" + dirname)
+            shutil.copytree(results_dir, "/misc/export2/sudou/model_results/" + date + "/" + dir_name)
 
         
