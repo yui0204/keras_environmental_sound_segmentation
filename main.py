@@ -359,7 +359,6 @@ def plot_history(history, model_name):
     plt.ylabel('accuracy')
     plt.legend(['acc', 'val_acc'], loc='lower right')
     plt.savefig(results_dir + model_name + "_accuracy.png")
-    #plt.show()
     plt.close()
     """
     plt.plot(history.history['loss'])
@@ -370,7 +369,6 @@ def plot_history(history, model_name):
     #plt.ylim(0.0,0.0025)
     plt.legend(['loss', 'val_loss'], loc='upper right')
     plt.savefig(results_dir + model_name + "_loss.png")
-    #plt.show()
     plt.close()
 
 
@@ -416,7 +414,6 @@ def origin_stft(X, no=0):
     plt.clim(0, 1)
     plt.colorbar()
     plt.savefig(pred_dir + filename[:-4] + ".png")
-    #plt.show()
     plt.close()
 
 
@@ -428,16 +425,13 @@ def event_plot(Y_true, Y_pred, no=0):
     plt.clim(0,1)
     plt.colorbar()
     plt.savefig(pred_dir + "true.png")
-    #plt.show()
-    plt.close()
     
     plt.pcolormesh((Y_pred[no][0].T))
     plt.title("prediction")
     plt.clim(0,1)
     plt.colorbar()
-    plt.savefig(pred_dir + "pred.png")
-    #plt.show()
-    
+    plt.savefig(pred_dir + "pred.png")    
+    plt.close()
 
 
 def plot_stft(Y_true, Y_pred, no=0):
@@ -461,8 +455,6 @@ def plot_stft(Y_true, Y_pred, no=0):
             plt.colorbar()
             plt.savefig(pred_dir + label.index[i] + "_true.png")
             #plt.savefig(pred_dir + "category_" + str(i) + "_truth.png")
-            #plt.show()
-            plt.close()
             
             plt.pcolormesh((Y_pred[no][i]))
             plt.title(label.index[i] + "_prediction")
@@ -471,7 +463,6 @@ def plot_stft(Y_true, Y_pred, no=0):
             plt.colorbar()
             plt.savefig(pred_dir + label.index[i] + "_pred.png")
             #plt.savefig(pred_dir + "category_" + str(i) + "_pred.png")
-            #plt.show()
             plt.close()
             
         Y_true_total += (Y_true[no][i] > 0.45) * (i + 4)
@@ -483,14 +474,11 @@ def plot_stft(Y_true, Y_pred, no=0):
     plt.title(str(no) + "__" + filename + "_truth")
     plt.clim(0, Y_true_total.max())
     plt.savefig(pred_dir + filename + "_truht.png")
-    #plt.show()
-    plt.close()
     
     plt.pcolormesh((Y_pred_total), cmap="gist_ncar")
     plt.title(str(no) + "__" + filename + "_prediction")
     plt.clim(0, Y_true_total.max())
     plt.savefig(pred_dir + filename + "_pred.png")
-    #plt.show() 
     plt.close()
 
 
@@ -619,28 +607,21 @@ def RMS(Y_true, Y_pred):
     plt.title("rms_overlap")
     plt.savefig(results_dir + "rms_laprms_result.png")
     plt.ylim(0,50)
-    #plt.show()
-    plt.close()
     
     plt.plot(rms_array, marker='o', linestyle="None")
     plt.title("rms")
     plt.savefig(results_dir + "rms_result.png")
     plt.ylim(0,50)
-    #plt.show()
-    plt.close()
     
     plt.plot(area_array, rms_array, marker='o', linestyle="None")
     plt.title("area-rms")
     plt.savefig(results_dir + "area-rms_result.png")
     plt.ylim(0,50)
-    #plt.show()
-    plt.close()
     
     plt.plot(spl_array, overlap_array, marker='o', linestyle="None")
     plt.title("spl-overlap")
     plt.savefig(results_dir + "spl-rms_result.png")
     plt.ylim(0,50)
-    #plt.show()
     plt.close()
 
     """
@@ -649,11 +630,9 @@ def RMS(Y_true, Y_pred):
         plt.pcolormesh(Y_true_db[i][0])
         plt.clim(-120,0)
         plt.colorbar()
-        plt.show()
         plt.pcolormesh(Y_pred_db[i][0])
         plt.clim(-120,0)
         plt.colorbar()
-        plt.show()
     if task == "event":    
         labels = labels.max(2)[:,:,np.newaxis,:]
         labels = ((labels > 0.1) * 1)
