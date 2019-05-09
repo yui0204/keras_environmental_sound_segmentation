@@ -702,7 +702,8 @@ if __name__ == '__main__':
     if task == "event":
         loss = "binary_crossentropy"
 
-    mode = "train"            
+    mode = "train"     
+    date = mode       
     plot = True
     
     if os.getcwd() == '/home/yui-sudo/document/segmentation/sound_segtest':
@@ -795,8 +796,6 @@ if __name__ == '__main__':
             print("Prediction\n")
             with open(results_dir + 'train_condition.txt','r') as f:
                 train_condition = f.read() 
-            date = mode
-            results_dir = "./model_results/" + date + "/" + dir_name
             
         if load_number >= 1000:
             load_number = 100
