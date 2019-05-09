@@ -34,7 +34,7 @@ from keras.utils import multi_gpu_model
 
 config = tf.ConfigProto()
 config.gpu_options.allow_growth = True
-config.gpu_options.visible_device_list = "0"
+config.gpu_options.visible_device_list = "0,1,2"
 sess = tf.Session(config=config)
 K.set_session(sess)
 
@@ -690,11 +690,15 @@ if __name__ == '__main__':
     image_size = 256
     task = "segmentation"
     
-    gpu_count = 1
+    gpu_count = 3
     BATCH_SIZE = 16 * gpu_count
     NUM_EPOCH = 5
-    load_number = 5
+    load_number = 500
     lr = 0.01
+    
+    loss = "mean_squared_error"
+    if task == "event":
+        loss = "binary_crossentropy"
 
     mode = "train"            
     plot = True
@@ -725,9 +729,6 @@ if __name__ == '__main__':
         complex_output = False
         VGG = 0                     #0: False, 1: Red 3: White
 
-        loss = "mean_squared_error"
-        if task == "event":
-            loss = "binary_crossentropy"
         
         model_name = Model + "_" + str(classes) + "_class"
 
@@ -769,23 +770,23 @@ if __name__ == '__main__':
                               "\t Loss function," + loss + "\n" + \
                               "\t Learning_rate," + str(lr) + "\n" + \
                               "\t Mic num," + str(mic_num) + "\n" + \
-                              "\t Multiply," + mul + "\n" + \
-                              "\t Softmax," + soft + "\n" + \
-                              "\t Complex_input," + complex_input + "\n" + \
-                              "\t Complex_output," + complex_output + "\n" + \
+                              "\t Multiply," + str(mul) + "\n" + \
+                              "\t Softmax," + str(soft) + "\n" + \
+                              "\t Complex_input," + str(complex_input) + "\n" + \
+                              "\t Complex_output," + str(complex_output) + "\n" + \
                               "\t Model," + Model + "\n" + \
-                              "\t classes," + str(classes) + "\n\n\n"            
+                              "\t classes," + str(classes) + "\n\n\n"
 
             print(train_condition)
             
             with open(results_dir + 'train_condition.txt','w') as f:
                 f.write(train_condition)    
-            with open('reserch_log.txt','a') as f:
-                f.write(train_condition)    
-        
+            
             history = train(X_train, Y_train, Model, Y_train_r, Y_train_i)
             plot_history(history, model_name)
         
+            with open('reserch_log.txt','a') as f:
+                f.write(train_condition)    
 
         # prediction            
         elif not mode == "train":
@@ -793,6 +794,7 @@ if __name__ == '__main__':
             with open(results_dir + 'train_condition.txt','r') as f:
                 train_condition = f.read() 
             date = mode
+            results_dir = "./model_results/" + date + "/" + dir_name
             
         if load_number >= 1000:
             load_number = 100
