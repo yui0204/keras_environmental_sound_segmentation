@@ -823,14 +823,14 @@ if __name__ == '__main__':
                                                               complex_input=complex_input)
         Y_pred = predict(X_test, Model)
         
-        #if task == "event":
-        #    Y_pred = (Y_pred > 0.5) * 1
-        #    f1 = f1_score(Y_test.ravel(), Y_pred.ravel())
-        #Y_pred = np.argmax(Y_pred, axis=3)
-        #print(f1)
+        if task == "event":
+            Y_pred = (Y_pred > 0.5) * 1
+            f1 = f1_score(Y_test.ravel(), Y_pred.ravel())
+            Y_pred = np.argmax(Y_pred, axis=3)
+            print(f1)
         
         rms = RMS(Y_test, Y_pred) 
-        #print(rms)
+        print(rms)
              
         if plot == True:
             sdr_array, sir_array, sar_array = np.array(()) ,np.array(()), np.array(())
