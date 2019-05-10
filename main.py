@@ -732,7 +732,7 @@ if __name__ == '__main__':
                     VGG = 0                     #0: False, 1: Red 3: White
             
                     
-                    model_name = Model+"_"+str(classes)+"class_mul"+str(mul) + "_cin"+str(complex_input)
+                    model_name = Model+"_"+str(classes)+"class_" + str(mic_num)+"ch_mul"+str(mul) + "_cin"+str(complex_input)
                     dir_name = model_name + "_"+datadir
                     date = datetime.datetime.today().strftime("%Y_%m%d")
                     results_dir = "./model_results/" + date + "/" + dir_name
@@ -761,7 +761,7 @@ if __name__ == '__main__':
             
                         # save train condition
                         train_condition = date + "\t" + results_dir                     + "\n" + \
-                                          "\t"+"comments here"                          + "\n" + \
+                                          "\t"+"comparison between multiply, complec inpu and array using toy dataset"                          + "\n" + \
                                           "\t\t segdata_dir, " + segdata_dir            + "\n" + \
                                           "\t\t valdata_dir, " + valdata_dir            + "\n" + \
                                           "\t\t X"+str(X_train.shape)+" Y"+str(Y_train.shape)+"\n" \
