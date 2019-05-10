@@ -733,10 +733,9 @@ if __name__ == '__main__':
         VGG = 0                     #0: False, 1: Red 3: White
 
         
-        model_name = Model + "_" + str(classes) + "_class"
-
-        date = datetime.datetime.today().strftime("%Y_%m%d")
+        model_name = Model+"_"+str(classes)+"class_mul"+str(mul) + "_cin"+str(complex_input)
         dir_name = model_name + "_"+datadir
+        date = datetime.datetime.today().strftime("%Y_%m%d")
         results_dir = "./model_results/" + date + "/" + dir_name
             
         if mode == "train":
@@ -762,23 +761,23 @@ if __name__ == '__main__':
                 #save_npy(X_train, Y_train, max, phase) 
 
             # save train condition
-            train_condition = date + "\t" + results_dir + "\n" + \
-                              "\t comment\t"+"comments here" + "\n\n" + \
-                              "\t segdata_dir, " + segdata_dir + "\n" + \
-                              "\t valdata_dir, " + valdata_dir + "\n" + \
-                              "\t X, "+str(X_train.shape)+" Y, "+str(Y_train.shape)+"\n" \
-                              "\t data_byte, " + str(X_train.dtype) + "\n" + \
-                              "\t BATCH_SIZE," + str(BATCH_SIZE) + "\n" + \
-                              "\t NUM_EPOCH," + str(NUM_EPOCH) + "\n" + \
-                              "\t Loss function," + loss + "\n" + \
-                              "\t Learning_rate," + str(lr) + "\n" + \
-                              "\t Mic num," + str(mic_num) + "\n" + \
-                              "\t Multiply," + str(mul) + "\n" + \
-                              "\t Softmax," + str(soft) + "\n" + \
-                              "\t Complex_input," + str(complex_input) + "\n" + \
-                              "\t Complex_output," + str(complex_output) + "\n" + \
-                              "\t Model," + Model + "\n" + \
-                              "\t classes," + str(classes) + "\n\n\n"
+            train_condition = date + "\t" + results_dir                     + "\n" + \
+                              "\t"+"comments here"                          + "\n" + \
+                              "\t\t segdata_dir, " + segdata_dir            + "\n" + \
+                              "\t\t valdata_dir, " + valdata_dir            + "\n" + \
+                              "\t\t X"+str(X_train.shape)+" Y"+str(Y_train.shape)+"\n" \
+                              "\t\t data_byte,      " + str(X_train.dtype)  + "\n" + \
+                              "\t\t BATCH_SIZE,     " + str(BATCH_SIZE)     + "\n" + \
+                              "\t\t NUM_EPOCH,      " + str(NUM_EPOCH)      + "\n" + \
+                              "\t\t Loss function,  " + loss                + "\n" + \
+                              "\t\t Learning_rate,  " + str(lr)             + "\n" + \
+                              "\t\t Mic num,        " + str(mic_num)        + "\n" + \
+                              "\t\t Multiply,       " + str(mul)            + "\n" + \
+                              "\t\t Softmax,        " + str(soft)           + "\n" + \
+                              "\t\t Complex_input,  " + str(complex_input)  + "\n" + \
+                              "\t\t Complex_output, " + str(complex_output) + "\n" + \
+                              "\t\t Model,          " + Model               + "\n" + \
+                              "\t\t classes,        " + str(classes)        + "\n\n\n"
 
             print(train_condition)
             
@@ -798,7 +797,7 @@ if __name__ == '__main__':
                 train_condition = f.read() 
             
         if load_number >= 1000:
-            load_number = 100
+            load_number = 50
         X_test, Y_test, max, phase, Y_test_r, Y_test_i = load(valdata_dir, 
                                                               n_classes=classes, 
                                                               load_number=load_number, 
