@@ -368,7 +368,8 @@ def plot_history(history, model_name):
     plt.title('loss')
     plt.xlabel('epoch')
     plt.ylabel('loss')
-    #plt.ylim(0.0,0.0025)
+    plt.xlim(0, 100)
+    plt.ylim(0.0, 1.0)
     plt.legend(['loss', 'val_loss'], loc='upper right')
     plt.savefig(results_dir + model_name + "_loss.png")
     plt.close()
@@ -413,6 +414,10 @@ def origin_stft(X, no=0):
     filename = get_filename(no)
     plt.title(str(no) + "__" + filename)
     plt.pcolormesh((X[no][0]))
+    plt.xlabel("time")
+    plt.ylabel('frequency')
+    plt.xlim(0, 256)
+    plt.ylim(0, 256)
     plt.clim(0, 1)
     plt.colorbar()
     plt.savefig(pred_dir + filename[:-4] + ".png")
@@ -424,13 +429,22 @@ def event_plot(Y_true, Y_pred, no=0):
 
     plt.pcolormesh((Y_true[no][0].T))
     plt.title("truth")
-    plt.clim(0,1)
+    plt.xlabel("time")
+    plt.ylabel('class index')
+    plt.xlim(0, 256)
+    plt.ylim(0, 256)
+    plt.clim(0, 1)
     plt.colorbar()
     plt.savefig(pred_dir + "true.png")
+    plt.close()
     
     plt.pcolormesh((Y_pred[no][0].T))
     plt.title("prediction")
-    plt.clim(0,1)
+    plt.xlabel("time")
+    plt.ylabel('class index')
+    plt.xlim(0, 256)
+    plt.ylim(0, 256)
+    plt.clim(0, 1)
     plt.colorbar()
     plt.savefig(pred_dir + "pred.png")    
     plt.close()
@@ -453,15 +467,24 @@ def plot_stft(Y_true, Y_pred, no=0):
             plt.pcolormesh((Y_true[no][i]))
             plt.title(label.index[i] + "_truth")
             #plt.title("category_" + str(i) + "_truth")
-            plt.clim(0,1)
+            plt.xlabel("time")
+            plt.ylabel('frequency')
+            plt.xlim(0, 256)
+            plt.ylim(0, 256)
+            plt.clim(0, 1)
             plt.colorbar()
             plt.savefig(pred_dir + label.index[i] + "_true.png")
             #plt.savefig(pred_dir + "category_" + str(i) + "_truth.png")
-            
+            plt.close()
+
             plt.pcolormesh((Y_pred[no][i]))
             plt.title(label.index[i] + "_prediction")
             #plt.title("category_" + str(i) + "_prediction")
-            plt.clim(0,1)
+            plt.xlabel("time")
+            plt.ylabel('frequency')
+            plt.xlim(0, 256)
+            plt.ylim(0, 256)
+            plt.clim(0, 1)
             plt.colorbar()
             plt.savefig(pred_dir + label.index[i] + "_pred.png")
             #plt.savefig(pred_dir + "category_" + str(i) + "_pred.png")
@@ -474,11 +497,20 @@ def plot_stft(Y_true, Y_pred, no=0):
     
     plt.pcolormesh((Y_true_total), cmap="gist_ncar")
     plt.title(str(no) + "__" + filename + "_truth")
+    plt.xlabel("time")
+    plt.ylabel('frequency')
+    plt.xlim(0, 256)
+    plt.ylim(0, 256)
     plt.clim(0, Y_true_total.max())
     plt.savefig(pred_dir + filename + "_truht.png")
-    
+    plt.close()
+
     plt.pcolormesh((Y_pred_total), cmap="gist_ncar")
     plt.title(str(no) + "__" + filename + "_prediction")
+    plt.xlabel("time")
+    plt.ylabel('frequency')
+    plt.xlim(0, 256)
+    plt.ylim(0, 256)
     plt.clim(0, Y_true_total.max())
     plt.savefig(pred_dir + filename + "_pred.png")
     plt.close()
@@ -607,23 +639,42 @@ def RMS(Y_true, Y_pred):
     plt.plot(overlap_array, marker='o', linestyle="None")
     #plt.plot(total_rms_array, marker='o', linestyle="None")
     plt.title("rms_overlap")
+    plt.xlabel("overlap")
+    plt.ylabel('rms')
+    #plt.xlim(0, 256)
+    #plt.ylim(0, 256)
     plt.savefig(results_dir + "rms_laprms_result.png")
-    plt.ylim(0,50)
-    
+    plt.ylim(0, 50)
+    plt.close()
+
     plt.plot(rms_array, marker='o', linestyle="None")
     plt.title("rms")
+    plt.xlabel("")
+    plt.ylabel('rms')
+    #plt.xlim(0, 256)
+    #plt.ylim(0, 256)
     plt.savefig(results_dir + "rms_result.png")
-    plt.ylim(0,50)
-    
+    plt.ylim(0, 50)
+    plt.close()
+
     plt.plot(area_array, rms_array, marker='o', linestyle="None")
     plt.title("area-rms")
+    plt.xlabel("area")
+    plt.ylabel('rms')
+    #plt.xlim(0, 256)
+    #plt.ylim(0, 256)
     plt.savefig(results_dir + "area-rms_result.png")
-    plt.ylim(0,50)
-    
+    plt.ylim(0, 50)
+    plt.close()
+
     plt.plot(spl_array, overlap_array, marker='o', linestyle="None")
     plt.title("spl-overlap")
+    plt.xlabel("")
+    plt.ylabel('')
+    #plt.xlim(0, 256)
+    #plt.ylim(0, 256)
     plt.savefig(results_dir + "spl-rms_result.png")
-    plt.ylim(0,50)
+    plt.ylim(0, 50)
     plt.close()
 
     """
@@ -696,7 +747,7 @@ if __name__ == '__main__':
     BATCH_SIZE = 16 * gpu_count
     NUM_EPOCH = 100
     load_number = 500
-    lr = 0.01
+    lr = 0.001
     
     loss = "mean_squared_error"
     if task == "event":
@@ -713,9 +764,10 @@ if __name__ == '__main__':
     
     for datadir in ["multi_segdata"+str(classes) + "_"+str(image_size)+"_no_sound/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-30dB/", 
-                    #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-20dB/", 
+                    "multi_segdata"+str(classes) + "_"+str(image_size)+"_-20dB/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-10dB/", 
-                    "multi_segdata"+str(classes) + "_"+str(image_size)+"_0dB/"]:
+                    #"multi_segdata"+str(classes) + "_"+str(image_size)+"_0dB/"
+                    ]:
         dataset = datasets_dir + datadir    
         segdata_dir = dataset + "train/"
         valdata_dir = dataset + "val/"
