@@ -368,7 +368,7 @@ def plot_history(history, model_name):
     plt.title('loss')
     plt.xlabel('epoch')
     plt.ylabel('loss')
-    plt.xlim(0, 100)
+    plt.xlim(0, 200)
     plt.ylim(0.0, 1.0)
     plt.legend(['loss', 'val_loss'], loc='upper right')
     plt.savefig(results_dir + model_name + "_loss.png")
@@ -745,7 +745,7 @@ if __name__ == '__main__':
     
     gpu_count = 3
     BATCH_SIZE = 16 * gpu_count
-    NUM_EPOCH = 100
+    NUM_EPOCH = 200
     load_number = 500
     lr = 0.001
     
