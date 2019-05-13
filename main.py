@@ -762,7 +762,7 @@ if __name__ == '__main__':
     else:
         datasets_dir = "/misc/export2/sudou/sound_data/datasets/"
     
-    for datadir in ["multi_segdata"+str(classes) + "_"+str(image_size)+"_no_sound/", 
+    for datadir in [#"multi_segdata"+str(classes) + "_"+str(image_size)+"_no_sound/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-30dB/", 
                     "multi_segdata"+str(classes) + "_"+str(image_size)+"_-20dB/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-10dB/", 
@@ -813,7 +813,7 @@ if __name__ == '__main__':
         
                     # save train condition
                     train_condition = date + "\t" + results_dir                     + "\n" + \
-                                      "\t"+"comparison between multiply, complec inpu and array using toy dataset"                          + "\n" + \
+                                      "\t"+"comparison between complex input and array using toy dataset (-20dB)"                          + "\n" + \
                                       "\t\t segdata_dir, " + segdata_dir            + "\n" + \
                                       "\t\t valdata_dir, " + valdata_dir            + "\n" + \
                                       "\t\t X"+str(X_train.shape)+" Y"+str(Y_train.shape)+"\n" \
