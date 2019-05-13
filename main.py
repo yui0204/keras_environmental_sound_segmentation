@@ -847,8 +847,8 @@ if __name__ == '__main__':
                     with open(results_dir + 'train_condition.txt','r') as f:
                         train_condition = f.read() 
                     
-                if load_number >= 1000:
-                    load_number = 1000
+                if load_number >= 100:
+                    load_number = 50
                 X_test, Y_test, max, phase, Y_test_r, Y_test_i = load(valdata_dir, 
                                                                       n_classes=classes, 
                                                                       load_number=load_number, 
@@ -866,7 +866,7 @@ if __name__ == '__main__':
                      
                 if plot == True:
                     sdr_array, sir_array, sar_array = np.array(()) ,np.array(()), np.array(())
-                    for i in range (0, 50):
+                    for i in range (0, load_number):
                         origin_stft(X_test, no=i)
                         
                         if task == "event":
