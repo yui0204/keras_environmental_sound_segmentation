@@ -368,10 +368,10 @@ def plot_history(history, model_name):
     plt.title('loss')
     plt.xlabel('epoch')
     plt.ylabel('loss')
-    plt.xlim(0, 200)
-    plt.ylim(0.0, 1.0)
+    plt.xlim(0, 300)
+    plt.ylim(0.0, 0.03)
     plt.legend(['loss', 'val_loss'], loc='upper right')
-    plt.savefig(results_dir + model_name + "_loss.png")
+    plt.savefig(results_dir + "loss_"+str(np.array((history.history["val_loss"])).min())+".png")
     plt.close()
 
 
@@ -745,9 +745,9 @@ if __name__ == '__main__':
     
     gpu_count = 3
     BATCH_SIZE = 16 * gpu_count
-    NUM_EPOCH = 200
+    NUM_EPOCH = 300
     load_number = 500
-    lr = 0.001
+    lr = 0.0001
     
     loss = "mean_squared_error"
     if task == "event":
@@ -762,7 +762,7 @@ if __name__ == '__main__':
     else:
         datasets_dir = "/misc/export2/sudou/sound_data/datasets/"
     
-    for datadir in [#"multi_segdata"+str(classes) + "_"+str(image_size)+"_no_sound/", 
+    for datadir in ["multi_segdata"+str(classes) + "_"+str(image_size)+"_no_sound/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-30dB/", 
                     "multi_segdata"+str(classes) + "_"+str(image_size)+"_-20dB/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-10dB/", 
