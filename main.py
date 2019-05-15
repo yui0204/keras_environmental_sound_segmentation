@@ -745,9 +745,9 @@ if __name__ == '__main__':
     
     gpu_count = 3
     BATCH_SIZE = 16 * gpu_count
-    NUM_EPOCH = 300
+    NUM_EPOCH = 500
     
-    lr = 0.0001
+    lr = 0.00001
     
     loss = "mean_squared_error"
     if task == "event":
@@ -776,7 +776,7 @@ if __name__ == '__main__':
         label = pd.read_csv(filepath_or_buffer=labelfile, sep=",", index_col=0)            
         
         Model = "Deeplab"        
-        mul = False
+        mul = True
         for mic_num in [1, 8]: # 1 or 8
             soft = False
             for complex_input in [False, True]:
