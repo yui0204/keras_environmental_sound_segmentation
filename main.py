@@ -746,7 +746,7 @@ if __name__ == '__main__':
     gpu_count = 3
     BATCH_SIZE = 16 * gpu_count
     NUM_EPOCH = 300
-    load_number = 500
+    
     lr = 0.0001
     
     loss = "mean_squared_error"
@@ -764,7 +764,7 @@ if __name__ == '__main__':
     
     for datadir in ["multi_segdata"+str(classes) + "_"+str(image_size)+"_no_sound/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-30dB/", 
-                    "multi_segdata"+str(classes) + "_"+str(image_size)+"_-20dB/", 
+                    #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-20dB/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-10dB/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_0dB/"
                     ]:
@@ -776,19 +776,20 @@ if __name__ == '__main__':
         label = pd.read_csv(filepath_or_buffer=labelfile, sep=",", index_col=0)            
         
         Model = "Deeplab"        
-        mul = True
+        mul = False
         for mic_num in [1, 8]: # 1 or 8
             soft = False
             for complex_input in [False, True]:
                 complex_output = False
                 VGG = 0                     #0: False, 1: Red 3: White
-        
+
+                load_number = 500
                 
                 model_name = Model+"_"+str(classes)+"class_" + str(mic_num)+"ch_mul"+str(mul) + "_cin"+str(complex_input)
                 dir_name = model_name + "_"+datadir
                 date = datetime.datetime.today().strftime("%Y_%m%d")
                 results_dir = "./model_results/" + date + "/" + dir_name
-                    
+                
                 if mode == "train":
                     print("\nTraining start...")
                     if not os.path.exists(results_dir + "prediction"):
