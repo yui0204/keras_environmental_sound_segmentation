@@ -808,7 +808,7 @@ if __name__ == '__main__':
 
                 load_number = 500
                 
-                model_name = Model+"_"+str(classes)+"class_" + str(mic_num)+"ch_mul"+str(mul) + "_cin"+str(complex_input)
+                model_name = Model+"_"+str(classes)+"class_" + str(mic_num)+"ch_mul"+str(mul) + "_cin"+str(complex_input) + "_ipd"+str(ipd)
                 dir_name = model_name + "_"+datadir
                 date = datetime.datetime.today().strftime("%Y_%m%d")
                 results_dir = "./model_results/" + date + "/" + dir_name
