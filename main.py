@@ -171,21 +171,21 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
         labels = labels.max(2)[:,:,np.newaxis,:]
         
     if ipd == True:
+        inputs = inputs.transpose(1,0,2,3)
         inputs[0], labels = log(inputs[0], labels)   
         inputs[0] = np.nan_to_num(inputs[0])
         labels = np.nan_to_num(labels) 
         inputs[0] += 120
         labels += 120
         inputs[0], labels, max, r_labels, i_labels = normalize(inputs[0], labels, r_labels, i_labels)
-
+        inputs = inputs.transpose(1,0,2,3)
     else:
         inputs, labels = log(inputs, labels)   
         inputs = np.nan_to_num(inputs)
         labels = np.nan_to_num(labels) 
         inputs += 120
         labels += 120
-
-    inputs, labels, max, r_labels, i_labels = normalize(inputs, labels, r_labels, i_labels)
+        inputs, labels, max, r_labels, i_labels = normalize(inputs, labels, r_labels, i_labels)
 
 
     if complex_input == True and ipd == False:
