@@ -769,7 +769,7 @@ if __name__ == '__main__':
     BATCH_SIZE = 16 * gpu_count
     NUM_EPOCH = 500
     
-    lr = 0.00001
+    lr = 0.0001
     
     loss = "mean_squared_error"
     if task == "event":
