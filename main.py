@@ -79,7 +79,9 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
         else:
             input_dim = 1
     else:
-        if complex_input == True or VGG > 0:
+        if ipd == True:
+            input_dim = 15    
+        elif complex_input == True or VGG > 0:
             input_dim = 24
         else:
             input_dim = 8        
@@ -127,7 +129,14 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
                         if not task == "event":
                             inputs_phase[i] = np.angle(stft[0])
                         for nchan in range(mic_num):
-                            if complex_input == True:
+                            if ipd == True:
+                                if nchan == 0:
+                                    inputs[i][nchan] = abs(stft[nchan][:256])
+                                else:
+                                    inputs[i][nchan*2-1] = np.cos(np.angle(stft[0][:256]) - np.angle(stft[nchan][:256]))
+                                    inputs[i][nchan*2] = np.sin(np.angle(stft[0][:256]) - np.angle(stft[nchan][:256]))
+                                
+                            elif complex_input == True:
                                 inputs[i][nchan * 3] = abs(stft[nchan][:256])
                                 inputs[i][nchan*3 + 1] = stft[nchan][:256].real
                                 inputs[i][nchan*3 + 2] = stft[nchan][:256].imag
@@ -146,7 +155,7 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
                     labels[i][label.T[filelist[n][:-4]][cat]] += abs(stft[:256])
             
     
-    if complex_input == True:
+    if complex_input == True and ipd == False:
         sign = (inputs > 0) * 2 - 1
         sign = sign.astype(np.float16)
         if complex_output == True:
@@ -161,16 +170,25 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
     if task == "event":    
         labels = labels.max(2)[:,:,np.newaxis,:]
         
-    inputs, labels = log(inputs, labels)   
-    inputs = np.nan_to_num(inputs)
-    labels = np.nan_to_num(labels) 
-    inputs += 120
-    labels += 120
+    if ipd == True:
+        inputs[0], labels = log(inputs[0], labels)   
+        inputs[0] = np.nan_to_num(inputs[0])
+        labels = np.nan_to_num(labels) 
+        inputs[0] += 120
+        labels += 120
+        inputs[0], labels, max, r_labels, i_labels = normalize(inputs[0], labels, r_labels, i_labels)
+
+    else:
+        inputs, labels = log(inputs, labels)   
+        inputs = np.nan_to_num(inputs)
+        labels = np.nan_to_num(labels) 
+        inputs += 120
+        labels += 120
 
     inputs, labels, max, r_labels, i_labels = normalize(inputs, labels, r_labels, i_labels)
 
 
-    if complex_input == True:
+    if complex_input == True and ipd == False:
         inputs = inputs * sign
         if complex_output == True:
             r_labels = r_labels * r_sign
@@ -250,6 +268,10 @@ def read_model(Model):
                 model = Deeplab.Deeplabv3(weights=None, input_tensor=None, 
                                   input_shape=(256, image_size, mic_num), 
                                   classes=classes, OS=16, mul=mul, soft=soft)
+            elif ipd == True:
+                model = Deeplab.Deeplabv3(weights=None, input_tensor=None, 
+                                  input_shape=(256, image_size, (mic_num-1)*2+1), 
+                                  classes=classes, OS=16, mul=mul, soft=soft)
             else:
                 model = Deeplab.Deeplabv3(weights=None, input_tensor=None, 
                                   input_shape=(256, image_size, mic_num * 3), 
@@ -322,7 +344,7 @@ def train(X_train, Y_train, Model, Y_train2, Y_train3):
     model.summary()
 
     if complex_output == False:
-        if complex_input == True  or mic_num > 1:
+        if complex_input == True  or mic_num > 1 or ipd == True:
             X_train = [X_train, 
                        X_train.transpose(3,0,1,2)[0][np.newaxis,:,:,:].transpose(1,2,3,0)]
         if gpu_count == 1:            
@@ -777,9 +799,10 @@ if __name__ == '__main__':
         
         Model = "Deeplab"        
         mul = True
-        for mic_num in [1, 8]: # 1 or 8
+        ipd = True
+        for mic_num in [8]: # 1 or 8
             soft = False
-            for complex_input in [False, True]:
+            for complex_input in [True]:
                 complex_output = False
                 VGG = 0                     #0: False, 1: Red 3: White
 
@@ -814,7 +837,7 @@ if __name__ == '__main__':
         
                     # save train condition
                     train_condition = date + "\t" + results_dir                     + "\n" + \
-                                      "\t"+"comparison between complex input and array using toy dataset (-20dB)"                          + "\n" + \
+                                      "\t"+"Try IPD input"                          + "\n" + \
                                       "\t\t segdata_dir, " + segdata_dir            + "\n" + \
                                       "\t\t valdata_dir, " + valdata_dir            + "\n" + \
                                       "\t\t X"+str(X_train.shape)+" Y"+str(Y_train.shape)+"\n" \
@@ -828,6 +851,7 @@ if __name__ == '__main__':
                                       "\t\t Softmax,        " + str(soft)           + "\n" + \
                                       "\t\t Complex_input,  " + str(complex_input)  + "\n" + \
                                       "\t\t Complex_output, " + str(complex_output) + "\n" + \
+                                      "\t\t IPD input,      " + str(ipd) + "\n" + \
                                       "\t\t Model,          " + Model               + "\n" + \
                                       "\t\t classes,        " + str(classes)        + "\n\n\n"
         
