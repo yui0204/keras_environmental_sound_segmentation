@@ -798,7 +798,7 @@ if __name__ == '__main__':
         label = pd.read_csv(filepath_or_buffer=labelfile, sep=",", index_col=0)            
         
         Model = "Deeplab"        
-        mul = False
+        mul = True
         ipd = True
         for mic_num in [8]: # 1 or 8
             soft = False
