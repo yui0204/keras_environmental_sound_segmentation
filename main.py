@@ -784,9 +784,9 @@ if __name__ == '__main__':
     else:
         datasets_dir = "/misc/export2/sudou/sound_data/datasets/"
     
-    for datadir in ["multi_segdata"+str(classes) + "_"+str(image_size)+"_no_sound/", 
+    for datadir in [#"multi_segdata"+str(classes) + "_"+str(image_size)+"_no_sound/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-30dB/", 
-                    #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-20dB/", 
+                    "multi_segdata"+str(classes) + "_"+str(image_size)+"_-20dB/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-10dB/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_0dB/"
                     ]:
