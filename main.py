@@ -784,9 +784,9 @@ if __name__ == '__main__':
     else:
         datasets_dir = "/misc/export2/sudou/sound_data/datasets/"
     
-    for datadir in [#"multi_segdata"+str(classes) + "_"+str(image_size)+"_no_sound/", 
+    for datadir in ["multi_segdata"+str(classes) + "_"+str(image_size)+"_no_sound_random/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-30dB/", 
-                    "multi_segdata"+str(classes) + "_"+str(image_size)+"_-20dB/", 
+                    #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-20dB_random/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-10dB/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_0dB/"
                     ]:
@@ -799,14 +799,15 @@ if __name__ == '__main__':
         
         Model = "Deeplab"        
         mul = True
-        ipd = True
-        for mic_num in [8]: # 1 or 8
+        ipd = False
+        for mic_num in [1, 8]: # 1 or 8
             soft = False
-            for complex_input in [True]:
+            for complex_input in [False, True]:
+                
                 complex_output = False
                 VGG = 0                     #0: False, 1: Red 3: White
 
-                load_number = 500
+                load_number = 3000
                 
                 model_name = Model+"_"+str(classes)+"class_" + str(mic_num)+"ch_mul"+str(mul) + "_cin"+str(complex_input) + "_ipd"+str(ipd)
                 dir_name = model_name + "_"+datadir
