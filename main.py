@@ -761,7 +761,7 @@ def load_npy():
 
 if __name__ == '__main__':
     train_mode = "class"
-    classes = 3
+    classes = 75
     image_size = 256
     task = "segmentation"
     
@@ -784,7 +784,7 @@ if __name__ == '__main__':
     else:
         datasets_dir = "/misc/export2/sudou/sound_data/datasets/"
     
-    for datadir in ["multi_segdata"+str(classes) + "_"+str(image_size)+"_no_sound_random/", 
+    for datadir in ["multi_segdata"+str(classes) + "_"+str(image_size)+"_no_sound/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-30dB/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-20dB_random/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-10dB/", 
@@ -799,17 +799,17 @@ if __name__ == '__main__':
         
         Model = "Deeplab"        
         mul = True
-        for ipd in [False, True]:
-            for mic_num in [1, 8]: # 1 or 8
+        for ipd in [True]:
+            for mic_num in [8]: # 1 or 8
                 soft = False
-                for complex_input in [False, True]:        
+                for complex_input in [True]:        
                     complex_output = False
                     VGG = 0                     #0: False, 1: Red 3: White
                     
                     if ipd == True:
                         if mic_num == 1 or complex_input == False:
                             continue
-                    load_number = 3000
+                    load_number = 10000
                     
                     model_name = Model+"_"+str(classes)+"class_" + str(mic_num)+"ch_mul"+str(mul) + "_cin"+str(complex_input) + "_ipd"+str(ipd)
                     dir_name = model_name + "_"+datadir
