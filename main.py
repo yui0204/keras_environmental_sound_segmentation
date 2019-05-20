@@ -799,17 +799,17 @@ if __name__ == '__main__':
         
         Model = "Deeplab"        
         mul = True
-        for ipd in [True]:
-            for mic_num in [8]: # 1 or 8
+        for ipd in [False]:
+            for mic_num in [1]: # 1 or 8
                 soft = False
-                for complex_input in [True]:        
+                for complex_input in [False]:        
                     complex_output = False
                     VGG = 0                     #0: False, 1: Red 3: White
                     
                     if ipd == True:
                         if mic_num == 1 or complex_input == False:
                             continue
-                    load_number = 10000
+                    load_number = 5000
                     
                     model_name = Model+"_"+str(classes)+"class_" + str(mic_num)+"ch_mul"+str(mul) + "_cin"+str(complex_input) + "_ipd"+str(ipd)
                     dir_name = model_name + "_"+datadir
@@ -840,7 +840,7 @@ if __name__ == '__main__':
             
                         # save train condition
                         train_condition = date + "\t" + results_dir                     + "\n" + \
-                                          "\t"+"Try IPD input"                          + "\n" + \
+                                          "\t"+"Compare IPD and monaural"                          + "\n" + \
                                           "\t\t segdata_dir, " + segdata_dir            + "\n" + \
                                           "\t\t valdata_dir, " + valdata_dir            + "\n" + \
                                           "\t\t X"+str(X_train.shape)+" Y"+str(Y_train.shape)+"\n" \
