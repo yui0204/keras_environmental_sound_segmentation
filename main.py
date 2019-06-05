@@ -761,13 +761,13 @@ def load_npy():
 
 if __name__ == '__main__':
     train_mode = "class"
-    classes = 75
+    classes = 3
     image_size = 256
     task = "segmentation"
     
     gpu_count = 3
     BATCH_SIZE = 16 * gpu_count
-    NUM_EPOCH = 500
+    NUM_EPOCH = 300
     
     lr = 0.0001
     
@@ -784,7 +784,7 @@ if __name__ == '__main__':
     else:
         datasets_dir = "/misc/export2/sudou/sound_data/datasets/"
     
-    for datadir in ["multi_segdata"+str(classes) + "_"+str(image_size)+"_no_sound/", 
+    for datadir in ["multi_segdata"+str(classes) + "_"+str(image_size)+"_no_sound_random_sep/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-30dB/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-20dB_random/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-10dB/", 
@@ -799,15 +799,18 @@ if __name__ == '__main__':
         
         Model = "Deeplab"        
         mul = True
-        for ipd in [False]:
-            for mic_num in [1]: # 1 or 8
+        for ipd in [False, True]:
+            for mic_num in [1, 8]: # 1 or 8
                 soft = False
-                for complex_input in [False]:        
+                for complex_input in [False, True]:        
                     complex_output = False
                     VGG = 0                     #0: False, 1: Red 3: White
                     
                     if ipd == True:
                         if mic_num == 1 or complex_input == False:
+                            continue
+                    else:
+                        if mic_num == 8 or complex_input == True:
                             continue
                     load_number = 5000
                     
@@ -840,7 +843,7 @@ if __name__ == '__main__':
             
                         # save train condition
                         train_condition = date + "\t" + results_dir                     + "\n" + \
-                                          "\t"+"Compare IPD and monaural"                          + "\n" + \
+                                          "\t"+"Re-train sep dataset firstly 5000data"                          + "\n" + \
                                           "\t\t segdata_dir, " + segdata_dir            + "\n" + \
                                           "\t\t valdata_dir, " + valdata_dir            + "\n" + \
                                           "\t\t X"+str(X_train.shape)+" Y"+str(Y_train.shape)+"\n" \
