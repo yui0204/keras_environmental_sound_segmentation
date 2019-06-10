@@ -1,0 +1,916 @@
+2019_0512	./model_results/2019_0512/Deeplab_3class_1ch_mulTrue_cinFalse_multi_segdata3_256_no_sound/
+	comparison between multiply, complec inpu and array using toy dataset
+		 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound/train/
+		 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound/val/
+		 X(500, 256, 256, 1) Y(500, 256, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     48
+		 NUM_EPOCH,      200
+		 Loss function,  mean_squared_error
+		 Learning_rate,  0.001
+		 Mic num,        1
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  False
+		 Complex_output, False
+		 Model,          Deeplab
+		 classes,        3
+
+
+2019_0512	./model_results/2019_0512/Deeplab_3class_1ch_mulTrue_cinTrue_multi_segdata3_256_no_sound/
+	comparison between multiply, complec inpu and array using toy dataset
+		 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound/train/
+		 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound/val/
+		 X(500, 256, 256, 3) Y(500, 256, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     48
+		 NUM_EPOCH,      200
+		 Loss function,  mean_squared_error
+		 Learning_rate,  0.001
+		 Mic num,        1
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  True
+		 Complex_output, False
+		 Model,          Deeplab
+		 classes,        3
+
+
+2019_0512	./model_results/2019_0512/Deeplab_3class_8ch_mulTrue_cinFalse_multi_segdata3_256_no_sound/
+	comparison between multiply, complec inpu and array using toy dataset
+		 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound/train/
+		 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound/val/
+		 X(500, 256, 256, 8) Y(500, 256, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     48
+		 NUM_EPOCH,      200
+		 Loss function,  mean_squared_error
+		 Learning_rate,  0.001
+		 Mic num,        8
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  False
+		 Complex_output, False
+		 Model,          Deeplab
+		 classes,        3
+
+
+2019_0512	./model_results/2019_0512/Deeplab_3class_8ch_mulTrue_cinTrue_multi_segdata3_256_no_sound/
+	comparison between multiply, complec inpu and array using toy dataset
+		 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound/train/
+		 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound/val/
+		 X(500, 256, 256, 24) Y(500, 256, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     48
+		 NUM_EPOCH,      200
+		 Loss function,  mean_squared_error
+		 Learning_rate,  0.001
+		 Mic num,        8
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  True
+		 Complex_output, False
+		 Model,          Deeplab
+		 classes,        3
+
+
+2019_0512	./model_results/2019_0512/Deeplab_3class_1ch_mulFalse_cinFalse_multi_segdata3_256_no_sound/
+	comparison between multiply, complec inpu and array using toy dataset
+		 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound/train/
+		 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound/val/
+		 X(500, 256, 256, 1) Y(500, 256, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     48
+		 NUM_EPOCH,      200
+		 Loss function,  mean_squared_error
+		 Learning_rate,  0.001
+		 Mic num,        1
+		 Multiply,       False
+		 Softmax,        False
+		 Complex_input,  False
+		 Complex_output, False
+		 Model,          Deeplab
+		 classes,        3
+
+
+2019_0512	./model_results/2019_0512/Deeplab_3class_1ch_mulFalse_cinTrue_multi_segdata3_256_no_sound/
+	comparison between multiply, complec inpu and array using toy dataset
+		 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound/train/
+		 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound/val/
+		 X(500, 256, 256, 3) Y(500, 256, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     48
+		 NUM_EPOCH,      200
+		 Loss function,  mean_squared_error
+		 Learning_rate,  0.001
+		 Mic num,        1
+		 Multiply,       False
+		 Softmax,        False
+		 Complex_input,  True
+		 Complex_output, False
+		 Model,          Deeplab
+		 classes,        3
+
+
+2019_0512	./model_results/2019_0512/Deeplab_3class_8ch_mulFalse_cinFalse_multi_segdata3_256_no_sound/
+	comparison between multiply, complec inpu and array using toy dataset
+		 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound/train/
+		 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound/val/
+		 X(500, 256, 256, 8) Y(500, 256, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     48
+		 NUM_EPOCH,      200
+		 Loss function,  mean_squared_error
+		 Learning_rate,  0.001
+		 Mic num,        8
+		 Multiply,       False
+		 Softmax,        False
+		 Complex_input,  False
+		 Complex_output, False
+		 Model,          Deeplab
+		 classes,        3
+
+
+2019_0513	./model_results/2019_0513/Deeplab_3class_8ch_mulFalse_cinTrue_multi_segdata3_256_no_sound/
+	comparison between multiply, complec inpu and array using toy dataset
+		 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound/train/
+		 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound/val/
+		 X(500, 256, 256, 24) Y(500, 256, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     48
+		 NUM_EPOCH,      200
+		 Loss function,  mean_squared_error
+		 Learning_rate,  0.001
+		 Mic num,        8
+		 Multiply,       False
+		 Softmax,        False
+		 Complex_input,  True
+		 Complex_output, False
+		 Model,          Deeplab
+		 classes,        3
+
+
+2019_0513	./model_results/2019_0513/Deeplab_3class_1ch_mulTrue_cinFalse_multi_segdata3_256_-20dB/
+	comparison between complex input and array using toy dataset (-20dB)
+		 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_-20dB/train/
+		 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_-20dB/val/
+		 X(500, 256, 256, 1) Y(500, 256, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     48
+		 NUM_EPOCH,      200
+		 Loss function,  mean_squared_error
+		 Learning_rate,  0.001
+		 Mic num,        1
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  False
+		 Complex_output, False
+		 Model,          Deeplab
+		 classes,        3
+
+
+2019_0513	./model_results/2019_0513/Deeplab_3class_1ch_mulTrue_cinTrue_multi_segdata3_256_-20dB/
+	comparison between complex input and array using toy dataset (-20dB)
+		 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_-20dB/train/
+		 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_-20dB/val/
+		 X(50, 256, 256, 3) Y(50, 256, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     48
+		 NUM_EPOCH,      200
+		 Loss function,  mean_squared_error
+		 Learning_rate,  0.001
+		 Mic num,        1
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  True
+		 Complex_output, False
+		 Model,          Deeplab
+		 classes,        3
+
+
+2019_0513	./model_results/2019_0513/Deeplab_3class_8ch_mulTrue_cinFalse_multi_segdata3_256_-20dB/
+	comparison between complex input and array using toy dataset (-20dB)
+		 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_-20dB/train/
+		 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_-20dB/val/
+		 X(50, 256, 256, 8) Y(50, 256, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     48
+		 NUM_EPOCH,      200
+		 Loss function,  mean_squared_error
+		 Learning_rate,  0.001
+		 Mic num,        8
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  False
+		 Complex_output, False
+		 Model,          Deeplab
+		 classes,        3
+
+
+2019_0513	./model_results/2019_0513/Deeplab_3class_8ch_mulTrue_cinTrue_multi_segdata3_256_-20dB/
+	comparison between complex input and array using toy dataset (-20dB)
+		 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_-20dB/train/
+		 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_-20dB/val/
+		 X(50, 256, 256, 24) Y(50, 256, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     48
+		 NUM_EPOCH,      200
+		 Loss function,  mean_squared_error
+		 Learning_rate,  0.001
+		 Mic num,        8
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  True
+		 Complex_output, False
+		 Model,          Deeplab
+		 classes,        3
+
+
+
+
+2019_0514	./model_results/2019_0514/Deeplab_3class_1ch_mulTrue_cinFalse_multi_segdata3_256_no_sound/
+	comparison between complex input and array using toy dataset (-20dB)
+		 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound/train/
+		 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound/val/
+		 X(500, 256, 256, 1) Y(500, 256, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     48
+		 NUM_EPOCH,      300
+		 Loss function,  mean_squared_error
+		 Learning_rate,  0.0001
+		 Mic num,        1
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  False
+		 Complex_output, False
+		 Model,          Deeplab
+		 classes,        3
+
+
+2019_0514	./model_results/2019_0514/Deeplab_3class_1ch_mulTrue_cinTrue_multi_segdata3_256_no_sound/
+	comparison between complex input and array using toy dataset (-20dB)
+		 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound/train/
+		 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound/val/
+		 X(500, 256, 256, 3) Y(500, 256, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     48
+		 NUM_EPOCH,      300
+		 Loss function,  mean_squared_error
+		 Learning_rate,  0.0001
+		 Mic num,        1
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  True
+		 Complex_output, False
+		 Model,          Deeplab
+		 classes,        3
+
+
+2019_0514	./model_results/2019_0514/Deeplab_3class_8ch_mulTrue_cinFalse_multi_segdata3_256_no_sound/
+	comparison between complex input and array using toy dataset (-20dB)
+		 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound/train/
+		 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound/val/
+		 X(500, 256, 256, 8) Y(500, 256, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     48
+		 NUM_EPOCH,      300
+		 Loss function,  mean_squared_error
+		 Learning_rate,  0.0001
+		 Mic num,        8
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  False
+		 Complex_output, False
+		 Model,          Deeplab
+		 classes,        3
+
+
+2019_0514	./model_results/2019_0514/Deeplab_3class_8ch_mulTrue_cinTrue_multi_segdata3_256_no_sound/
+	comparison between complex input and array using toy dataset (-20dB)
+		 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound/train/
+		 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound/val/
+		 X(500, 256, 256, 24) Y(500, 256, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     48
+		 NUM_EPOCH,      300
+		 Loss function,  mean_squared_error
+		 Learning_rate,  0.0001
+		 Mic num,        8
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  True
+		 Complex_output, False
+		 Model,          Deeplab
+		 classes,        3
+
+
+2019_0514	./model_results/2019_0514/Deeplab_3class_1ch_mulTrue_cinFalse_multi_segdata3_256_-20dB/
+	comparison between complex input and array using toy dataset (-20dB)
+		 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_-20dB/train/
+		 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_-20dB/val/
+		 X(500, 256, 256, 1) Y(500, 256, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     48
+		 NUM_EPOCH,      300
+		 Loss function,  mean_squared_error
+		 Learning_rate,  0.0001
+		 Mic num,        1
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  False
+		 Complex_output, False
+		 Model,          Deeplab
+		 classes,        3
+
+
+2019_0514	./model_results/2019_0514/Deeplab_3class_1ch_mulTrue_cinTrue_multi_segdata3_256_-20dB/
+	comparison between complex input and array using toy dataset (-20dB)
+		 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_-20dB/train/
+		 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_-20dB/val/
+		 X(500, 256, 256, 3) Y(500, 256, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     48
+		 NUM_EPOCH,      300
+		 Loss function,  mean_squared_error
+		 Learning_rate,  0.0001
+		 Mic num,        1
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  True
+		 Complex_output, False
+		 Model,          Deeplab
+		 classes,        3
+
+
+2019_0514	./model_results/2019_0514/Deeplab_3class_8ch_mulTrue_cinFalse_multi_segdata3_256_-20dB/
+	comparison between complex input and array using toy dataset (-20dB)
+		 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_-20dB/train/
+		 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_-20dB/val/
+		 X(500, 256, 256, 8) Y(500, 256, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     48
+		 NUM_EPOCH,      300
+		 Loss function,  mean_squared_error
+		 Learning_rate,  0.0001
+		 Mic num,        8
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  False
+		 Complex_output, False
+		 Model,          Deeplab
+		 classes,        3
+
+
+2019_0515	./model_results/2019_0515/Deeplab_3class_8ch_mulTrue_cinTrue_multi_segdata3_256_-20dB/
+	comparison between complex input and array using toy dataset (-20dB)
+		 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_-20dB/train/
+		 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_-20dB/val/
+		 X(500, 256, 256, 24) Y(500, 256, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     48
+		 NUM_EPOCH,      300
+		 Loss function,  mean_squared_error
+		 Learning_rate,  0.0001
+		 Mic num,        8
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  True
+		 Complex_output, False
+		 Model,          Deeplab
+		 classes,        3
+
+
+2019_0515	./model_results/2019_0515/Deeplab_3class_1ch_mulFalse_cinFalse_multi_segdata3_256_no_sound/
+	comparison between complex input and array using toy dataset (-20dB)
+		 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound/train/
+		 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound/val/
+		 X(500, 256, 256, 1) Y(500, 256, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     48
+		 NUM_EPOCH,      300
+		 Loss function,  mean_squared_error
+		 Learning_rate,  0.0001
+		 Mic num,        1
+		 Multiply,       False
+		 Softmax,        False
+		 Complex_input,  False
+		 Complex_output, False
+		 Model,          Deeplab
+		 classes,        3
+
+
+2019_0515	./model_results/2019_0515/Deeplab_3class_1ch_mulFalse_cinTrue_multi_segdata3_256_no_sound/
+	comparison between complex input and array using toy dataset (-20dB)
+		 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound/train/
+		 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound/val/
+		 X(500, 256, 256, 3) Y(500, 256, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     48
+		 NUM_EPOCH,      300
+		 Loss function,  mean_squared_error
+		 Learning_rate,  0.0001
+		 Mic num,        1
+		 Multiply,       False
+		 Softmax,        False
+		 Complex_input,  True
+		 Complex_output, False
+		 Model,          Deeplab
+		 classes,        3
+
+
+2019_0515	./model_results/2019_0515/Deeplab_3class_8ch_mulFalse_cinFalse_multi_segdata3_256_no_sound/
+	comparison between complex input and array using toy dataset (-20dB)
+		 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound/train/
+		 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound/val/
+		 X(500, 256, 256, 8) Y(500, 256, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     48
+		 NUM_EPOCH,      300
+		 Loss function,  mean_squared_error
+		 Learning_rate,  0.0001
+		 Mic num,        8
+		 Multiply,       False
+		 Softmax,        False
+		 Complex_input,  False
+		 Complex_output, False
+		 Model,          Deeplab
+		 classes,        3
+
+
+2019_0515	./model_results/2019_0515/Deeplab_3class_8ch_mulFalse_cinTrue_multi_segdata3_256_no_sound/
+	comparison between complex input and array using toy dataset (-20dB)
+		 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound/train/
+		 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound/val/
+		 X(500, 256, 256, 24) Y(500, 256, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     48
+		 NUM_EPOCH,      300
+		 Loss function,  mean_squared_error
+		 Learning_rate,  0.0001
+		 Mic num,        8
+		 Multiply,       False
+		 Softmax,        False
+		 Complex_input,  True
+		 Complex_output, False
+		 Model,          Deeplab
+		 classes,        3
+
+
+2019_0516	./model_results/2019_0516/Deeplab_3class_1ch_mulTrue_cinFalse_multi_segdata3_256_no_sound/
+	comparison between complex input and array using toy dataset (-20dB)
+		 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound/train/
+		 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound/val/
+		 X(500, 256, 256, 1) Y(500, 256, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     48
+		 NUM_EPOCH,      500
+		 Loss function,  mean_squared_error
+		 Learning_rate,  1e-05
+		 Mic num,        1
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  False
+		 Complex_output, False
+		 Model,          Deeplab
+		 classes,        3
+
+
+2019_0516	./model_results/2019_0516/Deeplab_3class_1ch_mulTrue_cinTrue_multi_segdata3_256_no_sound/
+	comparison between complex input and array using toy dataset (-20dB)
+		 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound/train/
+		 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound/val/
+		 X(500, 256, 256, 3) Y(500, 256, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     48
+		 NUM_EPOCH,      500
+		 Loss function,  mean_squared_error
+		 Learning_rate,  1e-05
+		 Mic num,        1
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  True
+		 Complex_output, False
+		 Model,          Deeplab
+		 classes,        3
+
+
+2019_0516	./model_results/2019_0516/Deeplab_3class_8ch_mulTrue_cinFalse_multi_segdata3_256_no_sound/
+	comparison between complex input and array using toy dataset (-20dB)
+		 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound/train/
+		 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound/val/
+		 X(500, 256, 256, 8) Y(500, 256, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     48
+		 NUM_EPOCH,      500
+		 Loss function,  mean_squared_error
+		 Learning_rate,  1e-05
+		 Mic num,        8
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  False
+		 Complex_output, False
+		 Model,          Deeplab
+		 classes,        3
+
+
+2019_0516	./model_results/2019_0516/Deeplab_3class_8ch_mulTrue_cinTrue_multi_segdata3_256_no_sound/
+	comparison between complex input and array using toy dataset (-20dB)
+		 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound/train/
+		 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound/val/
+		 X(500, 256, 256, 24) Y(500, 256, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     48
+		 NUM_EPOCH,      500
+		 Loss function,  mean_squared_error
+		 Learning_rate,  1e-05
+		 Mic num,        8
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  True
+		 Complex_output, False
+		 Model,          Deeplab
+		 classes,        3
+
+
+
+
+2019_0516	./model_results/2019_0516/Deeplab_3class_8ch_mulTrue_cinTrue_ipdTrue_multi_segdata3_256_no_sound/
+	Try IPD input
+		 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound/train/
+		 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound/val/
+		 X(500, 256, 256, 15) Y(500, 256, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     48
+		 NUM_EPOCH,      500
+		 Loss function,  mean_squared_error
+		 Learning_rate,  1e-05
+		 Mic num,        8
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  True
+		 Complex_output, False
+		 IPD input,      True
+		 Model,          Deeplab
+		 classes,        3
+
+
+2019_0517	./model_results/2019_0517/Deeplab_3class_8ch_mulTrue_cinTrue_ipdTrue_multi_segdata3_256_no_sound/
+	Try IPD input
+		 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound/train/
+		 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound/val/
+		 X(500, 256, 256, 15) Y(500, 256, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     48
+		 NUM_EPOCH,      500
+		 Loss function,  mean_squared_error
+		 Learning_rate,  0.0001
+		 Mic num,        8
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  True
+		 Complex_output, False
+		 IPD input,      True
+		 Model,          Deeplab
+		 classes,        3
+
+
+2019_0517	./model_results/2019_0517/Deeplab_3class_8ch_mulTrue_cinTrue_ipdTrue_multi_segdata3_256_-20dB/
+	Try IPD input
+		 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_-20dB/train/
+		 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_-20dB/val/
+		 X(500, 256, 256, 15) Y(500, 256, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     48
+		 NUM_EPOCH,      500
+		 Loss function,  mean_squared_error
+		 Learning_rate,  0.0001
+		 Mic num,        8
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  True
+		 Complex_output, False
+		 IPD input,      True
+		 Model,          Deeplab
+		 classes,        3
+
+
+2019_0517	./model_results/2019_0517/Deeplab_3class_8ch_mulTrue_cinTrue_ipdTrue_multi_segdata3_256_no_sound_random/
+	Try IPD input
+		 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound_random/train/
+		 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound_random/val/
+		 X(500, 256, 256, 15) Y(500, 256, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     48
+		 NUM_EPOCH,      500
+		 Loss function,  mean_squared_error
+		 Learning_rate,  0.0001
+		 Mic num,        8
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  True
+		 Complex_output, False
+		 IPD input,      True
+		 Model,          Deeplab
+		 classes,        3
+
+
+2019_0517	./model_results/2019_0517/Deeplab_3class_8ch_mulTrue_cinTrue_ipdTrue_multi_segdata3_256_-20dB_random/
+	Try IPD input
+		 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_-20dB_random/train/
+		 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_-20dB_random/val/
+		 X(500, 256, 256, 15) Y(500, 256, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     48
+		 NUM_EPOCH,      500
+		 Loss function,  mean_squared_error
+		 Learning_rate,  0.0001
+		 Mic num,        8
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  True
+		 Complex_output, False
+		 IPD input,      True
+		 Model,          Deeplab
+		 classes,        3
+
+
+2019_0518	./model_results/2019_0518/Deeplab_3class_1ch_mulTrue_cinFalse_ipdFalse_multi_segdata3_256_no_sound_random/
+	Try IPD input
+		 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound_random/train/
+		 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound_random/val/
+		 X(3000, 256, 256, 1) Y(3000, 256, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     48
+		 NUM_EPOCH,      500
+		 Loss function,  mean_squared_error
+		 Learning_rate,  0.0001
+		 Mic num,        1
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  False
+		 Complex_output, False
+		 IPD input,      False
+		 Model,          Deeplab
+		 classes,        3
+
+
+2019_0518	./model_results/2019_0518/Deeplab_3class_1ch_mulTrue_cinTrue_ipdFalse_multi_segdata3_256_no_sound_random/
+	Try IPD input
+		 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound_random/train/
+		 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound_random/val/
+		 X(3000, 256, 256, 3) Y(3000, 256, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     48
+		 NUM_EPOCH,      500
+		 Loss function,  mean_squared_error
+		 Learning_rate,  0.0001
+		 Mic num,        1
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  True
+		 Complex_output, False
+		 IPD input,      False
+		 Model,          Deeplab
+		 classes,        3
+
+
+2019_0518	./model_results/2019_0518/Deeplab_3class_8ch_mulTrue_cinFalse_ipdFalse_multi_segdata3_256_no_sound_random/
+	Try IPD input
+		 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound_random/train/
+		 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound_random/val/
+		 X(3000, 256, 256, 8) Y(3000, 256, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     48
+		 NUM_EPOCH,      500
+		 Loss function,  mean_squared_error
+		 Learning_rate,  0.0001
+		 Mic num,        8
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  False
+		 Complex_output, False
+		 IPD input,      False
+		 Model,          Deeplab
+		 classes,        3
+
+
+2019_0518	./model_results/2019_0518/Deeplab_3class_8ch_mulTrue_cinTrue_ipdFalse_multi_segdata3_256_no_sound_random/
+	Try IPD input
+		 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound_random/train/
+		 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound_random/val/
+		 X(3000, 256, 256, 24) Y(3000, 256, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     48
+		 NUM_EPOCH,      500
+		 Loss function,  mean_squared_error
+		 Learning_rate,  0.0001
+		 Mic num,        8
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  True
+		 Complex_output, False
+		 IPD input,      False
+		 Model,          Deeplab
+		 classes,        3
+
+
+2019_0518	./model_results/2019_0518/Deeplab_3class_8ch_mulTrue_cinTrue_ipdTrue_multi_segdata3_256_no_sound_random/
+	Try IPD input
+		 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound_random/train/
+		 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound_random/val/
+		 X(3000, 256, 256, 15) Y(3000, 256, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     48
+		 NUM_EPOCH,      500
+		 Loss function,  mean_squared_error
+		 Learning_rate,  0.0001
+		 Mic num,        8
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  True
+		 Complex_output, False
+		 IPD input,      True
+		 Model,          Deeplab
+		 classes,        3
+
+
+2019_0519	./model_results/2019_0519/Deeplab_75class_8ch_mulTrue_cinTrue_ipdTrue_multi_segdata75_256_no_sound/
+	Try IPD input
+		 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata75_256_no_sound/train/
+		 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata75_256_no_sound/val/
+		 X(5000, 256, 256, 15) Y(5000, 256, 256, 75)
+		 data_byte,      float16
+		 BATCH_SIZE,     48
+		 NUM_EPOCH,      500
+		 Loss function,  mean_squared_error
+		 Learning_rate,  0.0001
+		 Mic num,        8
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  True
+		 Complex_output, False
+		 IPD input,      True
+		 Model,          Deeplab
+		 classes,        75
+
+
+2019_0520	./model_results/2019_0520/Deeplab_75class_1ch_mulTrue_cinFalse_ipdFalse_multi_segdata75_256_no_sound/
+	Compare IPD and monaural
+		 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata75_256_no_sound/train/
+		 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata75_256_no_sound/val/
+		 X(5000, 256, 256, 1) Y(5000, 256, 256, 75)
+		 data_byte,      float16
+		 BATCH_SIZE,     48
+		 NUM_EPOCH,      500
+		 Loss function,  mean_squared_error
+		 Learning_rate,  0.0001
+		 Mic num,        1
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  False
+		 Complex_output, False
+		 IPD input,      False
+		 Model,          Deeplab
+		 classes,        75
+
+
+2019_0522	./model_results/2019_0522/Deeplab_3class_8ch_mulTrue_cinTrue_ipdTrue_multi_segdata3_256_no_sound_random/
+	Try IPD with 30,000data
+		 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound_random/train/
+		 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound_random/val/
+		 X(30000, 256, 256, 15) Y(30000, 256, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     48
+		 NUM_EPOCH,      500
+		 Loss function,  mean_squared_error
+		 Learning_rate,  0.0001
+		 Mic num,        8
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  True
+		 Complex_output, False
+		 IPD input,      True
+		 Model,          Deeplab
+		 classes,        3
+
+
+2019_0524	./model_results/2019_0524/Deeplab_3class_8ch_mulTrue_cinTrue_ipdTrue_multi_segdata3_256_no_sound_random/
+	Try IPD with 30,000data
+		 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound_random/train/
+		 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound_random/val/
+		 X(10000, 256, 256, 15) Y(10000, 256, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     48
+		 NUM_EPOCH,      500
+		 Loss function,  mean_squared_error
+		 Learning_rate,  0.0001
+		 Mic num,        8
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  True
+		 Complex_output, False
+		 IPD input,      True
+		 Model,          Deeplab
+		 classes,        3
+
+
+2019_0525	./model_results/2019_0525/Deeplab_3class_1ch_mulTrue_cinFalse_ipdFalse_multi_segdata3_256_no_sound_random/
+	Try IPD with 30,000data
+		 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound_random/train/
+		 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound_random/val/
+		 X(10000, 256, 256, 1) Y(10000, 256, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     48
+		 NUM_EPOCH,      500
+		 Loss function,  mean_squared_error
+		 Learning_rate,  0.0001
+		 Mic num,        1
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  False
+		 Complex_output, False
+		 IPD input,      False
+		 Model,          Deeplab
+		 classes,        3
+
+
+2019_0526	./model_results/2019_0526/Deeplab_3class_1ch_mulTrue_cinTrue_ipdFalse_multi_segdata3_256_no_sound_random/
+	Try IPD with 30,000data
+		 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound_random/train/
+		 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound_random/val/
+		 X(10000, 256, 256, 3) Y(10000, 256, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     48
+		 NUM_EPOCH,      500
+		 Loss function,  mean_squared_error
+		 Learning_rate,  0.0001
+		 Mic num,        1
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  True
+		 Complex_output, False
+		 IPD input,      False
+		 Model,          Deeplab
+		 classes,        3
+
+
+2019_0526	./model_results/2019_0526/Deeplab_3class_8ch_mulTrue_cinFalse_ipdFalse_multi_segdata3_256_no_sound_random/
+	Try IPD with 30,000data
+		 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound_random/train/
+		 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound_random/val/
+		 X(10000, 256, 256, 8) Y(10000, 256, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     48
+		 NUM_EPOCH,      500
+		 Loss function,  mean_squared_error
+		 Learning_rate,  0.0001
+		 Mic num,        8
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  False
+		 Complex_output, False
+		 IPD input,      False
+		 Model,          Deeplab
+		 classes,        3
+
+
+2019_0527	./model_results/2019_0527/Deeplab_3class_8ch_mulTrue_cinTrue_ipdFalse_multi_segdata3_256_no_sound_random/
+	Try IPD with 30,000data
+		 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound_random/train/
+		 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound_random/val/
+		 X(10000, 256, 256, 24) Y(10000, 256, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     48
+		 NUM_EPOCH,      500
+		 Loss function,  mean_squared_error
+		 Learning_rate,  0.0001
+		 Mic num,        8
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  True
+		 Complex_output, False
+		 IPD input,      False
+		 Model,          Deeplab
+		 classes,        3
+
+
+2019_0528	./model_results/2019_0528/Deeplab_3class_8ch_mulTrue_cinTrue_ipdTrue_multi_segdata3_256_no_sound_random/
+	Try IPD with 30,000data
+		 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound_random/train/
+		 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound_random/val/
+		 X(10000, 256, 256, 15) Y(10000, 256, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     48
+		 NUM_EPOCH,      500
+		 Loss function,  mean_squared_error
+		 Learning_rate,  0.0001
+		 Mic num,        8
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  True
+		 Complex_output, False
+		 IPD input,      True
+		 Model,          Deeplab
+		 classes,        3
+
+
