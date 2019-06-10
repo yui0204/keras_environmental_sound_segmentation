@@ -767,7 +767,7 @@ if __name__ == '__main__':
     
     gpu_count = 3
     BATCH_SIZE = 16 * gpu_count
-    NUM_EPOCH = 300
+    NUM_EPOCH = 100
     
     lr = 0.0001
     
@@ -812,7 +812,7 @@ if __name__ == '__main__':
                     else:
                         if mic_num == 8 or complex_input == True:
                             continue
-                    load_number = 5000
+                    load_number = 10000
                     
                     model_name = Model+"_"+str(classes)+"class_" + str(mic_num)+"ch_mul"+str(mul) + "_cin"+str(complex_input) + "_ipd"+str(ipd)
                     dir_name = model_name + "_"+datadir
@@ -843,7 +843,7 @@ if __name__ == '__main__':
             
                         # save train condition
                         train_condition = date + "\t" + results_dir                     + "\n" + \
-                                          "\t"+"Re-train sep dataset firstly 5000data"                          + "\n" + \
+                                          "\t"+"Re-train sep dataset firstly 3000data"                          + "\n" + \
                                           "\t\t segdata_dir, " + segdata_dir            + "\n" + \
                                           "\t\t valdata_dir, " + valdata_dir            + "\n" + \
                                           "\t\t X"+str(X_train.shape)+" Y"+str(Y_train.shape)+"\n" \
