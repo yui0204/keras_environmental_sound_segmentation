@@ -333,10 +333,10 @@ def Deeplabv3(weights='None', input_tensor=None,
     x = BatchNormalization(name='concat_projection_BN', epsilon=1e-5)(x)
     x = Activation('relu')(x)
     x = Dropout(0.1)(x)
-    print(x)
+    #print(x)
     
 #################################### added RNN
-"""    
+    """    
     r = Reshape((16, 16 * 256))(x)
     r = GRU(16 * 256, activation='tanh', recurrent_activation='hard_sigmoid', 
             return_sequences=True,
@@ -349,7 +349,7 @@ def Deeplabv3(weights='None', input_tensor=None,
     r = BatchNormalization()(r)
     r = Reshape((16, 16, 256))(r)
     x = r
-"""
+    """
 ####################################
 
     # DeepLab v.3+ decoder
