@@ -336,6 +336,7 @@ def Deeplabv3(weights='None', input_tensor=None,
     print(x)
     
 #################################### added RNN
+"""    
     r = Reshape((16, 16 * 256))(x)
     r = GRU(16 * 256, activation='tanh', recurrent_activation='hard_sigmoid', 
             return_sequences=True,
@@ -348,6 +349,7 @@ def Deeplabv3(weights='None', input_tensor=None,
     r = BatchNormalization()(r)
     r = Reshape((16, 16, 256))(r)
     x = r
+"""
 ####################################
 
     # DeepLab v.3+ decoder

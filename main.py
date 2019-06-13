@@ -869,7 +869,7 @@ if __name__ == '__main__':
                         history = train(X_train, Y_train, Model, Y_train_r, Y_train_i)
                         plot_history(history, model_name)
                     
-                        with open('reserch_log.txt','a') as f:
+                        with open('research_log.txt','a') as f:
                             f.write(train_condition)    
             
                     # prediction            

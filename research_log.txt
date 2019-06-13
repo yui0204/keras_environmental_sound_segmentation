@@ -1074,3 +1074,26 @@
 		 classes,        3
 
 
+File Edit Options Buffers Tools Text Help
+2019_0613       ./model_results/2019_0613/Deeplab_3class_1ch_mulTrue_cinFalse_ipdFalse_multi_segdata3_256_no_sound_random_sep/
+        Try RNN Deeplab using 1ch
+                 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound_random_sep/train/
+                 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound_random_sep/val/
+                 X(5000, 256, 256, 1) Y(5000, 256, 256, 3)
+                 data_byte,      float16
+	         BATCH_SIZE,     48
+                 NUM_EPOCH,      100
+                 Loss function,  mean_squared_error
+                 Learning_rate,  0.0001
+                 Mic num,        1
+                 Multiply,       True
+                 Softmax,        False
+                 Complex_input,  False
+                 Complex_output, False
+                 IPD input,      False
+                 Model,          Deeplab
+                 classes,        3
+
+
+
+
