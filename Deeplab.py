@@ -30,7 +30,7 @@ from keras.utils import conv_utils
 from keras.utils.data_utils import get_file
 
 from keras.layers.merge import concatenate
-from keras.layers import RepeatVector, Flatten, Reshape
+from keras.layers import RepeatVector, Flatten, Reshape, GRU, LSTM
 from keras.layers.merge import multiply
 import os
 import CNN
@@ -333,6 +333,22 @@ def Deeplabv3(weights='None', input_tensor=None,
     x = BatchNormalization(name='concat_projection_BN', epsilon=1e-5)(x)
     x = Activation('relu')(x)
     x = Dropout(0.1)(x)
+    print(x)
+    
+#################################### added RNN
+    r = Reshape((16, 16 * 256))(x)
+    r = GRU(16 * 256, activation='tanh', recurrent_activation='hard_sigmoid', 
+            return_sequences=True,
+            dropout=0.25, recurrent_dropout=0.25, stateful=False)(r) 
+    r = BatchNormalization()(r)
+
+    r = GRU(16 * 256, activation='tanh', recurrent_activation='hard_sigmoid', 
+            return_sequences=True,
+            dropout=0.25, recurrent_dropout=0.25, stateful=False)(r) 
+    r = BatchNormalization()(r)
+    r = Reshape((16, 16, 256))(r)
+    x = r
+####################################
 
     # DeepLab v.3+ decoder
 

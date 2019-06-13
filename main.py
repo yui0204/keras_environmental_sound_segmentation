@@ -799,10 +799,10 @@ if __name__ == '__main__':
         
         Model = "Deeplab"        
         mul = True
-        for ipd in [False, True]:
-            for mic_num in [1, 8]: # 1 or 8
+        for ipd in [False]:
+            for mic_num in [1]: # 1 or 8
                 soft = False
-                for complex_input in [False, True]:        
+                for complex_input in [False]:        
                     complex_output = False
                     VGG = 0                     #0: False, 1: Red 3: White
                     
@@ -812,7 +812,7 @@ if __name__ == '__main__':
                     else:
                         if mic_num == 8 or complex_input == True:
                             continue
-                    load_number = 10000
+                    load_number = 5000
                     
                     model_name = Model+"_"+str(classes)+"class_" + str(mic_num)+"ch_mul"+str(mul) + "_cin"+str(complex_input) + "_ipd"+str(ipd)
                     dir_name = model_name + "_"+datadir
@@ -843,7 +843,7 @@ if __name__ == '__main__':
             
                         # save train condition
                         train_condition = date + "\t" + results_dir                     + "\n" + \
-                                          "\t"+"Re-train sep dataset firstly 3000data"                          + "\n" + \
+                                          "\t"+"Try RNN Deeplab using 1ch"                          + "\n" + \
                                           "\t\t segdata_dir, " + segdata_dir            + "\n" + \
                                           "\t\t valdata_dir, " + valdata_dir            + "\n" + \
                                           "\t\t X"+str(X_train.shape)+" Y"+str(Y_train.shape)+"\n" \
