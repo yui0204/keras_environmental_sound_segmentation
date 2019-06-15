@@ -186,7 +186,7 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
         if ang_reso == 1:
             labels = labels.max(2)[:,:,np.newaxis,:]
         else:
-            labels = labels.max(3)[:,:,:,np.newaxis,:]
+            labels = labels.max(3)#[:,:,:,np.newaxis,:]
         
     if ipd == True:
         inputs = inputs.transpose(1,0,2,3)
@@ -229,7 +229,7 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
         labels = t * f
         
     inputs = inputs.transpose(0, 2, 3, 1)
-    if ang_reso == 1:
+    if ang_reso == 1 or task == "event":
         labels = labels.transpose(0, 2, 3, 1)  
     else:
         labels = labels.transpose(0, 2, 3, 4, 1)
@@ -926,7 +926,7 @@ if __name__ == '__main__':
                     else:
                         if mic_num == 8 or complex_input == True:
                             continue
-                    load_number = 5000
+                    load_number = 500
                     
                     model_name = Model+"_"+str(classes)+"class_" + str(mic_num)+"ch_mul"+str(mul) + "_cin"+str(complex_input) + "_ipd"+str(ipd)
                     dir_name = model_name + "_"+datadir

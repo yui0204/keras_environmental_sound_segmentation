@@ -18,7 +18,7 @@ def CNN(n_classes, input_height=256, input_width=512, nChannels=3):
 #    x = Dropout(0.25)(x)
     x = MaxPooling2D((2, 1), strides=(2, 1))(x)
 
-    x = Conv2D(64, (3, 3), activation='relu', padding='same', dilation_rate=1)(inputs)
+    x = Conv2D(64, (3, 3), activation='relu', padding='same', dilation_rate=1)(x)
 #    x = BatchNormalization()(x)
 #    x = Dropout(0.25)(x)
     x = MaxPooling2D((2, 1), strides=(2, 1))(x)
@@ -37,6 +37,7 @@ def CNN(n_classes, input_height=256, input_width=512, nChannels=3):
 #    x = BatchNormalization()(x)
 #    x = Dropout(0.25)(x)
     x = MaxPooling2D((2, 1), strides=(2, 1))(x)
+    print(x)
 
     """
     x = Reshape((input_width * 8, 512))(x)
