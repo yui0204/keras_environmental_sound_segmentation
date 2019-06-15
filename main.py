@@ -1020,7 +1020,9 @@ if __name__ == '__main__':
                         Y_pred = np.argmax(Y_pred, axis=3)
                         print("F1_score", f1)
                         #Y_pred = Y_pred[:,:,:,np.newaxis]
-                    
+                        with open(results_dir + "f1_" + str(f1) + ".txt","w") as f:
+                            f.write(f1)   
+                            
                     elif task == "segmentaion":
                         rms = RMS(Y_test, Y_pred) 
                         print("Total RMSE", rms)
