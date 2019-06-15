@@ -504,7 +504,7 @@ def event_plot(Y_true, Y_pred, no=0):
         plt.xlabel("time")
         plt.ylabel('class index')
         plt.xlim(0, 256)
-        plt.ylim(0, 256)
+#        plt.ylim(0, 256)
         plt.clim(0, 1)
         plt.colorbar()
         plt.savefig(pred_dir + "true.png")
@@ -515,7 +515,7 @@ def event_plot(Y_true, Y_pred, no=0):
         plt.xlabel("time")
         plt.ylabel('class index')
         plt.xlim(0, 256)
-        plt.ylim(0, 256)
+#        plt.ylim(0, 256)
         plt.clim(0, 1)
         plt.colorbar()
         plt.savefig(pred_dir + "pred.png")    
@@ -539,7 +539,7 @@ def event_plot(Y_true, Y_pred, no=0):
                 plt.xlabel("time")
                 plt.ylabel('frequency')
                 plt.xlim(0, 256)
-                plt.ylim(0, 256)
+ #               plt.ylim(0, 256)
                 plt.clim(0, 1)
                 plt.colorbar()
                 plt.savefig(pred_dir + label.index[i] + "_true.png")
@@ -552,7 +552,7 @@ def event_plot(Y_true, Y_pred, no=0):
                 plt.xlabel("time")
                 plt.ylabel('frequency')
                 plt.xlim(0, 256)
-                plt.ylim(0, 256)
+#                plt.ylim(0, 256)
                 plt.clim(0, 1)
                 plt.colorbar()
                 plt.savefig(pred_dir + label.index[i] + "_pred.png")
@@ -567,9 +567,9 @@ def event_plot(Y_true, Y_pred, no=0):
         plt.pcolormesh((Y_true_total), cmap="gist_ncar")
         plt.title(str(no) + "__" + filename + "_truth")
         plt.xlabel("time")
-        plt.ylabel('angele')
+        plt.ylabel('angle')
         plt.xlim(0, 256)
-        plt.ylim(0, 256)
+ #       plt.ylim(0, 256)
         plt.clim(0, Y_true_total.max())
         plt.savefig(pred_dir + filename + "_truht.png")
         plt.close()
@@ -579,7 +579,7 @@ def event_plot(Y_true, Y_pred, no=0):
         plt.xlabel("time")
         plt.ylabel('angle')
         plt.xlim(0, 256)
-        plt.ylim(0, 256)
+  #      plt.ylim(0, 256)
         plt.clim(0, Y_true_total.max())
         plt.savefig(pred_dir + filename + "_pred.png")
         plt.close()
@@ -874,7 +874,7 @@ def load_npy():
 
 if __name__ == '__main__':
     train_mode = "class"
-    classes = 1
+    classes = 3
     image_size = 256
     task = "event"
     ang_reso = 8
@@ -889,7 +889,7 @@ if __name__ == '__main__':
     if task == "event":
         loss = "binary_crossentropy"
 
-    mode = "train"     
+    mode = "train"
     date = mode       
     plot = True
     
@@ -898,7 +898,7 @@ if __name__ == '__main__':
     else:
         datasets_dir = "/misc/export2/sudou/sound_data/datasets/"
     
-    for datadir in ["multi_segdata"+str(classes) + "_"+str(image_size)+"_no_sound_random/", 
+    for datadir in ["multi_segdata"+str(classes) + "_"+str(image_size)+"_no_sound_random_sep/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-30dB/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-20dB_random/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-10dB/", 
@@ -982,6 +982,8 @@ if __name__ == '__main__':
                     # prediction            
                     elif not mode == "train":
                         print("Prediction\n")
+                        date = mode
+                        results_dir = "./model_results/" + date + "/" + dir_name
                         with open(results_dir + 'train_condition.txt','r') as f:
                             train_condition = f.read() 
                         
@@ -1040,7 +1042,7 @@ if __name__ == '__main__':
                         #shutil.move("nohup.out", results_dir)
     
                         # copy to export2
-                        shutil.copytree(results_dir, "/misc/export2/sudou/model_results/" + date + "/" + dir_name)
+#                        shutil.copytree(results_dir, "/misc/export2/sudou/model_results/" + date + "/" + dir_name)
                                                 
 
     os.remove("Unet.pyc")
