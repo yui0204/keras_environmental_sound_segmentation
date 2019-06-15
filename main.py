@@ -1040,6 +1040,7 @@ if __name__ == '__main__':
                             shutil.copy("Deeplab.py", results_dir)
                         elif task == "event":
                             shutil.copy("CNN.py", results_dir)
+                            shutil.copy("SELD_CNN.py", results_dir)
                         #shutil.move("nohup.out", results_dir)
     
                         # copy to export2
