@@ -919,14 +919,15 @@ if __name__ == '__main__':
                 for complex_input in [True]:
                     complex_output = False
                     VGG = 0                     #0: False, 1: Red 3: White
-                    
+                    """
                     if ipd == True:
                         if mic_num == 1 or complex_input == False:
                             continue
                     else:
                         if mic_num == 8 or complex_input == True:
                             continue
-                    load_number = 500
+                    """
+                    load_number = 10000
                     
                     model_name = Model+"_"+str(classes)+"class_" + str(mic_num)+"ch_mul"+str(mul) + "_cin"+str(complex_input) + "_ipd"+str(ipd)
                     dir_name = model_name + "_"+datadir
