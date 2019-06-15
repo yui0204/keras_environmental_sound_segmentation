@@ -21,8 +21,7 @@ import keras.backend as K
 from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard
 from keras.utils import plot_model
 
-#import FCN32, FCN8, Segnet, Deeplab, PSPNet, Unet
-import CNN, Unet, DC, PSPNet, Deeplab
+import CNN, Unet, DC, PSPNet, Deeplab, SELD_CNN, SELD_Deeplab
 
 from sound import WavfileOperate, Stft
 import cmath
@@ -45,6 +44,8 @@ import soundfile as sf
 from scipy import signal
 
 from sklearn.metrics import f1_score
+
+import re
 
 
 def normalize(inputs, labels, r_labels=None, i_labels=None):
@@ -96,7 +97,12 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
         inputs_phase = 1
     else:    
         inputs_phase = np.zeros((load_number, 512, image_size), dtype=np.float16)
-    labels = np.zeros((load_number, n_classes, 256, image_size), dtype=np.float16)
+        
+    if ang_reso ==1:
+        labels = np.zeros((load_number, n_classes, 256, image_size), dtype=np.float16)
+    else:
+        labels = np.zeros((load_number, n_classes, ang_reso, 256, image_size), dtype=np.float16)
+
     if complex_output == True:
         r_labels = np.zeros((load_number, n_classes, 256, image_size), dtype=np.float16)
         i_labels = np.zeros((load_number, n_classes, 256, image_size), dtype=np.float16)
@@ -105,7 +111,12 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
     
     for i in range(load_number):
         data_dir = segdata_dir + str(i) + "/"
-        filelist = os.listdir(data_dir)        
+        filelist = os.listdir(data_dir)  
+        
+        with open(segdata_dir + str(i) + "/sound_direction.txt", "r") as f:
+            direction = f.read().split("\n")[:-1]
+            
+        dn = 0
         for n in range(len(filelist)):
             if filelist[n][-4:] == ".wav":
                 waveform, fs = sf.read(data_dir + filelist[n]) 
@@ -152,8 +163,12 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
                     if complex_output == True:
                         r_labels[i][label.T[filelist[n][:-4]][cat]] = stft[:256].real
                         i_labels[i][label.T[filelist[n][:-4]][cat]] = stft[:256].imag
-                    labels[i][label.T[filelist[n][:-4]][cat]] += abs(stft[:256])
-            
+                    if ang_reso == 1:
+                        labels[i][label.T[filelist[n][:-4]][cat]] += abs(stft[:256])
+                    else:
+                        angle = int(re.sub("\\D", "", direction[dn].split("_")[1])) // (360 // ang_reso)
+                        labels[i][label.T[filelist[n][:-4]][cat]][angle] += abs(stft[:256])
+                        dn += 1
     
     if complex_input == True and ipd == False:
         sign = (inputs > 0) * 2 - 1
@@ -168,7 +183,10 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
             i_labels += 120
             
     if task == "event":    
-        labels = labels.max(2)[:,:,np.newaxis,:]
+        if ang_reso == 1:
+            labels = labels.max(2)[:,:,np.newaxis,:]
+        else:
+            labels = labels.max(3)[:,:,:,np.newaxis,:]
         
     if ipd == True:
         inputs = inputs.transpose(1,0,2,3)
@@ -211,8 +229,10 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
         labels = t * f
         
     inputs = inputs.transpose(0, 2, 3, 1)
-    labels = labels.transpose(0, 2, 3, 1)  
-    
+    if ang_reso == 1:
+        labels = labels.transpose(0, 2, 3, 1)  
+    else:
+        labels = labels.transpose(0, 2, 3, 4, 1)
     
     if VGG > 0:
         inputs = inputs.transpose(3,0,1,2)
@@ -310,6 +330,32 @@ def read_model(Model):
         elif Model == "UNet":
             model = CNN.Unet(n_classes=classes, input_height=256, 
                                 input_width=image_size, nChannels=1)
+        
+        elif Model == "SELD_CNN":
+            if complex_input == False:
+                model = SELD_CNN.CNN(n_classes=classes, input_height=256, 
+                                input_width=image_size, nChannels=mic_num)
+
+            elif ipd == True:
+                model = SELD_CNN.CNN(n_classes=classes, input_height=256, 
+                                input_width=image_size, nChannels=(mic_num-1)*2+1)
+            else:
+                model = SELD_CNN.CNN(n_classes=classes, input_height=256, 
+                                input_width=image_size, nChannels=mic_num * 3)
+        
+        elif Model == "SELD_Deeplab":
+            if complex_input == False:
+                model = SELD_Deeplab.Deeplabv3(weights=None, input_tensor=None, 
+                                  input_shape=(256, image_size, mic_num), 
+                                  classes=classes, OS=16, mul=mul, soft=soft)
+            elif ipd == True:
+                model = SELD_Deeplab.Deeplabv3(weights=None, input_tensor=None, 
+                                  input_shape=(256, image_size, (mic_num-1)*2+1), 
+                                  classes=classes, OS=16, mul=mul, soft=soft)
+            else:
+                model = SELD_Deeplab.Deeplabv3(weights=None, input_tensor=None, 
+                                  input_shape=(256, image_size, mic_num * 3), 
+                                  classes=classes, OS=16, mul=mul, soft=soft)
             
         elif Model == "GLU":
             model = DC.GLU_DC(n_classes=classes, input_height=256, 
@@ -344,9 +390,11 @@ def train(X_train, Y_train, Model, Y_train2, Y_train3):
     model.summary()
 
     if complex_output == False:
-        if complex_input == True  or mic_num > 1 or ipd == True:
-            X_train = [X_train, 
-                       X_train.transpose(3,0,1,2)[0][np.newaxis,:,:,:].transpose(1,2,3,0)]
+        if task == "segmentation":
+            if complex_input == True  or mic_num > 1 or ipd == True:
+                X_train = [X_train, 
+                           X_train.transpose(3,0,1,2)[0][np.newaxis,:,:,:].transpose(1,2,3,0)]
+        
         if gpu_count == 1:            
             history = model.fit(X_train, Y_train, batch_size=BATCH_SIZE, 
                                 epochs=NUM_EPOCH, verbose=1, validation_split=0.1,
@@ -402,9 +450,10 @@ def predict(X_test, Model):
     model.load_weights(results_dir + model_name + '_weights.hdf5')
 
     print("\npredicting...")
-    if complex_input == True or mic_num > 1:
-        X_test = [X_test, 
-                  X_test.transpose(3,0,1,2)[0][np.newaxis,:,:,:].transpose(1,2,3,0)]
+    if task == "segmentation":
+        if complex_input == True or mic_num > 1:
+            X_test = [X_test, 
+                      X_test.transpose(3,0,1,2)[0][np.newaxis,:,:,:].transpose(1,2,3,0)]
     Y_pred = model.predict(X_test, BATCH_SIZE * gpu_count)
     print("prediction finished\n")
     
@@ -449,27 +498,91 @@ def origin_stft(X, no=0):
 def event_plot(Y_true, Y_pred, no=0):
     pred_dir = pred_dir_make(no)
 
-    plt.pcolormesh((Y_true[no][0].T))
-    plt.title("truth")
-    plt.xlabel("time")
-    plt.ylabel('class index')
-    plt.xlim(0, 256)
-    plt.ylim(0, 256)
-    plt.clim(0, 1)
-    plt.colorbar()
-    plt.savefig(pred_dir + "true.png")
-    plt.close()
+    if ang_reso == 1:
+        plt.pcolormesh((Y_true[no][0].T))
+        plt.title("truth")
+        plt.xlabel("time")
+        plt.ylabel('class index')
+        plt.xlim(0, 256)
+        plt.ylim(0, 256)
+        plt.clim(0, 1)
+        plt.colorbar()
+        plt.savefig(pred_dir + "true.png")
+        plt.close()
+        
+        plt.pcolormesh((Y_pred[no][0].T))
+        plt.title("prediction")
+        plt.xlabel("time")
+        plt.ylabel('class index')
+        plt.xlim(0, 256)
+        plt.ylim(0, 256)
+        plt.clim(0, 1)
+        plt.colorbar()
+        plt.savefig(pred_dir + "pred.png")    
+        plt.close()
     
-    plt.pcolormesh((Y_pred[no][0].T))
-    plt.title("prediction")
-    plt.xlabel("time")
-    plt.ylabel('class index')
-    plt.xlim(0, 256)
-    plt.ylim(0, 256)
-    plt.clim(0, 1)
-    plt.colorbar()
-    plt.savefig(pred_dir + "pred.png")    
-    plt.close()
+    else:
+        if complex_output == True:
+            Y_pred = Y_pred[0].transpose(0, 3, 1, 2)
+        else:
+            Y_pred = Y_pred.transpose(0, 3, 1, 2)
+        Y_true = Y_true.transpose(0, 3, 1, 2)
+            
+        Y_true_total = np.zeros((ang_reso, image_size))
+        Y_pred_total = np.zeros((ang_reso, image_size))
+        for i in range(classes):
+            if Y_true[no][i].max() > 0: #含まれているクラスのみグラフ表示
+                
+                plt.pcolormesh((Y_true[no][i]))
+                plt.title(label.index[i] + "_truth")
+                #plt.title("category_" + str(i) + "_truth")
+                plt.xlabel("time")
+                plt.ylabel('frequency')
+                plt.xlim(0, 256)
+                plt.ylim(0, 256)
+                plt.clim(0, 1)
+                plt.colorbar()
+                plt.savefig(pred_dir + label.index[i] + "_true.png")
+                #plt.savefig(pred_dir + "category_" + str(i) + "_truth.png")
+                plt.close()
+    
+                plt.pcolormesh((Y_pred[no][i]))
+                plt.title(label.index[i] + "_prediction")
+                #plt.title("category_" + str(i) + "_prediction")
+                plt.xlabel("time")
+                plt.ylabel('frequency')
+                plt.xlim(0, 256)
+                plt.ylim(0, 256)
+                plt.clim(0, 1)
+                plt.colorbar()
+                plt.savefig(pred_dir + label.index[i] + "_pred.png")
+                #plt.savefig(pred_dir + "category_" + str(i) + "_pred.png")
+                plt.close()
+                
+            Y_true_total += (Y_true[no][i] > 0.45) * (i + 4)
+            Y_pred_total += (Y_pred[no][i] > 0.45) * (i + 4)
+        
+        filename = get_filename(no)
+        
+        plt.pcolormesh((Y_true_total), cmap="gist_ncar")
+        plt.title(str(no) + "__" + filename + "_truth")
+        plt.xlabel("time")
+        plt.ylabel('angele')
+        plt.xlim(0, 256)
+        plt.ylim(0, 256)
+        plt.clim(0, Y_true_total.max())
+        plt.savefig(pred_dir + filename + "_truht.png")
+        plt.close()
+    
+        plt.pcolormesh((Y_pred_total), cmap="gist_ncar")
+        plt.title(str(no) + "__" + filename + "_prediction")
+        plt.xlabel("time")
+        plt.ylabel('angle')
+        plt.xlim(0, 256)
+        plt.ylim(0, 256)
+        plt.clim(0, Y_true_total.max())
+        plt.savefig(pred_dir + filename + "_pred.png")
+        plt.close()
 
 
 def plot_stft(Y_true, Y_pred, no=0):
@@ -761,9 +874,10 @@ def load_npy():
 
 if __name__ == '__main__':
     train_mode = "class"
-    classes = 3
+    classes = 1
     image_size = 256
-    task = "segmentation"
+    task = "event"
+    ang_reso = 8
     
     gpu_count = 3
     BATCH_SIZE = 16 * gpu_count
@@ -784,7 +898,7 @@ if __name__ == '__main__':
     else:
         datasets_dir = "/misc/export2/sudou/sound_data/datasets/"
     
-    for datadir in ["multi_segdata"+str(classes) + "_"+str(image_size)+"_no_sound_random_sep/", 
+    for datadir in ["multi_segdata"+str(classes) + "_"+str(image_size)+"_no_sound_random/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-30dB/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-20dB_random/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-10dB/", 
@@ -797,12 +911,12 @@ if __name__ == '__main__':
         labelfile = dataset + "label.csv"
         label = pd.read_csv(filepath_or_buffer=labelfile, sep=",", index_col=0)            
         
-        Model = "Deeplab"        
+        Model = "SELD_CNN"        
         mul = True
-        for ipd in [False]:
-            for mic_num in [1]: # 1 or 8
+        for ipd in [False, True]:
+            for mic_num in [8]: # 1 or 8
                 soft = False
-                for complex_input in [False]:        
+                for complex_input in [True]:
                     complex_output = False
                     VGG = 0                     #0: False, 1: Red 3: White
                     
@@ -858,6 +972,8 @@ if __name__ == '__main__':
                                           "\t\t Complex_input,  " + str(complex_input)  + "\n" + \
                                           "\t\t Complex_output, " + str(complex_output) + "\n" + \
                                           "\t\t IPD input,      " + str(ipd) + "\n" + \
+                                          "\t\t task     ,      " + task + "\n" + \
+                                          "\t\t Angle reso,     " + str(360 // ang_reso) + "\n" + \
                                           "\t\t Model,          " + Model               + "\n" + \
                                           "\t\t classes,        " + str(classes)        + "\n\n\n"
             
@@ -890,11 +1006,12 @@ if __name__ == '__main__':
                         Y_pred = (Y_pred > 0.5) * 1
                         f1 = f1_score(Y_test.ravel(), Y_pred.ravel())
                         Y_pred = np.argmax(Y_pred, axis=3)
-                        print(f1)
+                        print("F1_score", f1)
                     
-                    rms = RMS(Y_test, Y_pred) 
-                    print(rms)
-                         
+                    elif task == "segmentaion":
+                        rms = RMS(Y_test, Y_pred) 
+                        print("Total RMSE", rms)
+                             
                     if plot == True:
                         sdr_array, sir_array, sar_array = np.array(()) ,np.array(()), np.array(())
                         for i in range (0, load_number):
