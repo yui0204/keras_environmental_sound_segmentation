@@ -957,7 +957,7 @@ if __name__ == '__main__':
             
                         # save train condition
                         train_condition = date + "\t" + results_dir                     + "\n" + \
-                                          "\t"+"Try RNN Deeplab using 1ch"                          + "\n" + \
+                                          "\t"+"SELDNet using 1class Barping"                          + "\n" + \
                                           "\t\t segdata_dir, " + segdata_dir            + "\n" + \
                                           "\t\t valdata_dir, " + valdata_dir            + "\n" + \
                                           "\t\t X"+str(X_train.shape)+" Y"+str(Y_train.shape)+"\n" \
