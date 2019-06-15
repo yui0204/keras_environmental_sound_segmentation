@@ -1117,3 +1117,69 @@ File Edit Options Buffers Tools Text Help
 		 classes,        3
 
 
+2019_0615	./model_results/2019_0615/SELD_CNN_1class_8ch_mulTrue_cinTrue_ipdTrue_multi_segdata1_256_no_sound_random/
+	Try RNN Deeplab using 1ch
+		 segdata_dir, /home/yui-sudo/document/dataset/sound_segmentation/datasets/multi_segdata1_256_no_sound_random/train/
+		 valdata_dir, /home/yui-sudo/document/dataset/sound_segmentation/datasets/multi_segdata1_256_no_sound_random/val/
+		 X(5, 256, 256, 15) Y(5, 8, 256, 1)
+		 data_byte,      float16
+		 BATCH_SIZE,     16
+		 NUM_EPOCH,      2
+		 Loss function,  binary_crossentropy
+		 Learning_rate,  0.0001
+		 Mic num,        8
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  True
+		 Complex_output, False
+		 IPD input,      True
+		 task     ,      event
+		 Angle reso,     45
+		 Model,          SELD_CNN
+		 classes,        1
+
+
+2019_0615	./model_results/2019_0615/SELD_CNN_1class_8ch_mulTrue_cinTrue_ipdTrue_multi_segdata1_256_no_sound_random/
+	Try RNN Deeplab using 1ch
+		 segdata_dir, /home/yui-sudo/document/dataset/sound_segmentation/datasets/multi_segdata1_256_no_sound_random/train/
+		 valdata_dir, /home/yui-sudo/document/dataset/sound_segmentation/datasets/multi_segdata1_256_no_sound_random/val/
+		 X(5, 256, 256, 15) Y(5, 8, 256, 1)
+		 data_byte,      float16
+		 BATCH_SIZE,     16
+		 NUM_EPOCH,      2
+		 Loss function,  binary_crossentropy
+		 Learning_rate,  0.0001
+		 Mic num,        8
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  True
+		 Complex_output, False
+		 IPD input,      True
+		 task     ,      event
+		 Angle reso,     45
+		 Model,          SELD_CNN
+		 classes,        1
+
+
+2019_0615	./model_results/2019_0615/SELD_CNN_1class_8ch_mulTrue_cinTrue_ipdTrue_multi_segdata1_256_no_sound_random/
+	Try RNN Deeplab using 1ch
+		 segdata_dir, /home/yui-sudo/document/dataset/sound_segmentation/datasets/multi_segdata1_256_no_sound_random/train/
+		 valdata_dir, /home/yui-sudo/document/dataset/sound_segmentation/datasets/multi_segdata1_256_no_sound_random/val/
+		 X(5, 256, 256, 15) Y(5, 8, 256, 1)
+		 data_byte,      float16
+		 BATCH_SIZE,     16
+		 NUM_EPOCH,      2
+		 Loss function,  binary_crossentropy
+		 Learning_rate,  0.0001
+		 Mic num,        8
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  True
+		 Complex_output, False
+		 IPD input,      True
+		 task     ,      event
+		 Angle reso,     45
+		 Model,          SELD_CNN
+		 classes,        1
+
+

@@ -35,7 +35,7 @@ from keras.utils import multi_gpu_model
 
 config = tf.ConfigProto()
 config.gpu_options.allow_growth = True
-config.gpu_options.visible_device_list = "0,1,2"
+config.gpu_options.visible_device_list = "0"#,1,2"
 sess = tf.Session(config=config)
 K.set_session(sess)
 
@@ -879,9 +879,9 @@ if __name__ == '__main__':
     task = "event"
     ang_reso = 8
     
-    gpu_count = 3
+    gpu_count = 1
     BATCH_SIZE = 16 * gpu_count
-    NUM_EPOCH = 100
+    NUM_EPOCH = 2
     
     lr = 0.0001
     
@@ -926,7 +926,7 @@ if __name__ == '__main__':
                     else:
                         if mic_num == 8 or complex_input == True:
                             continue
-                    load_number = 500
+                    load_number = 5
                     
                     model_name = Model+"_"+str(classes)+"class_" + str(mic_num)+"ch_mul"+str(mul) + "_cin"+str(complex_input) + "_ipd"+str(ipd)
                     dir_name = model_name + "_"+datadir
@@ -1007,6 +1007,7 @@ if __name__ == '__main__':
                         f1 = f1_score(Y_test.ravel(), Y_pred.ravel())
                         Y_pred = np.argmax(Y_pred, axis=3)
                         print("F1_score", f1)
+                        Y_pred = Y_pred[:,:,:,np.newaxis]
                     
                     elif task == "segmentaion":
                         rms = RMS(Y_test, Y_pred) 
