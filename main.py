@@ -939,16 +939,6 @@ if __name__ == '__main__':
                             os.makedirs(results_dir + "prediction/")
                             os.makedirs(results_dir + "checkpoint/")
                         
-                        """
-                        if not task == "event":
-                            npfile = "Y_"+mode+"_"+str(classes)+train_mode+"_"+str(load_number)+".npy"
-                        elif task == "event":
-                            npfile = "event_Y_"+mode+"_"+str(classes)+train_mode+"_"+str(load_number)+".npy"    
-                        if os.path.exists(dataset + npfile):
-                            X_train, Y_train, max, phase = load_npy()
-                            Y_train_r, Y_train_i = 1,1
-                        else:
-                        """
                         X_train, Y_train, max, phase, Y_train_r, Y_train_i = load(segdata_dir, 
                                                                                   n_classes=classes, 
                                                                                   load_number=load_number,
@@ -957,7 +947,7 @@ if __name__ == '__main__':
             
                         # save train condition
                         train_condition = date + "\t" + results_dir                     + "\n" + \
-                                          "\t"+"SELDNet using 1class Barping"                          + "\n" + \
+                                          "\t"+"SELDNet using 3class"                          + "\n" + \
                                           "\t\t segdata_dir, " + segdata_dir            + "\n" + \
                                           "\t\t valdata_dir, " + valdata_dir            + "\n" + \
                                           "\t\t X"+str(X_train.shape)+" Y"+str(Y_train.shape)+"\n" \
@@ -1002,16 +992,7 @@ if __name__ == '__main__':
                                                                           complex_input=complex_input)
                     Y_pred = predict(X_test, Model)
                     
-                    if task == "event":
-                        Y_pred = (Y_pred > 0.5) * 1
-                        f1 = f1_score(Y_test.ravel(), Y_pred.ravel())
-                        Y_pred = np.argmax(Y_pred, axis=3)
-                        print("F1_score", f1)
-                        Y_pred = Y_pred[:,:,:,np.newaxis]
                     
-                    elif task == "segmentaion":
-                        rms = RMS(Y_test, Y_pred) 
-                        print("Total RMSE", rms)
                              
                     if plot == True:
                         sdr_array, sir_array, sar_array = np.array(()) ,np.array(()), np.array(())
@@ -1032,6 +1013,17 @@ if __name__ == '__main__':
                             sir_array = sir_array.reshape(load_number, classes)
                             sar_array = sar_array.reshape(load_number, classes)
                 
+                    if task == "event":
+                        Y_pred = (Y_pred > 0.5) * 1
+                        f1 = f1_score(Y_test.ravel(), Y_pred.ravel())
+                        Y_pred = np.argmax(Y_pred, axis=3)
+                        print("F1_score", f1)
+                        #Y_pred = Y_pred[:,:,:,np.newaxis]
+                    
+                    elif task == "segmentaion":
+                        rms = RMS(Y_test, Y_pred) 
+                        print("Total RMSE", rms)
+                        
                         
                     if not os.getcwd() == '/home/yui-sudo/document/segmentation/sound_segtest':
                         shutil.copy("main.py", results_dir)
