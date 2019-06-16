@@ -1023,7 +1023,7 @@ if __name__ == '__main__':
                         print("F1_score", f1)
                         #Y_pred = Y_pred[:,:,:,np.newaxis]
                         with open(results_dir + "f1_" + str(f1) + ".txt","w") as f:
-                            f.write(f1)   
+                            f.write(str(f1))   
                             
                     elif task == "segmentaion":
                         rms = RMS(Y_test, Y_pred) 

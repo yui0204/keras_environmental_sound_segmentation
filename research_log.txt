@@ -1183,3 +1183,25 @@ File Edit Options Buffers Tools Text Help
 		 classes,        1
 
 
+2019_0616	./model_results/2019_0616/SELD_CNN_3class_8ch_mulTrue_cinTrue_ipdFalse_multi_segdata3_256_no_sound_random_sep/
+	SELDNet using 3class
+		 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound_random_sep/train/
+		 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound_random_sep/val/
+		 X(10000, 256, 256, 24) Y(10000, 8, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     48
+		 NUM_EPOCH,      100
+		 Loss function,  binary_crossentropy
+		 Learning_rate,  0.0001
+		 Mic num,        8
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  True
+		 Complex_output, False
+		 IPD input,      False
+		 task     ,      event
+		 Angle reso,     45
+		 Model,          SELD_CNN
+		 classes,        3
+
+
