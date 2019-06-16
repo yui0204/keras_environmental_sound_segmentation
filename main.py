@@ -927,7 +927,7 @@ if __name__ == '__main__':
                         if mic_num == 8 or complex_input == True:
                             continue
                     """
-                    load_number = 10000
+                    load_number = 5000
                     
                     model_name = Model+"_"+str(classes)+"class_" + str(mic_num)+"ch_mul"+str(mul) + "_cin"+str(complex_input) + "_ipd"+str(ipd)
                     dir_name = model_name + "_"+datadir

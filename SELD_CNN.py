@@ -38,7 +38,7 @@ def CNN(n_classes, input_height=256, input_width=512, nChannels=3):
 #    x = Dropout(0.25)(x)
     x = MaxPooling2D((2, 1), strides=(2, 1))(x)
 
-    """
+    
     x = Reshape((input_width * 8, 512))(x)
         
     x = GRU(8 * 512, activation='tanh', recurrent_activation='hard_sigmoid', 
@@ -59,7 +59,7 @@ def CNN(n_classes, input_height=256, input_width=512, nChannels=3):
     
     x = Conv1D(8 * n_classes, 1, activation='sigmoid')(x)
     x = Reshape((8, input_width, n_classes))(x)
-    """
+    
             
     x = Conv2D(n_classes, (1, 1), activation='sigmoid')(x)
     
