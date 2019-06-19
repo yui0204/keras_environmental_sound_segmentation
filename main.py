@@ -170,7 +170,7 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
                         labels[i][label.T[filelist[n][:-4]][cat]][angle] += abs(stft[:256])
                         dn += 1
     
-    if complex_input == True and ipd == False:
+    if complex_input == True and ipd == False and sincos == False:
         sign = (inputs > 0) * 2 - 1
         sign = sign.astype(np.float16)
         if complex_output == True:
@@ -181,6 +181,8 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
             r_labels, i_labels = log(abs(r_labels), abs(i_labels))
             r_labels += 120
             i_labels += 120
+        inputs = abs(inputs) ############################# bug fix
+            
             
     if task == "event":    
         if ang_reso == 1:
@@ -227,7 +229,7 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
         inputs, labels, max, r_labels, i_labels = normalize(inputs, labels, r_labels, i_labels)
 
 
-    if complex_input == True and ipd == False:
+    if complex_input == True and ipd == False and sincos == False:
         inputs = inputs * sign
         if complex_output == True:
             r_labels = r_labels * r_sign
