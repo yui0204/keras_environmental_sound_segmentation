@@ -1183,6 +1183,7 @@ File Edit Options Buffers Tools Text Help
 		 classes,        1
 
 
+<<<<<<< HEAD
 2019_0619	./model_results/2019_0619/SELD_CNN_1class_8ch_mulTrue_cinTrue_ipdFalse_sincosFalse_multi_segdata1_256_no_sound_random/
 	SELDNet using 3class
 		 segdata_dir, /home/yui-sudo/document/dataset/sound_segmentation/datasets/multi_segdata1_256_no_sound_random/train/
@@ -1191,6 +1192,16 @@ File Edit Options Buffers Tools Text Help
 		 data_byte,      float16
 		 BATCH_SIZE,     16
 		 NUM_EPOCH,      2
+=======
+2019_0616	./model_results/2019_0616/SELD_CNN_3class_8ch_mulTrue_cinTrue_ipdFalse_multi_segdata3_256_no_sound_random_sep/
+	SELDNet using 3class
+		 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound_random_sep/train/
+		 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound_random_sep/val/
+		 X(10000, 256, 256, 24) Y(10000, 8, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     48
+		 NUM_EPOCH,      100
+>>>>>>> e30d75c18598e011498bb761fcac459d9d3396ce
 		 Loss function,  binary_crossentropy
 		 Learning_rate,  0.0001
 		 Mic num,        8
@@ -1200,6 +1211,7 @@ File Edit Options Buffers Tools Text Help
 		 Complex_output, False
 		 IPD input,      False
 		 task     ,      event
+<<<<<<< HEAD
 		 Angle reso,     5
 		 Model,          SELD_CNN
 		 classes,        1
@@ -1279,6 +1291,21 @@ File Edit Options Buffers Tools Text Help
 		 data_byte,      float16
 		 BATCH_SIZE,     16
 		 NUM_EPOCH,      2
+=======
+		 Angle reso,     45
+		 Model,          SELD_CNN
+		 classes,        3
+
+
+2019_0616	./model_results/2019_0616/SELD_CNN_3class_8ch_mulTrue_cinTrue_ipdTrue_multi_segdata3_256_no_sound_random_sep/
+	SELDNet using 3class
+		 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound_random_sep/train/
+		 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound_random_sep/val/
+		 X(10000, 256, 256, 15) Y(10000, 8, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     48
+		 NUM_EPOCH,      100
+>>>>>>> e30d75c18598e011498bb761fcac459d9d3396ce
 		 Loss function,  binary_crossentropy
 		 Learning_rate,  0.0001
 		 Mic num,        8
@@ -1288,8 +1315,14 @@ File Edit Options Buffers Tools Text Help
 		 Complex_output, False
 		 IPD input,      True
 		 task     ,      event
+<<<<<<< HEAD
 		 Angle reso,     5
 		 Model,          SELD_CNN
 		 classes,        1
+=======
+		 Angle reso,     45
+		 Model,          SELD_CNN
+		 classes,        3
+>>>>>>> e30d75c18598e011498bb761fcac459d9d3396ce
 
 

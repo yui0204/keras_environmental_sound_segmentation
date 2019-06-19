@@ -933,6 +933,7 @@ if __name__ == '__main__':
                         VGG = 0                     #0: False, 1: Red 3: White
                         if ipd == True and sincos == True:
                             continue
+
                         """
                         if ipd == True:
                             if mic_num == 1 or complex_input == False:
@@ -942,6 +943,7 @@ if __name__ == '__main__':
                                 continue
                         """
                         load_number = 500
+
                         
                         model_name = Model+"_"+str(classes)+"class_" + str(mic_num)+"ch_mul"+str(mul) + "_cin"+str(complex_input) + "_ipd"+str(ipd)  + "_sincos"+str(sincos)
                         dir_name = model_name + "_"+datadir
@@ -983,10 +985,12 @@ if __name__ == '__main__':
                                               "\t\t Model,          " + Model               + "\n" + \
                                               "\t\t classes,        " + str(classes)        + "\n\n\n"
                 
+
                             print(train_condition)
                             
                             with open(results_dir + 'train_condition.txt','w') as f:
                                 f.write(train_condition)    
+
                             
                             history = train(X_train, Y_train, Model, Y_train_r, Y_train_i)
                             plot_history(history, model_name)
