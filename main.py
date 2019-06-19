@@ -197,17 +197,27 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
         labels += 120
         inputs[0], labels, max, r_labels, i_labels = normalize(inputs[0], labels, r_labels, i_labels)
         inputs = inputs.transpose(1,0,2,3)
+
     elif sincos == True:
         inputs = inputs.transpose(1,0,2,3)
         for ch in [1,2,4,5,7,8,10,11,13,14,16,17,19,20,22,23]:
             inputs[ch] = inputs[ch] / inputs[ch // 3] # sin, cos
-        inputs[0], labels = log(inputs[0], labels)   
+        inputs[0], labels = log(inputs[0], labels)
         inputs[0] = np.nan_to_num(inputs[0])
         labels = np.nan_to_num(labels) 
         inputs[0] += 120
         labels += 120
+        for ch in range(1, 8):
+            inputs[ch * 3] += 10**-7
+            inputs[ch * 3] = 20 * np.log10(inputs[ch * 3])
+            inputs[ch * 3] = np.nan_to_num(inputs[ch * 3])
+            inputs[ch * 3] += 120        
+        
         inputs[0], labels, max, r_labels, i_labels = normalize(inputs[0], labels, r_labels, i_labels)
+        for ch in range(1, 8):
+            inputs[ch * 3] = inputs[ch * 3] / max
         inputs = inputs.transpose(1,0,2,3)
+
     else:
         inputs, labels = log(inputs, labels)   
         inputs = np.nan_to_num(inputs)
