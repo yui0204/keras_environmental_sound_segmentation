@@ -1183,3 +1183,113 @@ File Edit Options Buffers Tools Text Help
 		 classes,        1
 
 
+2019_0619	./model_results/2019_0619/SELD_CNN_1class_8ch_mulTrue_cinTrue_ipdFalse_sincosFalse_multi_segdata1_256_no_sound_random/
+	SELDNet using 3class
+		 segdata_dir, /home/yui-sudo/document/dataset/sound_segmentation/datasets/multi_segdata1_256_no_sound_random/train/
+		 valdata_dir, /home/yui-sudo/document/dataset/sound_segmentation/datasets/multi_segdata1_256_no_sound_random/val/
+		 X(10, 256, 256, 24) Y(10, 72, 256, 1)
+		 data_byte,      float16
+		 BATCH_SIZE,     16
+		 NUM_EPOCH,      2
+		 Loss function,  binary_crossentropy
+		 Learning_rate,  0.0001
+		 Mic num,        8
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  True
+		 Complex_output, False
+		 IPD input,      False
+		 task     ,      event
+		 Angle reso,     5
+		 Model,          SELD_CNN
+		 classes,        1
+
+
+2019_0619	./model_results/2019_0619/SELD_CNN_1class_8ch_mulTrue_cinTrue_ipdFalse_sincosFalse_multi_segdata1_256_no_sound_random/
+	SELDNet using 3class
+		 segdata_dir, /home/yui-sudo/document/dataset/sound_segmentation/datasets/multi_segdata1_256_no_sound_random/train/
+		 valdata_dir, /home/yui-sudo/document/dataset/sound_segmentation/datasets/multi_segdata1_256_no_sound_random/val/
+		 X(10, 256, 256, 24) Y(10, 72, 256, 1)
+		 data_byte,      float16
+		 BATCH_SIZE,     16
+		 NUM_EPOCH,      2
+		 Loss function,  binary_crossentropy
+		 Learning_rate,  0.0001
+		 Mic num,        8
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  True
+		 Complex_output, False
+		 IPD input,      False
+		 task     ,      event
+		 Angle reso,     5
+		 Model,          SELD_CNN
+		 classes,        1
+
+
+2019_0619	./model_results/2019_0619/SELD_CNN_1class_8ch_mulTrue_cinTrue_ipdFalse_sincosFalse_multi_segdata1_256_no_sound_random/
+	SELDNet using 3class
+		 segdata_dir, /home/yui-sudo/document/dataset/sound_segmentation/datasets/multi_segdata1_256_no_sound_random/train/
+		 valdata_dir, /home/yui-sudo/document/dataset/sound_segmentation/datasets/multi_segdata1_256_no_sound_random/val/
+		 X(10, 256, 256, 24) Y(10, 72, 256, 1)
+		 data_byte,      float16
+		 BATCH_SIZE,     16
+		 NUM_EPOCH,      2
+		 Loss function,  binary_crossentropy
+		 Learning_rate,  0.0001
+		 Mic num,        8
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  True
+		 Complex_output, False
+		 IPD input,      False
+		 task     ,      event
+		 Angle reso,     5
+		 Model,          SELD_CNN
+		 classes,        1
+
+
+2019_0619	./model_results/2019_0619/SELD_CNN_1class_8ch_mulTrue_cinTrue_ipdFalse_sincosTrue_multi_segdata1_256_no_sound_random/
+	SELDNet using 3class
+		 segdata_dir, /home/yui-sudo/document/dataset/sound_segmentation/datasets/multi_segdata1_256_no_sound_random/train/
+		 valdata_dir, /home/yui-sudo/document/dataset/sound_segmentation/datasets/multi_segdata1_256_no_sound_random/val/
+		 X(10, 256, 256, 24) Y(10, 72, 256, 1)
+		 data_byte,      float16
+		 BATCH_SIZE,     16
+		 NUM_EPOCH,      2
+		 Loss function,  binary_crossentropy
+		 Learning_rate,  0.0001
+		 Mic num,        8
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  True
+		 Complex_output, False
+		 IPD input,      False
+		 task     ,      event
+		 Angle reso,     5
+		 Model,          SELD_CNN
+		 classes,        1
+
+
+2019_0619	./model_results/2019_0619/SELD_CNN_1class_8ch_mulTrue_cinTrue_ipdTrue_sincosFalse_multi_segdata1_256_no_sound_random/
+	SELDNet using 3class
+		 segdata_dir, /home/yui-sudo/document/dataset/sound_segmentation/datasets/multi_segdata1_256_no_sound_random/train/
+		 valdata_dir, /home/yui-sudo/document/dataset/sound_segmentation/datasets/multi_segdata1_256_no_sound_random/val/
+		 X(10, 256, 256, 15) Y(10, 72, 256, 1)
+		 data_byte,      float16
+		 BATCH_SIZE,     16
+		 NUM_EPOCH,      2
+		 Loss function,  binary_crossentropy
+		 Learning_rate,  0.0001
+		 Mic num,        8
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  True
+		 Complex_output, False
+		 IPD input,      True
+		 task     ,      event
+		 Angle reso,     5
+		 Model,          SELD_CNN
+		 classes,        1
+
+

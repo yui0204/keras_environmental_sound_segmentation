@@ -39,27 +39,52 @@ def CNN(n_classes, input_height=256, input_width=512, nChannels=3):
     x = MaxPooling2D((2, 1), strides=(2, 1))(x)
 
     """
+    x = Conv2D(512, (3, 3), activation='relu', padding='same', dilation_rate=1)(x)    
+    x = MaxPooling2D((2, 1), strides=(2, 1))(x)
+    
+    x = Conv2D(512, (3, 3), activation='relu', padding='same', dilation_rate=1)(x)    
+    x = MaxPooling2D((2, 1), strides=(2, 1))(x)
+
+    x = Conv2D(512, (3, 3), activation='relu', padding='same', dilation_rate=1)(x)    
+    x = MaxPooling2D((2, 1), strides=(2, 1))(x) # 1, 256, 512
+
     x = Reshape((input_width * 8, 512))(x)
         
-    x = GRU(8 * 512, activation='tanh', recurrent_activation='hard_sigmoid', 
+    x = GRU(512, activation='tanh', recurrent_activation='hard_sigmoid', 
             return_sequences=True,
             dropout=0.25, recurrent_dropout=0.25, stateful=False)(x) 
     x = BatchNormalization()(x)
 
-    x = GRU(8 * 512, activation='tanh', recurrent_activation='hard_sigmoid', 
+    x = GRU(512, activation='tanh', recurrent_activation='hard_sigmoid', 
             return_sequences=True,
             dropout=0.25, recurrent_dropout=0.25, stateful=False)(x) 
     x = BatchNormalization()(x)
 
-    x = GRU(8 * 512, activation='tanh', recurrent_activation='hard_sigmoid', 
+    x = GRU(512, activation='tanh', recurrent_activation='hard_sigmoid', 
             return_sequences=True,
             dropout=0.25, recurrent_dropout=0.25, stateful=False)(x) 
     x = BatchNormalization()(x)
-
     
-    x = Conv1D(8 * n_classes, 1, activation='sigmoid')(x)
-    x = Reshape((8, input_width, n_classes))(x)
+    x = Reshape((1, input_width, 512))(x)
+ 
+    x = Conv2DTranspose(512, kernel_size=(3, 3), strides=(2, 1), activation='relu', 
+                        padding="same")(x)
+
+    x = Conv2DTranspose(512, kernel_size=(3, 3), strides=(2, 1), activation='relu', 
+                        padding="same")(x)
+
+    x = Conv2DTranspose(512, kernel_size=(3, 3), strides=(2, 1), activation='relu', 
+                        padding="same")(x)    
     """
+    
+    x = Conv2DTranspose(512, kernel_size=(3, 3), strides=(3, 1), activation='relu', 
+                        padding="same")(x)    
+
+    x = Conv2DTranspose(512, kernel_size=(3, 3), strides=(3, 1), activation='relu', 
+                        padding="same")(x)    
+
+#    x = Conv2DTranspose(512, kernel_size=(3, 3), strides=(5, 1), activation='relu', 
+#                        padding="same")(x)    
             
     x = Conv2D(n_classes, (1, 1), activation='sigmoid')(x)
     
