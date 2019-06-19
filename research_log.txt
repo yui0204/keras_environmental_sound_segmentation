@@ -1326,3 +1326,26 @@ File Edit Options Buffers Tools Text Help
 >>>>>>> e30d75c18598e011498bb761fcac459d9d3396ce
 
 
+2019_0619	./model_results/2019_0619/SELD_CNN_1class_8ch_mulTrue_cinTrue_ipdFalse_sincosFalse_multi_segdata1_256_no_sound_random/
+	SELDNet using 1class Try sincos input
+		 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata1_256_no_sound_random/train/
+		 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata1_256_no_sound_random/val/
+		 X(500, 256, 256, 24) Y(500, 72, 256, 1)
+		 data_byte,      float16
+		 BATCH_SIZE,     48
+		 NUM_EPOCH,      2
+		 Loss function,  binary_crossentropy
+		 Learning_rate,  0.0001
+		 Mic num,        8
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  True
+		 Complex_output, False
+		 IPD input,      False
+		 sin, cos input, False
+		 task     ,      event
+		 Angle reso,     5
+		 Model,          SELD_CNN
+		 classes,        1
+
+

@@ -892,7 +892,7 @@ if __name__ == '__main__':
     
     gpu_count = 3
     BATCH_SIZE = 16 * gpu_count
-    NUM_EPOCH = 2
+    NUM_EPOCH = 100
     
     lr = 0.0001
     
