@@ -312,7 +312,7 @@ def read_model(Model):
                                   input_shape=(256, image_size, mic_num), 
                                   classes=classes, OS=16, mul=mul, soft=soft)
             elif ipd == True:
-                if ang reso == 1:
+                if ang_reso == 1:
                     model = Deeplab.Deeplabv3(weights=None, input_tensor=None, 
                                   input_shape=(256, image_size, (mic_num-1)*2+1), 
                                   classes=classes, OS=16, mul=mul, soft=soft)
