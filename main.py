@@ -319,7 +319,7 @@ def read_model(Model):
                 else:            
                     model = Deeplab.Deeplabv3(weights=None, input_tensor=None, 
                                   input_shape=(256, image_size, (mic_num-1)*2+1), 
-                                  classes=ang_reso, OS=16, mul=mul, soft=soft)
+                                  classes=classes * ang_reso, OS=16, mul=mul, soft=soft)
 
             else:
                 model = Deeplab.Deeplabv3(weights=None, input_tensor=None, 
@@ -516,8 +516,6 @@ def origin_stft(X, no=0):
     plt.pcolormesh((X[no][0]))
     plt.xlabel("time")
     plt.ylabel('frequency')
-    plt.xlim(0, 256)
-    plt.ylim(0, 256)
     plt.clim(0, 1)
     plt.colorbar()
     plt.savefig(pred_dir + filename[:-4] + ".png")
@@ -532,8 +530,6 @@ def event_plot(Y_true, Y_pred, no=0):
         plt.title("truth")
         plt.xlabel("time")
         plt.ylabel('class index')
-        plt.xlim(0, 256)
-#        plt.ylim(0, 256)
         plt.clim(0, 1)
         plt.colorbar()
         plt.savefig(pred_dir + "true.png")
@@ -543,8 +539,6 @@ def event_plot(Y_true, Y_pred, no=0):
         plt.title("prediction")
         plt.xlabel("time")
         plt.ylabel('class index')
-        plt.xlim(0, 256)
-#        plt.ylim(0, 256)
         plt.clim(0, 1)
         plt.colorbar()
         plt.savefig(pred_dir + "pred.png")    
@@ -564,28 +558,20 @@ def event_plot(Y_true, Y_pred, no=0):
                 
                 plt.pcolormesh((Y_true[no][i]))
                 plt.title(label.index[i] + "_truth")
-                #plt.title("category_" + str(i) + "_truth")
                 plt.xlabel("time")
                 plt.ylabel('frequency')
-                plt.xlim(0, 256)
- #               plt.ylim(0, 256)
                 plt.clim(0, 1)
                 plt.colorbar()
                 plt.savefig(pred_dir + label.index[i] + "_true.png")
-                #plt.savefig(pred_dir + "category_" + str(i) + "_truth.png")
                 plt.close()
     
                 plt.pcolormesh((Y_pred[no][i]))
                 plt.title(label.index[i] + "_prediction")
-                #plt.title("category_" + str(i) + "_prediction")
                 plt.xlabel("time")
                 plt.ylabel('frequency')
-                plt.xlim(0, 256)
-#                plt.ylim(0, 256)
                 plt.clim(0, 1)
                 plt.colorbar()
                 plt.savefig(pred_dir + label.index[i] + "_pred.png")
-                #plt.savefig(pred_dir + "category_" + str(i) + "_pred.png")
                 plt.close()
                 
             Y_true_total += (Y_true[no][i] > 0.45) * (i + 4)
@@ -597,8 +583,6 @@ def event_plot(Y_true, Y_pred, no=0):
         plt.title(str(no) + "__" + filename + "_truth")
         plt.xlabel("time")
         plt.ylabel('angle')
-        plt.xlim(0, 256)
- #       plt.ylim(0, 256)
         plt.clim(0, Y_true_total.max())
         plt.savefig(pred_dir + filename + "_truht.png")
         plt.close()
@@ -607,14 +591,17 @@ def event_plot(Y_true, Y_pred, no=0):
         plt.title(str(no) + "__" + filename + "_prediction")
         plt.xlabel("time")
         plt.ylabel('angle')
-        plt.xlim(0, 256)
-  #      plt.ylim(0, 256)
         plt.clim(0, Y_true_total.max())
         plt.savefig(pred_dir + filename + "_pred.png")
         plt.close()
 
 
 def plot_stft(Y_true, Y_pred, no=0):
+    plot_num = classes * ang_reso
+    if ang_reso > 1:
+        ylabel = "angle"
+    else:
+        ylabel = "frequency"
     pred_dir = pred_dir_make(no)
 
     if complex_output == True:
@@ -625,33 +612,36 @@ def plot_stft(Y_true, Y_pred, no=0):
         
     Y_true_total = np.zeros((256, image_size))
     Y_pred_total = np.zeros((256, image_size))
-    for i in range(classes):
+    for i in range(plot_num):
         if Y_true[no][i].max() > 0: #含まれているクラスのみグラフ表示
-            
             plt.pcolormesh((Y_true[no][i]))
-            plt.title(label.index[i] + "_truth")
-            #plt.title("category_" + str(i) + "_truth")
+            if ang_reso == 1:
+                plt.title(label.index[i] + "_truth")
+            else:
+                plt.title(label.index[i % ang_reso] + "_" + str(360 // ang_reso) * (i % ang_reso) + "deg_truth")
             plt.xlabel("time")
-            plt.ylabel('frequency')
-            plt.xlim(0, 256)
-            plt.ylim(0, 256)
+            plt.ylabel(ylabel)
             plt.clim(0, 1)
             plt.colorbar()
-            plt.savefig(pred_dir + label.index[i] + "_true.png")
-            #plt.savefig(pred_dir + "category_" + str(i) + "_truth.png")
+            if ang_reso == 1:
+                plt.savefig(pred_dir + label.index[i] + "_true.png")
+            else:
+                plt.savefig(pred_dir + label.index[i % ang_reso] + "_" + str(360 // ang_reso) * (i % ang_reso) + "deg_true.png")
             plt.close()
 
             plt.pcolormesh((Y_pred[no][i]))
-            plt.title(label.index[i] + "_prediction")
-            #plt.title("category_" + str(i) + "_prediction")
+            if ang_reso == 1:
+                plt.title(label.index[i] + "_prediction")
+            else:
+                plt.title(label.index[i % ang_reso] + "_" + str(360 // ang_reso) * (i % ang_reso) + "deg_prediction")                
             plt.xlabel("time")
-            plt.ylabel('frequency')
-            plt.xlim(0, 256)
-            plt.ylim(0, 256)
+            plt.ylabel(ylabel)
             plt.clim(0, 1)
             plt.colorbar()
-            plt.savefig(pred_dir + label.index[i] + "_pred.png")
-            #plt.savefig(pred_dir + "category_" + str(i) + "_pred.png")
+            if ang_reso == 1:
+                plt.savefig(pred_dir + label.index[i] + "_pred.png")
+            else:
+                plt.savefig(pred_dir + label.index[i % ang_reso] + "_" + str(360 // ang_reso) * (i % ang_reso) + "deg_pred.png")         
             plt.close()
             
         Y_true_total += (Y_true[no][i] > 0.45) * (i + 4)
@@ -662,25 +652,23 @@ def plot_stft(Y_true, Y_pred, no=0):
     plt.pcolormesh((Y_true_total), cmap="gist_ncar")
     plt.title(str(no) + "__" + filename + "_truth")
     plt.xlabel("time")
-    plt.ylabel('frequency')
-    plt.xlim(0, 256)
-    plt.ylim(0, 256)
+    plt.ylabel(ylabel)
     plt.clim(0, Y_true_total.max())
-    plt.savefig(pred_dir + filename + "_truht.png")
+    plt.savefig(pred_dir + filename + "_truth.png")
     plt.close()
 
     plt.pcolormesh((Y_pred_total), cmap="gist_ncar")
     plt.title(str(no) + "__" + filename + "_prediction")
     plt.xlabel("time")
-    plt.ylabel('frequency')
-    plt.xlim(0, 256)
-    plt.ylim(0, 256)
+    plt.ylabel(ylabel)
     plt.clim(0, Y_true_total.max())
     plt.savefig(pred_dir + filename + "_pred.png")
     plt.close()
 
 
 def restore(Y_true, Y_pred, max, phase, no=0, class_n=1):
+    plot_num = classes * ang_reso
+
     pred_dir = pred_dir_make(no)
     
     if complex_output == True:
@@ -692,11 +680,11 @@ def restore(Y_true, Y_pred, max, phase, no=0, class_n=1):
     Y_true = Y_true.transpose(0, 3, 1, 2)    
     
     data_dir = valdata_dir + str(no)
-    sdr_array = np.zeros((classes, 1))
-    sir_array = np.zeros((classes, 1))
-    sar_array = np.zeros((classes, 1))
+    sdr_array = np.zeros((plot_num, 1))
+    sir_array = np.zeros((plot_num, 1))
+    sar_array = np.zeros((plot_num, 1))
     
-    for class_n in range(classes):
+    for class_n in range(plot_num):
         if Y_true[no][class_n].max() > 0:
             Y_linear = 10 ** ((Y_pred[no][class_n] * max - 120) / 20)
             Y_linear = np.vstack((Y_linear, Y_linear[::-1]))
@@ -716,17 +704,18 @@ def restore(Y_true, Y_pred, max, phase, no=0, class_n=1):
                         Y_complex[i][j] = cmath.rect(Y_linear[i][j], phase[no][i][j])
                         #Y_complex[i][j] = cmath.rect(Y_linear[i][j], np.arctan2(Y_linear_r[i][j], Y_linear_i[i][j]))
                         #Y_complex[i][j] = cmath.rect(np.sqrt(Y_linear_r[i][j]**2 + Y_linear_i[i][j]**2), np.arctan2(Y_linear_r[i][j], Y_linear_i[i][j]))
-        
-            Y_Stft = Stft(Y_complex, 16000, label.index[class_n]+"_prediction")
-            #Y_Stft = Stft(Y_complex, 16000, "category_"+str(class_n)+"_prediction")
+            if ang_reso == 1:
+                Y_Stft = Stft(Y_complex, 16000, label.index[class_n]+"_prediction")
+            else:
+                Y_Stft = Stft(Y_complex, 16000, label.index[i % ang_reso] + "_" + str(360 // ang_reso) * (i % ang_reso) + "deg_prediction")
+                
             Y_pred_wave = Y_Stft.scipy_istft()
-            Y_pred_wave.plot()
             print(class_n)
             Y_pred_wave.write_wav_sf(dir=pred_dir, filename=None, bit=16)
 
-            if not task == "event":
+            if task == "segmentation" and ang_reso == 1:
                 Y_pred_wave = Y_pred_wave.norm_sound
-                Y_true_wave = WavfileOperate(data_dir + "/" + label.index[class_n] + ".wav").wavedata.norm_sound
+                Y_true_wave = WavfileOperate(data_dir + "/" + label.index[class_n] + ".wav").wavedata.norm_sound            
                 Y_true_wave = Y_true_wave[:len(Y_pred_wave)]    
                 sdr, sir, sar, per = bss_eval_sources(Y_true_wave[np.newaxis,:], Y_pred_wave[np.newaxis,:], compute_permutation=True)
                 print(sdr)
@@ -805,8 +794,6 @@ def RMS(Y_true, Y_pred):
     plt.title("rms_overlap")
     plt.xlabel("overlap")
     plt.ylabel('rms')
-    #plt.xlim(0, 256)
-    #plt.ylim(0, 256)
     plt.savefig(results_dir + "rms_laprms_result.png")
     plt.ylim(0, 50)
     plt.close()
@@ -815,8 +802,6 @@ def RMS(Y_true, Y_pred):
     plt.title("rms")
     plt.xlabel("")
     plt.ylabel('rms')
-    #plt.xlim(0, 256)
-    #plt.ylim(0, 256)
     plt.savefig(results_dir + "rms_result.png")
     plt.ylim(0, 50)
     plt.close()
@@ -825,8 +810,6 @@ def RMS(Y_true, Y_pred):
     plt.title("area-rms")
     plt.xlabel("area")
     plt.ylabel('rms')
-    #plt.xlim(0, 256)
-    #plt.ylim(0, 256)
     plt.savefig(results_dir + "area-rms_result.png")
     plt.ylim(0, 50)
     plt.close()
@@ -835,8 +818,6 @@ def RMS(Y_true, Y_pred):
     plt.title("spl-overlap")
     plt.xlabel("")
     plt.ylabel('')
-    #plt.xlim(0, 256)
-    #plt.ylim(0, 256)
     plt.savefig(results_dir + "spl-rms_result.png")
     plt.ylim(0, 50)
     plt.close()
@@ -976,7 +957,9 @@ if __name__ == '__main__':
                                                                                   n_classes=classes, 
                                                                                   load_number=load_number,
                                                                                   complex_input=complex_input)
-                            #save_npy(X_train, Y_train, max, phase) 
+                        if task == "segmentation" and ang_reso > 1:
+                            Y_train = Y_train.transpose(4,0,2,3,1)[0]
+                        #save_npy(X_train, Y_train, max, phase) 
             
                         # save train condition
                         train_condition = date + "\t" + results_dir                     + "\n" + \
@@ -1005,8 +988,7 @@ if __name__ == '__main__':
                         print(train_condition)
                         
                         with open(results_dir + 'train_condition.txt','w') as f:
-                            f.write(train_condition)    
-
+                            f.write(train_condition)
                         
                         history = train(X_train, Y_train, Model, Y_train_r, Y_train_i)
                         plot_history(history, model_name)
@@ -1028,9 +1010,10 @@ if __name__ == '__main__':
                                                                           n_classes=classes, 
                                                                           load_number=load_number, 
                                                                           complex_input=complex_input)
+                    if task == "segmentation" and ang_reso > 1:
+                            Y_test = Y_test.transpose(4,0,2,3,1)[0]
+                    
                     Y_pred = predict(X_test, Model)
-                    
-                    
                              
                     if plot == True:
                         sdr_array, sir_array, sar_array = np.array(()) ,np.array(()), np.array(())
