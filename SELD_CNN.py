@@ -99,7 +99,7 @@ def CRNN(n_classes, input_height=256, input_width=512, nChannels=3):
 
 
 
-def CRNN(n_classes, input_height=256, input_width=512, nChannels=3):
+def CRNN4(n_classes, input_height=256, input_width=512, nChannels=3):
     inputs = Input((input_height, input_width, nChannels))
     
     x = Conv2D(64, (3, 3), activation='relu', padding='same', dilation_rate=1)(inputs)
