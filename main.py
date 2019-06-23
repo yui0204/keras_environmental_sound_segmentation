@@ -312,14 +312,20 @@ def read_model(Model):
                                   input_shape=(256, image_size, mic_num), 
                                   classes=classes, OS=16, mul=mul, soft=soft)
             elif ipd == True:
-                model = Deeplab.Deeplabv3(weights=None, input_tensor=None, 
+                if ang reso == 1:
+                    model = Deeplab.Deeplabv3(weights=None, input_tensor=None, 
                                   input_shape=(256, image_size, (mic_num-1)*2+1), 
                                   classes=classes, OS=16, mul=mul, soft=soft)
+                else:            
+                    model = Deeplab.Deeplabv3(weights=None, input_tensor=None, 
+                                  input_shape=(256, image_size, (mic_num-1)*2+1), 
+                                  classes=ang_reso, OS=16, mul=mul, soft=soft)
+
             else:
                 model = Deeplab.Deeplabv3(weights=None, input_tensor=None, 
                                   input_shape=(256, image_size, mic_num * 3), 
                                   classes=classes, OS=16, mul=mul, soft=soft)
-
+            
         elif Model == "Mask_Deeplab":
             model = Deeplab.Deeplabv3(weights=None, input_tensor=None, 
                                   input_shape=(256,image_size,1), classes=classes, 

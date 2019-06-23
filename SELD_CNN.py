@@ -10,7 +10,7 @@ from keras.layers.wrappers import Bidirectional
 from keras.layers.merge import multiply, dot
 
 
-def CNN(n_classes, input_height=256, input_width=512, nChannels=3):
+def CRNN(n_classes, input_height=256, input_width=512, nChannels=3):
     inputs = Input((input_height, input_width, nChannels))
     
     x = Conv2D(32, (3, 3), activation='relu', padding='same', dilation_rate=1)(inputs)
@@ -49,7 +49,7 @@ def CNN(n_classes, input_height=256, input_width=512, nChannels=3):
     x = Conv2D(512, (3, 3), activation='relu', padding='same', dilation_rate=1)(x)    
     x = MaxPooling2D((2, 1), strides=(2, 1))(x) # 1, 256, 512
 
-    x = Reshape((input_width * 8, 512))(x)
+    x = Reshape((input_width, 512))(x)
         
     x = GRU(512, activation='tanh', recurrent_activation='hard_sigmoid', 
             return_sequences=True,
