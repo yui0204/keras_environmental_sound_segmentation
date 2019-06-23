@@ -899,7 +899,7 @@ if __name__ == '__main__':
     if task == "event":
         loss = "binary_crossentropy"
 
-    mode = "2019_0623"
+    mode = "train"
     date = mode       
     plot = True
     
@@ -939,7 +939,7 @@ if __name__ == '__main__':
                         if mic_num == 8 or complex_input == True:
                             continue
                     """
-                    load_number = 500
+                    load_number = 5000
 
                     
                     model_name = Model+"_"+str(classes)+"class_" + str(mic_num)+"ch_mul"+str(mul) + "_cin"+str(complex_input) + "_ipd"+str(ipd)  + "_sincos"+str(sincos)
