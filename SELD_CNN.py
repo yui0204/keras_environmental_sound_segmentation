@@ -39,7 +39,7 @@ def CNN(n_classes, input_height=256, input_width=512, nChannels=3):
     x = MaxPooling2D((2, 1), strides=(2, 1))(x)
 
 
-    """
+    
     x = Conv2D(512, (3, 3), activation='relu', padding='same', dilation_rate=1)(x)    
     x = MaxPooling2D((2, 1), strides=(2, 1))(x)
     
@@ -77,7 +77,7 @@ def CNN(n_classes, input_height=256, input_width=512, nChannels=3):
 
     x = Conv2DTranspose(512, kernel_size=(3, 3), strides=(2, 1), activation='relu', 
                         padding="same")(x)    
-    """
+    
     
     x = Conv2DTranspose(512, kernel_size=(3, 3), strides=(3, 1), activation='relu', 
                         padding="same")(x)    
