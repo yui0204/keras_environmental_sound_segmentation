@@ -924,7 +924,7 @@ if __name__ == '__main__':
         Model = "SELD_CRNN"
         mul = True
         sincos = True
-        for ipd in [False, True]:            
+        for ipd in [True]:            
             for mic_num in [8]: # 1 or 8
                 soft = False
                 for complex_input in [True]:
@@ -1060,7 +1060,7 @@ if __name__ == '__main__':
                         #shutil.move("nohup.out", results_dir)
     
                         # copy to export2
-#                        shutil.copytree(results_dir, "/misc/export2/sudou/model_results/" + date + "/" + dir_name)
+                        shutil.copytree(results_dir, "/misc/export2/sudou/model_results/" + date + "/" + dir_name)
                                                 
 
     os.remove("Unet.pyc")
