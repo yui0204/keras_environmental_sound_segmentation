@@ -1418,3 +1418,49 @@ File Edit Options Buffers Tools Text Help
 		 classes,        1
 
 
+2019_0623	./model_results/2019_0623/Deeplab_1class_8ch_mulTrue_cinTrue_ipdTrue_sincosTrue_multi_segdata3_256_no_sound_random_sep/
+	SELDNet using 1class Try sincos input
+		 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound_random_sep/train/
+		 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound_random_sep/val/
+		 X(5000, 256, 256, 15) Y(5000, 256, 256, 72)
+		 data_byte,      float16
+		 BATCH_SIZE,     48
+		 NUM_EPOCH,      100
+		 Loss function,  mean_squared_error
+		 Learning_rate,  0.0001
+		 Mic num,        8
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  True
+		 Complex_output, False
+		 IPD input,      True
+		 sin, cos input, True
+		 task     ,      segmentation
+		 Angle reso,     5
+		 Model,          Deeplab
+		 classes,        1
+
+
+2019_0624	./model_results/2019_0624/SELD_CRNN_3class_8ch_mulTrue_cinTrue_ipdTrue_sincosTrue_multi_segdata3_256_no_sound_random_sep/
+	SELDNet using 1class Try sincos input
+		 segdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound_random_sep/train/
+		 valdata_dir, /misc/export2/sudou/sound_data/datasets/multi_segdata3_256_no_sound_random_sep/val/
+		 X(5000, 256, 256, 15) Y(5000, 72, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     48
+		 NUM_EPOCH,      100
+		 Loss function,  binary_crossentropy
+		 Learning_rate,  0.0001
+		 Mic num,        8
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  True
+		 Complex_output, False
+		 IPD input,      True
+		 sin, cos input, True
+		 task     ,      event
+		 Angle reso,     5
+		 Model,          SELD_CRNN
+		 classes,        3
+
+

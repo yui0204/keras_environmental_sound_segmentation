@@ -884,9 +884,9 @@ def load_npy():
 
 if __name__ == '__main__':
     train_mode = "class"
-    classes = 1
+    classes = 3
     image_size = 256
-    task = "segmentation"
+    task = "event"
     ang_reso = 72
     
     gpu_count = 3
@@ -908,7 +908,7 @@ if __name__ == '__main__':
     else:
         datasets_dir = "/misc/export2/sudou/sound_data/datasets/"
     
-    for datadir in ["multi_segdata"+str(classes+2) + "_"+str(image_size)+"_no_sound_random_sep/", 
+    for datadir in ["multi_segdata"+str(classes) + "_"+str(image_size)+"_no_sound_random_sep/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-30dB/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-20dB_random/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-10dB/", 
@@ -921,7 +921,7 @@ if __name__ == '__main__':
         labelfile = dataset + "label.csv"
         label = pd.read_csv(filepath_or_buffer=labelfile, sep=",", index_col=0)            
         
-        Model = "Deeplab"
+        Model = "SELD_CRNN"
         mul = True
         sincos = True
         for ipd in [True]:            
