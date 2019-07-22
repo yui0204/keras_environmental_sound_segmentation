@@ -618,7 +618,7 @@ def plot_stft(Y_true, Y_pred, no=0):
             if ang_reso == 1:
                 plt.title(label.index[i] + "_truth")
             else:
-                plt.title(label.index[i % ang_reso * 0] + "_" + str(360 // ang_reso) * (i % ang_reso) + "deg_truth")
+                plt.title(label.index[i % ang_reso * 0] + "_" + str((360 // ang_reso) * (i % ang_reso)) + "deg_truth")
             plt.xlabel("time")
             plt.ylabel(ylabel)
             plt.clim(0, 1)
@@ -626,14 +626,14 @@ def plot_stft(Y_true, Y_pred, no=0):
             if ang_reso == 1:
                 plt.savefig(pred_dir + label.index[i] + "_true.png")
             else:
-                plt.savefig(pred_dir + label.index[i % ang_reso * 0] + "_" + str(360 // ang_reso) * (i % ang_reso) + "deg_true.png")
+                plt.savefig(pred_dir + label.index[i % ang_reso * 0] + "_" + str((360 // ang_reso) * (i % ang_reso)) + "deg_true.png")
             plt.close()
 
             plt.pcolormesh((Y_pred[no][i]))
             if ang_reso == 1:
                 plt.title(label.index[i] + "_prediction")
             else:
-                plt.title(label.index[i % ang_reso * 0] + "_" + str(360 // ang_reso) * (i % ang_reso) + "deg_prediction")                
+                plt.title(label.index[i % ang_reso * 0] + "_" + str((360 // ang_reso) * (i % ang_reso)) + "deg_prediction")                
             plt.xlabel("time")
             plt.ylabel(ylabel)
             plt.clim(0, 1)
@@ -641,7 +641,7 @@ def plot_stft(Y_true, Y_pred, no=0):
             if ang_reso == 1:
                 plt.savefig(pred_dir + label.index[i] + "_pred.png")
             else:
-                plt.savefig(pred_dir + label.index[i % ang_reso * 0] + "_" + str(360 // ang_reso) * (i % ang_reso) + "deg_pred.png")         
+                plt.savefig(pred_dir + label.index[i % ang_reso * 0] + "_" + str((360 // ang_reso) * (i % ang_reso)) + "deg_pred.png")         
             plt.close()
             
         Y_true_total += (Y_true[no][i] > 0.45) * (i + 4)
@@ -707,7 +707,7 @@ def restore(Y_true, Y_pred, max, phase, no=0, class_n=1):
             if ang_reso == 1:
                 Y_Stft = Stft(Y_complex, 16000, label.index[class_n]+"_prediction")
             else:
-                Y_Stft = Stft(Y_complex, 16000, label.index[i % ang_reso * 0] + "_" + str(360 // ang_reso) * (i % ang_reso) + "deg_prediction")
+                Y_Stft = Stft(Y_complex, 16000, label.index[i % ang_reso * 0] + "_" + str((360 // ang_reso) * (i % ang_reso)) + "deg_prediction")
                 
             Y_pred_wave = Y_Stft.scipy_istft()
             print(class_n)
@@ -884,9 +884,9 @@ def load_npy():
 
 if __name__ == '__main__':
     train_mode = "class"
-    classes = 3
+    classes = 1
     image_size = 256
-    task = "event"
+    task = "segmentation"
     ang_reso = 72
     
     gpu_count = 3
@@ -908,7 +908,7 @@ if __name__ == '__main__':
     else:
         datasets_dir = "/misc/export2/sudou/sound_data/datasets/"
     
-    for datadir in ["multi_segdata"+str(classes) + "_"+str(image_size)+"_no_sound_random_sep/", 
+    for datadir in ["multi_segdata"+str(classes+2) + "_"+str(image_size)+"_no_sound_random_sep/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-30dB/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-20dB_random/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-10dB/", 
@@ -921,9 +921,9 @@ if __name__ == '__main__':
         labelfile = dataset + "label.csv"
         label = pd.read_csv(filepath_or_buffer=labelfile, sep=",", index_col=0)            
         
-        Model = "SELD_CRNN"
+        Model = "Deeplab"
         mul = True
-        sincos = True
+        sincos = False
         for ipd in [True]:            
             for mic_num in [8]: # 1 or 8
                 soft = False
