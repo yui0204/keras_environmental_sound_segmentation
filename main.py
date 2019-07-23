@@ -707,7 +707,7 @@ def restore(Y_true, Y_pred, max, phase, no=0, class_n=1):
             if ang_reso == 1:
                 Y_Stft = Stft(Y_complex, 16000, label.index[class_n]+"_prediction")
             else:
-                Y_Stft = Stft(Y_complex, 16000, label.index[i % ang_reso * 0] + "_" + str((360 // ang_reso) * (i % ang_reso)) + "deg_prediction")
+                Y_Stft = Stft(Y_complex, 16000, label.index[i % ang_reso * 0] + "_" + str((360 // ang_reso) * (class_n % ang_reso)) + "deg_prediction")
                 
             Y_pred_wave = Y_Stft.scipy_istft()
             print(class_n)
