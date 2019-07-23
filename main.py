@@ -925,20 +925,23 @@ if __name__ == '__main__':
         mul = True
         sincos = False
         for ipd in [True]:            
-            for mic_num in [8]: # 1 or 8
+            for mic_num in [1, 8]: # 1 or 8
                 soft = False
-                for complex_input in [True]:
+                for complex_input in [False, True]:
                     complex_output = False
                     VGG = 0                     #0: False, 1: Red 3: White
-
-                    """
+                    
                     if ipd == True:
                         if mic_num == 1 or complex_input == False:
                             continue
                     else:
-                        if mic_num == 8 or complex_input == True:
-                            continue
-                    """
+                        if mic_num == 1:
+                            if complex_input == True:
+                                continue
+                        elif mic_num == 8:
+                            if complex_input == False:
+                                continue
+                    
                     load_number = 5000
 
                     
@@ -963,7 +966,7 @@ if __name__ == '__main__':
             
                         # save train condition
                         train_condition = date + "\t" + results_dir                     + "\n" + \
-                                          "\t"+"SELDNet using 1class Try sincos input"                          + "\n" + \
+                                          "\t"+"Comapare IPD input and normal complex input and 1ch"                          + "\n" + \
                                           "\t\t segdata_dir, " + segdata_dir            + "\n" + \
                                           "\t\t valdata_dir, " + valdata_dir            + "\n" + \
                                           "\t\t X"+str(X_train.shape)+" Y"+str(Y_train.shape)+"\n" \
