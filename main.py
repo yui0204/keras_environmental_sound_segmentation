@@ -467,8 +467,8 @@ def plot_history(history, model_name):
     plt.title('loss')
     plt.xlabel('epoch')
     plt.ylabel('loss')
-    plt.xlim(0, 300)
-    plt.ylim(0.0, 0.03)
+    plt.xlim(0, 100)
+#    plt.ylim(0.0, 0.03)
     plt.legend(['loss', 'val_loss'], loc='upper right')
     plt.savefig(results_dir + "loss_"+str(np.array((history.history["val_loss"])).min())+".png")
     plt.close()
@@ -613,7 +613,7 @@ def plot_stft(Y_true, Y_pred, no=0):
     Y_true_total = np.zeros((256, image_size))
     Y_pred_total = np.zeros((256, image_size))
     for i in range(plot_num):
-        if Y_true[no][i].max() > 0: #含まれているクラスのみグラフ表示
+        if Y_true[no][i].max() >= 0: #含まれているクラスのみグラフ表示
             plt.pcolormesh((Y_true[no][i]))
             if ang_reso == 1:
                 plt.title(label.index[i] + "_truth")
