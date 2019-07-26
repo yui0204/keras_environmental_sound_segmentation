@@ -315,6 +315,10 @@ def read_model(Model):
             model = Deeplab.Deeplabv3(weights=None, input_tensor=None, 
                               input_shape=(256, image_size, channel), 
                               classes=classes * ang_reso, OS=16, mul=mul, soft=soft)
+        elif Model == "RNN_Deeplab":
+            model = Deeplab.Deeplabv3(weights=None, input_tensor=None, 
+                              input_shape=(256, image_size, channel), 
+                              classes=classes * ang_reso, OS=16, mul=mul, soft=soft, RNN=True)
             
         elif Model == "Mask_Deeplab":
             model = Deeplab.Deeplabv3(weights=None, input_tensor=None, 
@@ -911,7 +915,7 @@ if __name__ == '__main__':
         labelfile = dataset + "label.csv"
         label = pd.read_csv(filepath_or_buffer=labelfile, sep=",", index_col=0)            
         
-        for Model in ["UNet", "RNN_UNet"]:
+        for Model in ["UNet", "RNN_UNet", "Deeplab", "RNN_Deeplab"]:
             mul = True
             sincos = False
             for ipd in [False, True]:            
@@ -1040,7 +1044,7 @@ if __name__ == '__main__':
                             with open(results_dir + "f1_" + str(f1) + ".txt","w") as f:
                                 f.write(str(f1))   
                                 
-                        elif task == "segmentaion":
+                        elif task == "segmentation":
                             rms = RMS(Y_test, Y_pred) 
                             print("Total RMSE", rms)
                             

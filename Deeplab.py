@@ -192,7 +192,7 @@ def xception_block(inputs, depth_list, prefix, skip_connection_type, stride,
 
 def Deeplabv3(weights='None', input_tensor=None, 
               input_shape=(256, 256, 1), classes=75, OS=16, 
-              mask=False, trainable=False, soft=True, mul=True):    
+              mask=False, trainable=False, soft=True, mul=True, RNN=False):    
     """ Instantiates the Deeplabv3+ architecture
 
     Optionally loads weights pre-trained on PASCAL VOC. 
@@ -336,20 +336,20 @@ def Deeplabv3(weights='None', input_tensor=None,
     #print(x)
     
 #################################### added RNN
-    """    
-    r = Reshape((16, 16 * 256))(x)
-    r = GRU(16 * 256, activation='tanh', recurrent_activation='hard_sigmoid', 
-            return_sequences=True,
-            dropout=0.25, recurrent_dropout=0.25, stateful=False)(r) 
-    r = BatchNormalization()(r)
-
-    r = GRU(16 * 256, activation='tanh', recurrent_activation='hard_sigmoid', 
-            return_sequences=True,
-            dropout=0.25, recurrent_dropout=0.25, stateful=False)(r) 
-    r = BatchNormalization()(r)
-    r = Reshape((16, 16, 256))(r)
-    x = r
-    """
+    if RNN == True:
+        r = Reshape((16, 16 * 256))(x)
+        r = GRU(16 * 256, activation='tanh', recurrent_activation='hard_sigmoid', 
+                return_sequences=True,
+                dropout=0.25, recurrent_dropout=0.25, stateful=False)(r) 
+        r = BatchNormalization()(r)
+    
+        r = GRU(16 * 256, activation='tanh', recurrent_activation='hard_sigmoid', 
+                return_sequences=True,
+                dropout=0.25, recurrent_dropout=0.25, stateful=False)(r) 
+        r = BatchNormalization()(r)
+        r = Reshape((16, 16, 256))(r)
+        x = r
+    
 ####################################
 
     # DeepLab v.3+ decoder

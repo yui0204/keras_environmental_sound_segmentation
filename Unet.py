@@ -425,7 +425,7 @@ def Mask_UNet(n_classes, input_height=256, input_width=512, nChannels=3,
 
 def UNet(n_classes, input_height=256, input_width=512, nChannels=3):
     inputs = Input((input_height, input_width, nChannels))
-    if nChannels > 0:
+    if nChannels > 1:
         inputs2 = Input((input_height, input_width, 1))
 
     
@@ -446,7 +446,7 @@ def UNet(n_classes, input_height=256, input_width=512, nChannels=3):
     e5 = LeakyReLU(0.2)(e4)
     e5 = Conv2D(512, (3, 3), strides=2, padding='same')(e5)
     e5 = BatchNormalization()(e5)
-    """
+    
     e6 = LeakyReLU(0.2)(e5)
     e6 = Conv2D(512, (3, 3), strides=2, padding='same')(e6)
     e6 = BatchNormalization()(e6)    
@@ -457,8 +457,8 @@ def UNet(n_classes, input_height=256, input_width=512, nChannels=3):
     d5 = BatchNormalization()(d5)
     d5 = Dropout(0.5)(d5)
     d5 = concatenate([d5, e5], axis=-1)
-    """
-    d4 = Activation(activation='relu')(e5)#d5)
+    
+    d4 = Activation(activation='relu')(d5)
     d4 = Conv2DTranspose(512, (2, 2), strides=(2, 2), use_bias=False,
                         kernel_initializer='he_uniform', padding='same')(d4)
     d4 = BatchNormalization()(d4)
@@ -488,7 +488,7 @@ def UNet(n_classes, input_height=256, input_width=512, nChannels=3):
     d0 = Conv2DTranspose(n_classes, (2, 2), strides=(2, 2), use_bias=False,
                         kernel_initializer='he_uniform', padding='same')(d0)
                     
-    if nChannels > 0:
+    if nChannels > 1:
         d0 = multiply([inputs2, d0])
         model = Model(input=[inputs, inputs2], output=d0)
     else:
@@ -500,7 +500,7 @@ def UNet(n_classes, input_height=256, input_width=512, nChannels=3):
 
 def RNN_UNet(n_classes, input_height=256, input_width=512, nChannels=3):
     inputs = Input((input_height, input_width, nChannels))
-    if nChannels > 0:
+    if nChannels > 1:
         inputs2 = Input((input_height, input_width, 1))
 
     
@@ -521,30 +521,30 @@ def RNN_UNet(n_classes, input_height=256, input_width=512, nChannels=3):
     e5 = LeakyReLU(0.2)(e4)
     e5 = Conv2D(512, (3, 3), strides=2, padding='same')(e5)
     e5 = BatchNormalization()(e5)
-
-    e5 = Reshape((-1, 512))(e5)
-        
-    e5 = GRU(512, activation='tanh', recurrent_activation='hard_sigmoid', 
-            return_sequences=True,
-            dropout=0.25, recurrent_dropout=0.25, stateful=False)(e5) 
-    e5 = BatchNormalization()(e5)
-
-    e5 = GRU(512, activation='tanh', recurrent_activation='hard_sigmoid', 
-            return_sequences=True,
-            dropout=0.25, recurrent_dropout=0.25, stateful=False)(e5) 
-    e5 = BatchNormalization()(e5)
-
-    e5 = GRU(512, activation='tanh', recurrent_activation='hard_sigmoid', 
-            return_sequences=True,
-            dropout=0.25, recurrent_dropout=0.25, stateful=False)(e5) 
-    e5 = BatchNormalization()(e5)
-
-    e5 = Reshape((8, 8, 512))(e5)
-
-    """
+    
     e6 = LeakyReLU(0.2)(e5)
     e6 = Conv2D(512, (3, 3), strides=2, padding='same')(e6)
     e6 = BatchNormalization()(e6)    
+
+    e6 = Reshape((-1, 512))(e6)
+        
+    e6 = GRU(512, activation='tanh', recurrent_activation='hard_sigmoid', 
+            return_sequences=True,
+            dropout=0.25, recurrent_dropout=0.25, stateful=False)(e6) 
+    e6 = BatchNormalization()(e6)
+
+    e6 = GRU(512, activation='tanh', recurrent_activation='hard_sigmoid', 
+            return_sequences=True,
+            dropout=0.25, recurrent_dropout=0.25, stateful=False)(e6) 
+    e6 = BatchNormalization()(e6)
+
+    e6 = GRU(512, activation='tanh', recurrent_activation='hard_sigmoid', 
+            return_sequences=True,
+            dropout=0.25, recurrent_dropout=0.25, stateful=False)(e6) 
+    e6 = BatchNormalization()(e6)
+
+    e6 = Reshape((4, 4, 512))(e6)
+
     
     d5 = Activation(activation='relu')(e6)
     d5 = Conv2DTranspose(512, (2, 2), strides=(2, 2), use_bias=False, 
@@ -552,8 +552,8 @@ def RNN_UNet(n_classes, input_height=256, input_width=512, nChannels=3):
     d5 = BatchNormalization()(d5)
     d5 = Dropout(0.5)(d5)
     d5 = concatenate([d5, e5], axis=-1)
-    """
-    d4 = Activation(activation='relu')(e5)#d5)
+    
+    d4 = Activation(activation='relu')(d5)
     d4 = Conv2DTranspose(512, (2, 2), strides=(2, 2), use_bias=False,
                         kernel_initializer='he_uniform', padding='same')(d4)
     d4 = BatchNormalization()(d4)
@@ -583,7 +583,7 @@ def RNN_UNet(n_classes, input_height=256, input_width=512, nChannels=3):
     d0 = Conv2DTranspose(n_classes, (2, 2), strides=(2, 2), use_bias=False,
                         kernel_initializer='he_uniform', padding='same')(d0)
                 
-    if nChannels > 0:
+    if nChannels > 1:
         d0 = multiply([inputs2, d0])
         model = Model(input=[inputs, inputs2], output=d0)
     else:
