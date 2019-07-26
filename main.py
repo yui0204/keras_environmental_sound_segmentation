@@ -298,10 +298,12 @@ def read_model(Model):
             
         elif Model == "UNet":
             model = Unet.UNet(n_classes=classes, input_height=256, 
-                                   input_width=image_size, nChannels=channel)
-            
+                                   input_width=image_size, nChannels=channel)            
         elif Model == "RNN_UNet":
             model = Unet.RNN_UNet(n_classes=classes, input_height=256, 
+                                   input_width=image_size, nChannels=channel)                
+        elif Model == "CR_UNet":
+            model = Unet.CR_UNet(n_classes=classes, input_height=256, 
                                    input_width=image_size, nChannels=channel)                
 
         elif Model == "PSPNet":
@@ -349,9 +351,6 @@ def read_model(Model):
                                 input_width=image_size, nChannels=1)
         elif Model == "BiRNN":
             model = CNN.BiRNN(n_classes=classes, input_height=256, 
-                                input_width=image_size, nChannels=1)
-        elif Model == "UNet":
-            model = CNN.Unet(n_classes=classes, input_height=256, 
                                 input_width=image_size, nChannels=1)
         
         elif Model == "SELD_CRNN":
@@ -425,7 +424,7 @@ def train(X_train, Y_train, Model, Y_train2, Y_train3):
         else:       
             history = multi_model.fit(X_train, Y_train, batch_size=BATCH_SIZE, 
                                 epochs=NUM_EPOCH, verbose=1, validation_split=0.1,
-                                callbacks=[checkpoint, early_stopping, tensorboard])                 
+                                callbacks=[early_stopping, tensorboard])                 
     else:
         history = model.fit(X_train, [Y_train, Y_train2, Y_train3], 
                             batch_size=BATCH_SIZE, epochs=NUM_EPOCH, 
@@ -903,6 +902,7 @@ if __name__ == '__main__':
         datasets_dir = "/misc/export2/sudou/sound_data/datasets/"
     
     for datadir in ["multi_segdata"+str(classes) + "_"+str(image_size)+"_no_sound_random_sep/", 
+                    "multi_segdata"+str(classes) + "_"+str(image_size)+"_no_sound/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-30dB/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-20dB_random/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-10dB/", 
@@ -915,7 +915,7 @@ if __name__ == '__main__':
         labelfile = dataset + "label.csv"
         label = pd.read_csv(filepath_or_buffer=labelfile, sep=",", index_col=0)            
         
-        for Model in ["UNet", "RNN_UNet", "Deeplab", "RNN_Deeplab"]:
+        for Model in ["UNet", "RNN_UNet", "CR_UNet", "Deeplab", "RNN_Deeplab"]:
             mul = True
             sincos = False
             for ipd in [False, True]:            
