@@ -992,6 +992,7 @@ if __name__ == '__main__':
                                               "\t\t Complex_input,  " + str(complex_input)  + "\n" + \
                                               "\t\t Complex_output, " + str(complex_output) + "\n" + \
                                               "\t\t IPD input,      " + str(ipd) + "\n" + \
+                                              "\t\t von Mises input," + str(vonMises) + "\n" + \
                                               "\t\t sin, cos input, " + str(sincos) + "\n" + \
                                               "\t\t task     ,      " + task + "\n" + \
                                               "\t\t Angle reso,     " + str(360 // ang_reso) + "\n" + \
