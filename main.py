@@ -82,7 +82,7 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
     else:
         if ipd == True:
             input_dim = 15    
-        elif complex_input == True or VGG > 0:
+        elif complex_input == True or VGG > 0 or vonMises == True:
             input_dim = 24
         else:
             input_dim = 8        
@@ -146,6 +146,13 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
                                 else:
                                     inputs[i][nchan*2-1] = np.cos(np.angle(stft[0][:256]) - np.angle(stft[nchan][:256]))
                                     inputs[i][nchan*2] = np.sin(np.angle(stft[0][:256]) - np.angle(stft[nchan][:256]))
+                                    
+                            elif vonMises == True:
+                                if nchan % 8 == 0:
+                                    inputs[i][nchan] = abs(stft[nchan][:256])
+                                else:
+                                    inputs[i][nchan*3+1] = np.cos(np.angle(stft[nchan][:256]))
+                                    inputs[i][nchan*3+2] = np.sin(np.angle(stft[nchan][:256]))
                                 
                             elif complex_input == True:
                                 inputs[i][nchan * 3] = abs(stft[nchan][:256])
@@ -170,7 +177,7 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
                         labels[i][label.T[filelist[0][:-4]][cat]][angle] += abs(stft[:256])
                         dn += 1
     
-    if complex_input == True and ipd == False and sincos == False:
+    if complex_input == True and ipd == False and sincos == False and vonMises == False:
         sign = (inputs > 0) * 2 - 1
         sign = sign.astype(np.float16)
         if complex_output == True:
@@ -190,7 +197,7 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
         else:
             labels = labels.max(3)#[:,:,:,np.newaxis,:]
         
-    if ipd == True:
+    if ipd == True or vonMises == True:
         inputs = inputs.transpose(1,0,2,3)
         inputs[0], labels = log(inputs[0], labels)   
         inputs[0] = np.nan_to_num(inputs[0])
@@ -229,7 +236,7 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
         inputs, labels, max, r_labels, i_labels = normalize(inputs, labels, r_labels, i_labels)
 
 
-    if complex_input == True and ipd == False and sincos == False:
+    if complex_input == True and ipd == False and sincos == False and vonMises == False:
         inputs = inputs * sign
         if complex_output == True:
             r_labels = r_labels * r_sign
@@ -918,6 +925,7 @@ if __name__ == '__main__':
         for Model in ["UNet", "RNN_UNet", "CR_UNet", "Deeplab", "RNN_Deeplab"]:
             mul = True
             sincos = False
+            vonMises = False
             for ipd in [False, True]:            
                 for mic_num in [1, 8]: # 1 or 8
                     soft = False
