@@ -933,9 +933,14 @@ if __name__ == '__main__':
                         complex_output = False
                         VGG = 0                     #0: False, 1: Red 3: White
                         
+                        
                         if ipd == True:
                             channel = 15
-                            if mic_num == 1 or complex_input == False:
+                            if mic_num == 1 or complex_input == False or vonMises == True:
+                                continue
+                        elif vonMises == True:
+                            channel = 24
+                            if mic_num == 1 or complex_input == False or ipd == True:
                                 continue
                         else:
                             if mic_num == 1:
