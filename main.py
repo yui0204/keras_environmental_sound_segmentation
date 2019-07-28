@@ -304,13 +304,13 @@ def read_model(Model):
                     
             
         elif Model == "UNet":
-            model = Unet.UNet(n_classes=classes, input_height=256, 
+            model = Unet.UNet(n_classes=classes * ang_reso, input_height=256, 
                                    input_width=image_size, nChannels=channel)            
         elif Model == "RNN_UNet":
-            model = Unet.RNN_UNet(n_classes=classes, input_height=256, 
+            model = Unet.RNN_UNet(n_classes=classes * ang_reso, input_height=256, 
                                    input_width=image_size, nChannels=channel)                
         elif Model == "CR_UNet":
-            model = Unet.CR_UNet(n_classes=classes, input_height=256, 
+            model = Unet.CR_UNet(n_classes=classes * ang_reso, input_height=256, 
                                    input_width=image_size, nChannels=channel)                
 
         elif Model == "PSPNet":
@@ -884,10 +884,10 @@ def load_npy():
 
 if __name__ == '__main__':
     train_mode = "class"
-    classes = 3
+    classes = 1
     image_size = 256
     task = "segmentation"
-    ang_reso = 1
+    ang_reso = 8
     
     gpu_count = 3
     BATCH_SIZE = 16 * gpu_count
@@ -908,8 +908,8 @@ if __name__ == '__main__':
     else:
         datasets_dir = "/misc/export2/sudou/sound_data/datasets/"
     
-    for datadir in ["multi_segdata"+str(classes) + "_"+str(image_size)+"_no_sound_random_sep/", 
-                    "multi_segdata"+str(classes) + "_"+str(image_size)+"_no_sound/", 
+    for datadir in ["multi_segdata"+str(classes+2) + "_"+str(image_size)+"_no_sound_random_sep/", 
+                    #"multi_segdata"+str(classes) + "_"+str(image_size)+"_no_sound/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-30dB/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-20dB_random/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-10dB/", 
@@ -922,14 +922,14 @@ if __name__ == '__main__':
         labelfile = dataset + "label.csv"
         label = pd.read_csv(filepath_or_buffer=labelfile, sep=",", index_col=0)            
         
-        for Model in ["UNet", "RNN_UNet", "CR_UNet", "Deeplab", "RNN_Deeplab"]:
+        for Model in ["UNet", "RNN_UNet", "Deeplab"]:#"CR_UNet", "Deeplab", "RNN_Deeplab"]:
             mul = True
             sincos = False
             vonMises = False
-            for ipd in [False, True]:            
-                for mic_num in [1, 8]: # 1 or 8
+            for ipd in [True]:            
+                for mic_num in [8]: # 1 or 8
                     soft = False
-                    for complex_input in [False, True]:
+                    for complex_input in [True]:
                         complex_output = False
                         VGG = 0                     #0: False, 1: Red 3: White
                         
