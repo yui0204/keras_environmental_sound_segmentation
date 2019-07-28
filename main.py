@@ -311,6 +311,12 @@ def read_model(Model):
                                    input_width=image_size, nChannels=channel)                
         elif Model == "CR_UNet":
             model = Unet.CR_UNet(n_classes=classes * ang_reso, input_height=256, 
+                                   input_width=image_size, nChannels=channel) 
+        elif Model == "Pre_UNet":
+            model = Unet.Pre_UNet(n_classes=classes * ang_reso, input_height=256, 
+                                   input_width=image_size, nChannels=channel)            
+        elif Model == "Pre_RNN_UNet":
+            model = Unet.Pre_RNN_UNet(n_classes=classes * ang_reso, input_height=256, 
                                    input_width=image_size, nChannels=channel)                
 
         elif Model == "PSPNet":
@@ -922,7 +928,7 @@ if __name__ == '__main__':
         labelfile = dataset + "label.csv"
         label = pd.read_csv(filepath_or_buffer=labelfile, sep=",", index_col=0)            
         
-        for Model in ["UNet", "RNN_UNet", "Deeplab"]:#"CR_UNet", "Deeplab", "RNN_Deeplab"]:
+        for Model in ["Pre_UNet", "Pre_RNN_UNet"]:#"CR_UNet", "Deeplab", "RNN_Deeplab"]:
             mul = True
             sincos = False
             vonMises = False
