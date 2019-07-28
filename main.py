@@ -956,7 +956,7 @@ if __name__ == '__main__':
                         load_number = 1000
     
                         
-                        model_name = Model+"_"+str(classes)+"class_" + str(mic_num)+"ch_mul"+str(mul) + "_cin"+str(complex_input) + "_ipd"+str(ipd)  + "_sincos"+str(sincos)
+                        model_name = Model+"_"+str(classes)+"class_" + str(mic_num)+"ch_mul"+str(mul) + "_cin"+str(complex_input) + "_ipd"+str(ipd)  + "_vonMises"+str(vonMises)
                         dir_name = model_name + "_"+datadir
                         date = datetime.datetime.today().strftime("%Y_%m%d")
                         results_dir = "./model_results/" + date + "/" + dir_name

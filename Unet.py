@@ -633,12 +633,7 @@ def CR_UNet(n_classes, input_height=256, input_width=512, nChannels=3):
             dropout=0.25, recurrent_dropout=0.25, stateful=False)(e6) 
     e6 = BatchNormalization()(e6)
 
-    e6 = GRU(512, activation='tanh', recurrent_activation='hard_sigmoid', 
-            return_sequences=True,
-            dropout=0.25, recurrent_dropout=0.25, stateful=False)(e6) 
-    e6 = BatchNormalization()(e6)
-
-    e6 = Reshape((4, 4, 512))(e6)
+    e6 = Reshape((4, -1, 512))(e6)
 
     
     d5 = Activation(activation='relu')(e6)
