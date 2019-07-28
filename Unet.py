@@ -692,7 +692,7 @@ def Pre_UNet(n_classes, input_height=256, input_width=512, nChannels=3,
     dir_name = "UNet_1class_8direction_8ch_mulTrue_cinTrue_ipdTrue_vonMisesFalse_multi_segdata3_256_no_sound_random_sep/"
     weight = "UNet_1class_8direction_8ch_mulTrue_cinTrue_ipdTrue_vonMisesFalse_weights.hdf5"
 
-    pre_cnn = CNN.CNN8(n_classes=8, input_height=256, input_width=input_width, nChannels=nChannels)
+    pre_cnn = UNet(n_classes=8, input_height=256, input_width=input_width, nChannels=nChannels)
     pre_cnn.load_weights(os.getcwd()+"/model_results/2019_0728/"+dir_name+weight)
 
     e1 = pre_cnn.layers[1](inputs)
@@ -812,7 +812,7 @@ def Pre_RNN_UNet(n_classes, input_height=256, input_width=512, nChannels=3,
     dir_name = "RNN_UNet_1class_8direction_8ch_mulTrue_cinTrue_ipdTrue_vonMisesFalse_multi_segdata3_256_no_sound_random_sep/"
     weight = "RNN_UNet_1class_8direction_8ch_mulTrue_cinTrue_ipdTrue_vonMisesFalse_weights.hdf5"
 
-    pre_cnn = CNN.CNN8(n_classes=8, input_height=256, input_width=input_width, nChannels=nChannels)
+    pre_cnn = RNN_UNet(n_classes=8, input_height=256, input_width=input_width, nChannels=nChannels)
     pre_cnn.load_weights(os.getcwd()+"/model_results/2019_0728/"+dir_name+weight)
 
     e1 = pre_cnn.layers[1](inputs)
