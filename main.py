@@ -890,10 +890,10 @@ def load_npy():
 
 if __name__ == '__main__':
     train_mode = "class"
-    classes = 1
+    classes = 3
     image_size = 256
     task = "segmentation"
-    ang_reso = 8
+    ang_reso = 1
     
     gpu_count = 3
     BATCH_SIZE = 16 * gpu_count
@@ -914,7 +914,7 @@ if __name__ == '__main__':
     else:
         datasets_dir = "/misc/export2/sudou/sound_data/datasets/"
     
-    for datadir in ["multi_segdata"+str(classes+2) + "_"+str(image_size)+"_no_sound_random_sep/", 
+    for datadir in ["multi_segdata"+str(classes) + "_"+str(image_size)+"_no_sound_random_sep/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_no_sound/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-30dB/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-20dB_random/", 
