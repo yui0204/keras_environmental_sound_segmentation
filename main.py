@@ -915,7 +915,7 @@ if __name__ == '__main__':
         datasets_dir = "/misc/export2/sudou/sound_data/datasets/"
     
     for datadir in ["multi_segdata"+str(classes) + "_"+str(image_size)+"_no_sound_random_sep/", 
-                    #"multi_segdata"+str(classes) + "_"+str(image_size)+"_no_sound/", 
+                    "multi_segdata"+str(classes) + "_"+str(image_size)+"_no_sound/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-30dB/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-20dB_random/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-10dB/", 
@@ -928,14 +928,14 @@ if __name__ == '__main__':
         labelfile = dataset + "label.csv"
         label = pd.read_csv(filepath_or_buffer=labelfile, sep=",", index_col=0)            
         
-        for Model in ["AllPre_UNet", "AllPre_RNN_UNet"]:#"CR_UNet", "Deeplab", "RNN_Deeplab"]:
+        for Model in ["UNet", "RNN_UNet", "Deeplab", "RNN_Deeplab"]:
             mul = True
             sincos = False
             vonMises = False
-            for ipd in [True]:            
-                for mic_num in [8]: # 1 or 8
+            for ipd in [False, True]:            
+                for mic_num in [1, 8]: # 1 or 8
                     soft = False
-                    for complex_input in [True]:
+                    for complex_input in [False, True]:
                         complex_output = False
                         VGG = 0                     #0: False, 1: Red 3: White
                         
