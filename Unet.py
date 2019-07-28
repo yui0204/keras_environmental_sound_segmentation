@@ -733,29 +733,6 @@ def Pre_UNet(n_classes, input_height=256, input_width=512, nChannels=3,
     e6 = pre_cnn.layers[16](e6)
     pre_cnn.layers[16].trainable = trainable # fixed weight or fine-tuning    
     
-    # RNN
-    e6 = pre_cnn.layers[17](e5)
-    pre_cnn.layers[17].trainable = trainable # fixed weight or fine-tuning    
-    
-    e6 = pre_cnn.layers[18](e5)
-    pre_cnn.layers[18].trainable = trainable # fixed weight or fine-tuning    
-    e6 = pre_cnn.layers[19](e5)
-    pre_cnn.layers[19].trainable = trainable # fixed weight or fine-tuning    
-        
-    e6 = pre_cnn.layers[20](e5)
-    pre_cnn.layers[20].trainable = trainable # fixed weight or fine-tuning    
-    e6 = pre_cnn.layers[21](e5)
-    pre_cnn.layers[21].trainable = trainable # fixed weight or fine-tuning    
-
-    e6 = pre_cnn.layers[22](e5)
-    pre_cnn.layers[22].trainable = trainable # fixed weight or fine-tuning    
-    e6 = pre_cnn.layers[23](e5)
-    pre_cnn.layers[23].trainable = trainable # fixed weight or fine-tuning    
-
-    e6 = pre_cnn.layers[24](e5)
-    pre_cnn.layers[24].trainable = trainable # fixed weight or fine-tuning    
-
-    
     d5 = Activation(activation='relu')(e6)
     d5 = Conv2DTranspose(512, (2, 2), strides=(2, 2), use_bias=False, 
                          kernel_initializer='he_uniform', padding='same')(d5)
@@ -853,7 +830,29 @@ def Pre_RNN_UNet(n_classes, input_height=256, input_width=512, nChannels=3,
     e6 = pre_cnn.layers[16](e6)
     pre_cnn.layers[16].trainable = trainable # fixed weight or fine-tuning    
     
+    # RNN
+    e6 = pre_cnn.layers[17](e5)
+    pre_cnn.layers[17].trainable = trainable # fixed weight or fine-tuning    
     
+    e6 = pre_cnn.layers[18](e5)
+    pre_cnn.layers[18].trainable = trainable # fixed weight or fine-tuning    
+    e6 = pre_cnn.layers[19](e5)
+    pre_cnn.layers[19].trainable = trainable # fixed weight or fine-tuning    
+        
+    e6 = pre_cnn.layers[20](e5)
+    pre_cnn.layers[20].trainable = trainable # fixed weight or fine-tuning    
+    e6 = pre_cnn.layers[21](e5)
+    pre_cnn.layers[21].trainable = trainable # fixed weight or fine-tuning    
+
+    e6 = pre_cnn.layers[22](e5)
+    pre_cnn.layers[22].trainable = trainable # fixed weight or fine-tuning    
+    e6 = pre_cnn.layers[23](e5)
+    pre_cnn.layers[23].trainable = trainable # fixed weight or fine-tuning    
+
+    e6 = pre_cnn.layers[24](e5)
+    pre_cnn.layers[24].trainable = trainable # fixed weight or fine-tuning    
+
+
     d5 = Activation(activation='relu')(e6)
     d5 = Conv2DTranspose(512, (2, 2), strides=(2, 2), use_bias=False, 
                          kernel_initializer='he_uniform', padding='same')(d5)
