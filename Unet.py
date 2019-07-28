@@ -733,6 +733,59 @@ def Pre_UNet(n_classes, input_height=256, input_width=512, nChannels=3,
     e6 = pre_cnn.layers[16](e6)
     pre_cnn.layers[16].trainable = trainable # fixed weight or fine-tuning    
     
+    
+    d5 = pre_cnn.layers[17](e6)
+    pre_cnn.layers[17].trainable = trainable # fixed weight or fine-tuning    
+    d5 = pre_cnn.layers[18](d5)
+    pre_cnn.layers[18].trainable = trainable # fixed weight or fine-tuning    
+    d5 = pre_cnn.layers[19](d5)
+    pre_cnn.layers[19].trainable = trainable # fixed weight or fine-tuning    
+    d5 = pre_cnn.layers[20](d5)
+    pre_cnn.layers[20].trainable = trainable # fixed weight or fine-tuning    
+    d5 = pre_cnn.layers[21](d5)
+    pre_cnn.layers[21].trainable = trainable # fixed weight or fine-tuning    
+
+    d4 = pre_cnn.layers[22](d5)
+    pre_cnn.layers[22].trainable = trainable # fixed weight or fine-tuning    
+    d4 = pre_cnn.layers[23](d4)
+    pre_cnn.layers[23].trainable = trainable # fixed weight or fine-tuning    
+    d4 = pre_cnn.layers[24](d4)
+    pre_cnn.layers[24].trainable = trainable # fixed weight or fine-tuning    
+    d4 = pre_cnn.layers[25](d4)
+    pre_cnn.layers[25].trainable = trainable # fixed weight or fine-tuning    
+    d4 = pre_cnn.layers[26](d4)
+    pre_cnn.layers[26].trainable = trainable # fixed weight or fine-tuning    
+
+    d3 = pre_cnn.layers[27](d4)
+    pre_cnn.layers[27].trainable = trainable # fixed weight or fine-tuning    
+    d3 = pre_cnn.layers[28](d3)
+    pre_cnn.layers[28].trainable = trainable # fixed weight or fine-tuning    
+    d3 = pre_cnn.layers[29](d3)
+    pre_cnn.layers[29].trainable = trainable # fixed weight or fine-tuning    
+    d3 = pre_cnn.layers[30](d3)
+    pre_cnn.layers[30].trainable = trainable # fixed weight or fine-tuning    
+    d3 = pre_cnn.layers[31](d3)
+    pre_cnn.layers[31].trainable = trainable # fixed weight or fine-tuning    
+
+    d2 = pre_cnn.layers[32](d3)
+    pre_cnn.layers[32].trainable = trainable # fixed weight or fine-tuning    
+    d2 = pre_cnn.layers[33](d2)
+    pre_cnn.layers[33].trainable = trainable # fixed weight or fine-tuning    
+    d2 = pre_cnn.layers[34](d2)
+    pre_cnn.layers[34].trainable = trainable # fixed weight or fine-tuning    
+    d2 = pre_cnn.layers[35](d2)
+    pre_cnn.layers[35].trainable = trainable # fixed weight or fine-tuning    
+
+    d1 = pre_cnn.layers[36](d2)
+    pre_cnn.layers[36].trainable = trainable # fixed weight or fine-tuning    
+    d1 = pre_cnn.layers[37](d1)
+    pre_cnn.layers[37].trainable = trainable # fixed weight or fine-tuning    
+    d1 = pre_cnn.layers[38](d1)
+    pre_cnn.layers[38].trainable = trainable # fixed weight or fine-tuning    
+    d1 = pre_cnn.layers[39](d1)
+    pre_cnn.layers[39].trainable = trainable # fixed weight or fine-tuning    
+    
+    """
     d5 = Activation(activation='relu')(e6)
     d5 = Conv2DTranspose(512, (2, 2), strides=(2, 2), use_bias=False, 
                          kernel_initializer='he_uniform', padding='same')(d5)
@@ -765,6 +818,7 @@ def Pre_UNet(n_classes, input_height=256, input_width=512, nChannels=3,
                         kernel_initializer='he_uniform', padding='same')(d1)
     d1 = BatchNormalization()(d1)
     d1 = concatenate([d1, e1], axis=-1)
+    """
     
     d0 = Activation(activation='sigmoid')(d1)
     d0 = Conv2DTranspose(n_classes, (2, 2), strides=(2, 2), use_bias=False,
@@ -831,28 +885,80 @@ def Pre_RNN_UNet(n_classes, input_height=256, input_width=512, nChannels=3,
     pre_cnn.layers[16].trainable = trainable # fixed weight or fine-tuning    
     
     # RNN
-    e6 = pre_cnn.layers[17](e5)
+    e6 = pre_cnn.layers[17](e6)
     pre_cnn.layers[17].trainable = trainable # fixed weight or fine-tuning    
     
-    e6 = pre_cnn.layers[18](e5)
+    e6 = pre_cnn.layers[18](e6)
     pre_cnn.layers[18].trainable = trainable # fixed weight or fine-tuning    
-    e6 = pre_cnn.layers[19](e5)
+    e6 = pre_cnn.layers[19](e6)
     pre_cnn.layers[19].trainable = trainable # fixed weight or fine-tuning    
         
-    e6 = pre_cnn.layers[20](e5)
+    e6 = pre_cnn.layers[20](e6)
     pre_cnn.layers[20].trainable = trainable # fixed weight or fine-tuning    
-    e6 = pre_cnn.layers[21](e5)
+    e6 = pre_cnn.layers[21](e6)
     pre_cnn.layers[21].trainable = trainable # fixed weight or fine-tuning    
 
-    e6 = pre_cnn.layers[22](e5)
+    e6 = pre_cnn.layers[22](e6)
     pre_cnn.layers[22].trainable = trainable # fixed weight or fine-tuning    
-    e6 = pre_cnn.layers[23](e5)
+    e6 = pre_cnn.layers[23](e6)
     pre_cnn.layers[23].trainable = trainable # fixed weight or fine-tuning    
 
-    e6 = pre_cnn.layers[24](e5)
+    e6 = pre_cnn.layers[24](e6)
     pre_cnn.layers[24].trainable = trainable # fixed weight or fine-tuning    
 
 
+    d5 = pre_cnn.layers[25](e6)
+    pre_cnn.layers[25].trainable = trainable # fixed weight or fine-tuning    
+    d5 = pre_cnn.layers[26](d5)
+    pre_cnn.layers[26].trainable = trainable # fixed weight or fine-tuning    
+    d5 = pre_cnn.layers[27](d5)
+    pre_cnn.layers[27].trainable = trainable # fixed weight or fine-tuning    
+    d5 = pre_cnn.layers[28](d5)
+    pre_cnn.layers[28].trainable = trainable # fixed weight or fine-tuning    
+    d5 = pre_cnn.layers[29](d5)
+    pre_cnn.layers[29].trainable = trainable # fixed weight or fine-tuning    
+
+    d4 = pre_cnn.layers[30](d5)
+    pre_cnn.layers[30].trainable = trainable # fixed weight or fine-tuning    
+    d4 = pre_cnn.layers[31](d4)
+    pre_cnn.layers[31].trainable = trainable # fixed weight or fine-tuning    
+    d4 = pre_cnn.layers[32](d4)
+    pre_cnn.layers[32].trainable = trainable # fixed weight or fine-tuning    
+    d4 = pre_cnn.layers[33](d4)
+    pre_cnn.layers[33].trainable = trainable # fixed weight or fine-tuning    
+    d4 = pre_cnn.layers[34](d4)
+    pre_cnn.layers[34].trainable = trainable # fixed weight or fine-tuning    
+
+    d3 = pre_cnn.layers[35](d4)
+    pre_cnn.layers[35].trainable = trainable # fixed weight or fine-tuning    
+    d3 = pre_cnn.layers[36](d3)
+    pre_cnn.layers[36].trainable = trainable # fixed weight or fine-tuning    
+    d3 = pre_cnn.layers[37](d3)
+    pre_cnn.layers[37].trainable = trainable # fixed weight or fine-tuning    
+    d3 = pre_cnn.layers[38](d3)
+    pre_cnn.layers[38].trainable = trainable # fixed weight or fine-tuning    
+    d3 = pre_cnn.layers[39](d3)
+    pre_cnn.layers[39].trainable = trainable # fixed weight or fine-tuning    
+
+    d2 = pre_cnn.layers[40](d3)
+    pre_cnn.layers[40].trainable = trainable # fixed weight or fine-tuning    
+    d2 = pre_cnn.layers[41](d2)
+    pre_cnn.layers[41].trainable = trainable # fixed weight or fine-tuning    
+    d2 = pre_cnn.layers[42](d2)
+    pre_cnn.layers[42].trainable = trainable # fixed weight or fine-tuning    
+    d2 = pre_cnn.layers[43](d2)
+    pre_cnn.layers[43].trainable = trainable # fixed weight or fine-tuning    
+
+    d1 = pre_cnn.layers[44](d2)
+    pre_cnn.layers[44].trainable = trainable # fixed weight or fine-tuning    
+    d1 = pre_cnn.layers[45](d1)
+    pre_cnn.layers[45].trainable = trainable # fixed weight or fine-tuning    
+    d1 = pre_cnn.layers[46](d1)
+    pre_cnn.layers[46].trainable = trainable # fixed weight or fine-tuning    
+    d1 = pre_cnn.layers[47](d1)
+    pre_cnn.layers[47].trainable = trainable # fixed weight or fine-tuning  
+    
+    """
     d5 = Activation(activation='relu')(e6)
     d5 = Conv2DTranspose(512, (2, 2), strides=(2, 2), use_bias=False, 
                          kernel_initializer='he_uniform', padding='same')(d5)
@@ -885,6 +991,7 @@ def Pre_RNN_UNet(n_classes, input_height=256, input_width=512, nChannels=3,
                         kernel_initializer='he_uniform', padding='same')(d1)
     d1 = BatchNormalization()(d1)
     d1 = concatenate([d1, e1], axis=-1)
+    """
     
     d0 = Activation(activation='sigmoid')(d1)
     d0 = Conv2DTranspose(n_classes, (2, 2), strides=(2, 2), use_bias=False,
