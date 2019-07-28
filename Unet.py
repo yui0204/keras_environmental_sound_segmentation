@@ -106,7 +106,7 @@ class Complex_UNet2(object):
         self.CONV_FILTER_SIZE = 3
         self.CONV_STRIDE = 2
         self.CONV_PADDING = (1, 1)
-        self.DECONV_FILTER_SIZE = 2
+        self.DECONV_FILTER_SIZE = 3
         self.DECONV_STRIDE = 2
         first_filter_count = 64
 
@@ -267,33 +267,33 @@ def VGG_UNet(n_classes, input_height=256, input_width=512, nChannels=3):
     e5 = x
 
     d4 = Activation(activation='relu')(e5)#d5)
-    d4 = Conv2DTranspose(512, (2, 2), strides=(2, 2), use_bias=False,
+    d4 = Conv2DTranspose(512, (3, 3), strides=(2, 2), use_bias=False,
                         kernel_initializer='he_uniform')(d4)
     d4 = BatchNormalization()(d4)
     d4 = Dropout(0.5)(d4)  ###
     d4 = concatenate([d4, e4], axis=-1)
 
     d3 = Activation(activation='relu')(d4)
-    d3 = Conv2DTranspose(256, (2, 2), strides=(2, 2), use_bias=False,
+    d3 = Conv2DTranspose(256, (3, 3), strides=(2, 2), use_bias=False,
                         kernel_initializer='he_uniform')(d3)
     d3 = BatchNormalization()(d3)
     d3 = Dropout(0.5)(d3) ###
     d3 = concatenate([d3, e3], axis=-1)
 
     d2 = Activation(activation='relu')(d3)
-    d2 = Conv2DTranspose(128, (2, 2), strides=(2, 2), use_bias=False,
+    d2 = Conv2DTranspose(128, (3, 3), strides=(2, 2), use_bias=False,
                         kernel_initializer='he_uniform')(d2)
     d2 = BatchNormalization()(d2)
     d2 = concatenate([d2, e2], axis=-1)
 
     d1 = Activation(activation='relu')(d2)
-    d1 = Conv2DTranspose(64, (2, 2), strides=(2, 2), use_bias=False,
+    d1 = Conv2DTranspose(64, (3, 3), strides=(2, 2), use_bias=False,
                         kernel_initializer='he_uniform')(d1)
     d1 = BatchNormalization()(d1)
     d1 = concatenate([d1, e1], axis=-1)
     
     d0 = Activation(activation='sigmoid')(d1)
-    d0 = Conv2DTranspose(n_classes, (2, 2), strides=(2, 2), use_bias=False,
+    d0 = Conv2DTranspose(n_classes, (3, 3), strides=(2, 2), use_bias=False,
                         kernel_initializer='he_uniform')(d0)
             
     d0 = core.Activation('softmax')(d0)
@@ -452,40 +452,40 @@ def UNet(n_classes, input_height=256, input_width=512, nChannels=3):
     e6 = BatchNormalization()(e6)    
     
     d5 = Activation(activation='relu')(e6)
-    d5 = Conv2DTranspose(512, (2, 2), strides=(2, 2), use_bias=False, 
+    d5 = Conv2DTranspose(512, (3, 3), strides=(2, 2), use_bias=False, 
                          kernel_initializer='he_uniform', padding='same')(d5)
     d5 = BatchNormalization()(d5)
     d5 = Dropout(0.5)(d5)
     d5 = concatenate([d5, e5], axis=-1)
     
     d4 = Activation(activation='relu')(d5)
-    d4 = Conv2DTranspose(512, (2, 2), strides=(2, 2), use_bias=False,
+    d4 = Conv2DTranspose(512, (3, 3), strides=(2, 2), use_bias=False,
                         kernel_initializer='he_uniform', padding='same')(d4)
     d4 = BatchNormalization()(d4)
     d4 = Dropout(0.5)(d4)
     d4 = concatenate([d4, e4], axis=-1)
 
     d3 = Activation(activation='relu')(d4)
-    d3 = Conv2DTranspose(256, (2, 2), strides=(2, 2), use_bias=False,
+    d3 = Conv2DTranspose(256, (3, 3), strides=(2, 2), use_bias=False,
                         kernel_initializer='he_uniform', padding='same')(d3)
     d3 = BatchNormalization()(d3)
     d3 = Dropout(0.5)(d3)
     d3 = concatenate([d3, e3], axis=-1)
 
     d2 = Activation(activation='relu')(d3)
-    d2 = Conv2DTranspose(128, (2, 2), strides=(2, 2), use_bias=False,
+    d2 = Conv2DTranspose(128, (3, 3), strides=(2, 2), use_bias=False,
                         kernel_initializer='he_uniform', padding='same')(d2)
     d2 = BatchNormalization()(d2)
     d2 = concatenate([d2, e2], axis=-1)
 
     d1 = Activation(activation='relu')(d2)
-    d1 = Conv2DTranspose(64, (2, 2), strides=(2, 2), use_bias=False,
+    d1 = Conv2DTranspose(64, (3, 3), strides=(2, 2), use_bias=False,
                         kernel_initializer='he_uniform', padding='same')(d1)
     d1 = BatchNormalization()(d1)
     d1 = concatenate([d1, e1], axis=-1)
     
     d0 = Activation(activation='sigmoid')(d1)
-    d0 = Conv2DTranspose(n_classes, (2, 2), strides=(2, 2), use_bias=False,
+    d0 = Conv2DTranspose(n_classes, (3, 3), strides=(2, 2), use_bias=False,
                         kernel_initializer='he_uniform', padding='same')(d0)
                     
     if nChannels > 1:
@@ -547,40 +547,40 @@ def RNN_UNet(n_classes, input_height=256, input_width=512, nChannels=3):
 
     
     d5 = Activation(activation='relu')(e6)
-    d5 = Conv2DTranspose(512, (2, 2), strides=(2, 2), use_bias=False, 
+    d5 = Conv2DTranspose(512, (3, 3), strides=(2, 2), use_bias=False, 
                          kernel_initializer='he_uniform', padding='same')(d5)
     d5 = BatchNormalization()(d5)
     d5 = Dropout(0.5)(d5)
     d5 = concatenate([d5, e5], axis=-1)
     
     d4 = Activation(activation='relu')(d5)
-    d4 = Conv2DTranspose(512, (2, 2), strides=(2, 2), use_bias=False,
+    d4 = Conv2DTranspose(512, (3, 3), strides=(2, 2), use_bias=False,
                         kernel_initializer='he_uniform', padding='same')(d4)
     d4 = BatchNormalization()(d4)
     d4 = Dropout(0.5)(d4)
     d4 = concatenate([d4, e4], axis=-1)
 
     d3 = Activation(activation='relu')(d4)
-    d3 = Conv2DTranspose(256, (2, 2), strides=(2, 2), use_bias=False,
+    d3 = Conv2DTranspose(256, (3, 3), strides=(2, 2), use_bias=False,
                         kernel_initializer='he_uniform', padding='same')(d3)
     d3 = BatchNormalization()(d3)
     d3 = Dropout(0.5)(d3)
     d3 = concatenate([d3, e3], axis=-1)
 
     d2 = Activation(activation='relu')(d3)
-    d2 = Conv2DTranspose(128, (2, 2), strides=(2, 2), use_bias=False,
+    d2 = Conv2DTranspose(128, (3, 3), strides=(2, 2), use_bias=False,
                         kernel_initializer='he_uniform', padding='same')(d2)
     d2 = BatchNormalization()(d2)
     d2 = concatenate([d2, e2], axis=-1)
 
     d1 = Activation(activation='relu')(d2)
-    d1 = Conv2DTranspose(64, (2, 2), strides=(2, 2), use_bias=False,
+    d1 = Conv2DTranspose(64, (3, 3), strides=(2, 2), use_bias=False,
                         kernel_initializer='he_uniform', padding='same')(d1)
     d1 = BatchNormalization()(d1)
     d1 = concatenate([d1, e1], axis=-1)
     
     d0 = Activation(activation='sigmoid')(d1)
-    d0 = Conv2DTranspose(n_classes, (2, 2), strides=(2, 2), use_bias=False,
+    d0 = Conv2DTranspose(n_classes, (3, 3), strides=(2, 2), use_bias=False,
                         kernel_initializer='he_uniform', padding='same')(d0)
                 
     if nChannels > 1:
@@ -637,40 +637,40 @@ def CR_UNet(n_classes, input_height=256, input_width=512, nChannels=3):
 
     
     d5 = Activation(activation='relu')(e6)
-    d5 = Conv2DTranspose(512, (2, 2), strides=(2, 1), use_bias=False, 
+    d5 = Conv2DTranspose(512, (3, 3), strides=(2, 1), use_bias=False, 
                          kernel_initializer='he_uniform', padding='same')(d5)
     d5 = BatchNormalization()(d5)
     d5 = Dropout(0.5)(d5)
     d5 = concatenate([d5, e5], axis=-1)
     
     d4 = Activation(activation='relu')(d5)
-    d4 = Conv2DTranspose(512, (2, 2), strides=(2, 1), use_bias=False,
+    d4 = Conv2DTranspose(512, (3, 3), strides=(2, 1), use_bias=False,
                         kernel_initializer='he_uniform', padding='same')(d4)
     d4 = BatchNormalization()(d4)
     d4 = Dropout(0.5)(d4)
     d4 = concatenate([d4, e4], axis=-1)
 
     d3 = Activation(activation='relu')(d4)
-    d3 = Conv2DTranspose(256, (2, 2), strides=(2, 1), use_bias=False,
+    d3 = Conv2DTranspose(256, (3, 3), strides=(2, 1), use_bias=False,
                         kernel_initializer='he_uniform', padding='same')(d3)
     d3 = BatchNormalization()(d3)
     d3 = Dropout(0.5)(d3)
     d3 = concatenate([d3, e3], axis=-1)
 
     d2 = Activation(activation='relu')(d3)
-    d2 = Conv2DTranspose(128, (2, 2), strides=(2, 1), use_bias=False,
+    d2 = Conv2DTranspose(128, (3, 3), strides=(2, 1), use_bias=False,
                         kernel_initializer='he_uniform', padding='same')(d2)
     d2 = BatchNormalization()(d2)
     d2 = concatenate([d2, e2], axis=-1)
 
     d1 = Activation(activation='relu')(d2)
-    d1 = Conv2DTranspose(64, (2, 2), strides=(2, 1), use_bias=False,
+    d1 = Conv2DTranspose(64, (3, 3), strides=(2, 1), use_bias=False,
                         kernel_initializer='he_uniform', padding='same')(d1)
     d1 = BatchNormalization()(d1)
     d1 = concatenate([d1, e1], axis=-1)
     
     d0 = Activation(activation='sigmoid')(d1)
-    d0 = Conv2DTranspose(n_classes, (2, 2), strides=(2, 1), use_bias=False,
+    d0 = Conv2DTranspose(n_classes, (3, 3), strides=(2, 1), use_bias=False,
                         kernel_initializer='he_uniform', padding='same')(d0)
                 
     if nChannels > 1:
@@ -782,41 +782,41 @@ def Pre_UNet(n_classes, input_height=256, input_width=512, nChannels=3,
 
     """
     d5 = Activation(activation='relu')(e6)
-    d5 = Conv2DTranspose(512, (2, 2), strides=(2, 2), use_bias=False, 
+    d5 = Conv2DTranspose(512, (3, 3), strides=(2, 2), use_bias=False, 
                          kernel_initializer='he_uniform', padding='same')(d5)
     d5 = BatchNormalization()(d5)
     d5 = Dropout(0.5)(d5)
     d5 = concatenate([d5, e5], axis=-1)
     
     d4 = Activation(activation='relu')(d5)
-    d4 = Conv2DTranspose(512, (2, 2), strides=(2, 2), use_bias=False,
+    d4 = Conv2DTranspose(512, (3, 3), strides=(2, 2), use_bias=False,
                         kernel_initializer='he_uniform', padding='same')(d4)
     d4 = BatchNormalization()(d4)
     d4 = Dropout(0.5)(d4)
     d4 = concatenate([d4, e4], axis=-1)
 
     d3 = Activation(activation='relu')(d4)
-    d3 = Conv2DTranspose(256, (2, 2), strides=(2, 2), use_bias=False,
+    d3 = Conv2DTranspose(256, (3, 3), strides=(2, 2), use_bias=False,
                         kernel_initializer='he_uniform', padding='same')(d3)
     d3 = BatchNormalization()(d3)
     d3 = Dropout(0.5)(d3)
     d3 = concatenate([d3, e3], axis=-1)
 
     d2 = Activation(activation='relu')(d3)
-    d2 = Conv2DTranspose(128, (2, 2), strides=(2, 2), use_bias=False,
+    d2 = Conv2DTranspose(128, (3, 3), strides=(2, 2), use_bias=False,
                         kernel_initializer='he_uniform', padding='same')(d2)
     d2 = BatchNormalization()(d2)
     d2 = concatenate([d2, e2], axis=-1)
 
     d1 = Activation(activation='relu')(d2)
-    d1 = Conv2DTranspose(64, (2, 2), strides=(2, 2), use_bias=False,
+    d1 = Conv2DTranspose(64, (3, 3), strides=(2, 2), use_bias=False,
                         kernel_initializer='he_uniform', padding='same')(d1)
     d1 = BatchNormalization()(d1)
     d1 = concatenate([d1, e1], axis=-1)
     """
     
     d0 = Activation(activation='sigmoid')(d1)
-    d0 = Conv2DTranspose(n_classes, (2, 2), strides=(2, 2), use_bias=False,
+    d0 = Conv2DTranspose(n_classes, (3, 3), strides=(2, 2), use_bias=False,
                         kernel_initializer='he_uniform', padding='same')(d0)
                     
     if nChannels > 1:
@@ -950,41 +950,41 @@ def Pre_RNN_UNet(n_classes, input_height=256, input_width=512, nChannels=3,
     
     """
     d5 = Activation(activation='relu')(e6)
-    d5 = Conv2DTranspose(512, (2, 2), strides=(2, 2), use_bias=False, 
+    d5 = Conv2DTranspose(512, (3, 3), strides=(2, 2), use_bias=False, 
                          kernel_initializer='he_uniform', padding='same')(d5)
     d5 = BatchNormalization()(d5)
     d5 = Dropout(0.5)(d5)
     d5 = concatenate([d5, e5], axis=-1)
     
     d4 = Activation(activation='relu')(d5)
-    d4 = Conv2DTranspose(512, (2, 2), strides=(2, 2), use_bias=False,
+    d4 = Conv2DTranspose(512, (3, 3), strides=(2, 2), use_bias=False,
                         kernel_initializer='he_uniform', padding='same')(d4)
     d4 = BatchNormalization()(d4)
     d4 = Dropout(0.5)(d4)
     d4 = concatenate([d4, e4], axis=-1)
 
     d3 = Activation(activation='relu')(d4)
-    d3 = Conv2DTranspose(256, (2, 2), strides=(2, 2), use_bias=False,
+    d3 = Conv2DTranspose(256, (3, 3), strides=(2, 2), use_bias=False,
                         kernel_initializer='he_uniform', padding='same')(d3)
     d3 = BatchNormalization()(d3)
     d3 = Dropout(0.5)(d3)
     d3 = concatenate([d3, e3], axis=-1)
 
     d2 = Activation(activation='relu')(d3)
-    d2 = Conv2DTranspose(128, (2, 2), strides=(2, 2), use_bias=False,
+    d2 = Conv2DTranspose(128, (3, 3), strides=(2, 2), use_bias=False,
                         kernel_initializer='he_uniform', padding='same')(d2)
     d2 = BatchNormalization()(d2)
     d2 = concatenate([d2, e2], axis=-1)
 
     d1 = Activation(activation='relu')(d2)
-    d1 = Conv2DTranspose(64, (2, 2), strides=(2, 2), use_bias=False,
+    d1 = Conv2DTranspose(64, (3, 3), strides=(2, 2), use_bias=False,
                         kernel_initializer='he_uniform', padding='same')(d1)
     d1 = BatchNormalization()(d1)
     d1 = concatenate([d1, e1], axis=-1)
     """
     
     d0 = Activation(activation='sigmoid')(d1)
-    d0 = Conv2DTranspose(n_classes, (2, 2), strides=(2, 2), use_bias=False,
+    d0 = Conv2DTranspose(n_classes, (3, 3), strides=(2, 2), use_bias=False,
                         kernel_initializer='he_uniform', padding='same')(d0)
                     
     if nChannels > 1:
