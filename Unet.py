@@ -755,7 +755,7 @@ def Pre_UNet(n_classes, input_height=256, input_width=512, nChannels=3,
     d3 = concatenate([d3, e3], axis=-1)
 
     d2 = pre_cnn.layers[31](d3)
-    pre_cnn.layers[21].trainable = trainable # fixed weight or fine-tuning    
+    pre_cnn.layers[31].trainable = trainable # fixed weight or fine-tuning    
     d2 = pre_cnn.layers[32](d2)
     pre_cnn.layers[32].trainable = trainable # fixed weight or fine-tuning    
     d2 = concatenate([d2, e2], axis=-1)
@@ -796,8 +796,7 @@ def Pre_UNet(n_classes, input_height=256, input_width=512, nChannels=3,
     d1 = concatenate([d1, e1], axis=-1)
     """
     
-    d0 = Activation(activation='sigmoid')(d1)
-    d0 = Conv2DTranspose(n_classes, (3, 3), strides=(2, 2), use_bias=False,
+    d0 = Conv2DTranspose(n_classes, (3, 3), strides=(2, 2), use_bias=False, activation="sigmoid",
                         kernel_initializer='he_uniform', padding='same')(d0)
                     
     if nChannels > 1:
@@ -924,9 +923,8 @@ def Pre_RNN_UNet(n_classes, input_height=256, input_width=512, nChannels=3,
     d1 = concatenate([d1, e1], axis=-1)
     
     
-    d0 = Activation(activation='sigmoid')(d1)
-    d0 = Conv2DTranspose(n_classes, (3, 3), strides=(2, 2), use_bias=False,
-                        kernel_initializer='he_uniform', padding='same')(d0)
+    d0 = Conv2DTranspose(n_classes, (3, 3), strides=(2, 2), use_bias=False, activation="sigmoid",
+                        kernel_initializer='he_uniform', padding='same')(d1)
                     
     if nChannels > 1:
         d0 = multiply([inputs2, d0])

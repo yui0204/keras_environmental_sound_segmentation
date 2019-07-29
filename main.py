@@ -928,7 +928,7 @@ if __name__ == '__main__':
         labelfile = dataset + "label.csv"
         label = pd.read_csv(filepath_or_buffer=labelfile, sep=",", index_col=0)            
         
-        for Model in ["RNN_UNet", "RNN_UNet"]:
+        for Model in ["UNet", "RNN_UNet"]:
             mul = True
             sincos = False
             for vonMises in [False, True]:
