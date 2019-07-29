@@ -9,9 +9,12 @@ from keras.layers.merge import concatenate
 from keras.layers.merge import multiply, add, average, subtract
 
 from keras.layers.convolutional import ZeroPadding2D, Conv2DTranspose
-from keras.layers import LeakyReLU, BatchNormalization, Activation
+from keras.layers import BatchNormalization, Activation
 
 from keras.applications.vgg16 import VGG16
+
+from keras.layers.advanced_activations import LeakyReLU
+leaky_relu = LeakyReLU()
 
 import CNN
 import os
@@ -429,64 +432,55 @@ def UNet(n_classes, input_height=256, input_width=512, nChannels=3):
         inputs2 = Input((input_height, input_width, 1))
 
     
-    e1 = Conv2D(64, (3, 3), strides=2, padding='same')(inputs)
+    e1 = Conv2D(64, (3, 3), strides=2, padding='same', activation=leaky_relu)(inputs)
+    e1 = BatchNormalization()(e1)
 
-    e2 = LeakyReLU(0.2)(e1)
-    e2 = Conv2D(128, (3, 3), strides=2, padding='same')(e2)
+    e2 = Conv2D(128, (3, 3), strides=2, padding='same', activation=leaky_relu)(e1)
     e2 = BatchNormalization()(e2)
     
-    e3 = LeakyReLU(0.2)(e2)
-    e3 = Conv2D(256, (3, 3), strides=2, padding='same')(e3)
+    e3 = Conv2D(256, (3, 3), strides=2, padding='same', activation=leaky_relu)(e2)
     e3 = BatchNormalization()(e3)
     
-    e4 = LeakyReLU(0.2)(e3)
-    e4 = Conv2D(512, (3, 3), strides=2, padding='same')(e4)
+    e4 = Conv2D(512, (3, 3), strides=2, padding='same', activation=leaky_relu)(e3)
     e4 = BatchNormalization()(e4)
     
-    e5 = LeakyReLU(0.2)(e4)
-    e5 = Conv2D(512, (3, 3), strides=2, padding='same')(e5)
+    e5 = Conv2D(512, (3, 3), strides=2, padding='same', activation=leaky_relu)(e4)
     e5 = BatchNormalization()(e5)
     
-    e6 = LeakyReLU(0.2)(e5)
-    e6 = Conv2D(512, (3, 3), strides=2, padding='same')(e6)
+    e6 = Conv2D(512, (3, 3), strides=2, padding='same', activation=leaky_relu)(e5)
     e6 = BatchNormalization()(e6)    
     
-    d5 = Activation(activation='relu')(e6)
-    d5 = Conv2DTranspose(512, (3, 3), strides=(2, 2), use_bias=False, 
-                         kernel_initializer='he_uniform', padding='same')(d5)
+
+    d5 = Conv2DTranspose(512, (3, 3), strides=(2, 2), use_bias=False, activation='relu', 
+                         kernel_initializer='he_uniform', padding='same')(e6)
     d5 = BatchNormalization()(d5)
     d5 = Dropout(0.5)(d5)
     d5 = concatenate([d5, e5], axis=-1)
     
-    d4 = Activation(activation='relu')(d5)
-    d4 = Conv2DTranspose(512, (3, 3), strides=(2, 2), use_bias=False,
-                        kernel_initializer='he_uniform', padding='same')(d4)
+    d4 = Conv2DTranspose(512, (3, 3), strides=(2, 2), use_bias=False, activation='relu', 
+                        kernel_initializer='he_uniform', padding='same')(d5)
     d4 = BatchNormalization()(d4)
     d4 = Dropout(0.5)(d4)
     d4 = concatenate([d4, e4], axis=-1)
 
-    d3 = Activation(activation='relu')(d4)
-    d3 = Conv2DTranspose(256, (3, 3), strides=(2, 2), use_bias=False,
-                        kernel_initializer='he_uniform', padding='same')(d3)
+    d3 = Conv2DTranspose(256, (3, 3), strides=(2, 2), use_bias=False, activation='relu',
+                        kernel_initializer='he_uniform', padding='same')(d4)
     d3 = BatchNormalization()(d3)
     d3 = Dropout(0.5)(d3)
     d3 = concatenate([d3, e3], axis=-1)
 
-    d2 = Activation(activation='relu')(d3)
-    d2 = Conv2DTranspose(128, (3, 3), strides=(2, 2), use_bias=False,
-                        kernel_initializer='he_uniform', padding='same')(d2)
+    d2 = Conv2DTranspose(128, (3, 3), strides=(2, 2), use_bias=False, activation='relu',
+                        kernel_initializer='he_uniform', padding='same')(d3)
     d2 = BatchNormalization()(d2)
     d2 = concatenate([d2, e2], axis=-1)
 
-    d1 = Activation(activation='relu')(d2)
-    d1 = Conv2DTranspose(64, (3, 3), strides=(2, 2), use_bias=False,
-                        kernel_initializer='he_uniform', padding='same')(d1)
+    d1 = Conv2DTranspose(64, (3, 3), strides=(2, 2), use_bias=False, activation='relu',
+                        kernel_initializer='he_uniform', padding='same')(d2)
     d1 = BatchNormalization()(d1)
     d1 = concatenate([d1, e1], axis=-1)
     
-    d0 = Activation(activation='sigmoid')(d1)
-    d0 = Conv2DTranspose(n_classes, (3, 3), strides=(2, 2), use_bias=False,
-                        kernel_initializer='he_uniform', padding='same')(d0)
+    d0 = Conv2DTranspose(n_classes, (3, 3), strides=(2, 2), use_bias=False, activation='sigmoid',
+                        kernel_initializer='he_uniform', padding='same')(d1)
                     
     if nChannels > 1:
         d0 = multiply([inputs2, d0])
@@ -504,26 +498,22 @@ def RNN_UNet(n_classes, input_height=256, input_width=512, nChannels=3):
         inputs2 = Input((input_height, input_width, 1))
 
     
-    e1 = Conv2D(64, (3, 3), strides=2, padding='same')(inputs)
-
-    e2 = LeakyReLU(0.2)(e1)
-    e2 = Conv2D(128, (3, 3), strides=2, padding='same')(e2)
+    e1 = Conv2D(64, (3, 3), strides=2, padding='same', activation=leaky_relu)(inputs)
+    e1 = BatchNormalization()(e1)
+    
+    e2 = Conv2D(128, (3, 3), strides=2, padding='same', activation=leaky_relu)(e1)
     e2 = BatchNormalization()(e2)
     
-    e3 = LeakyReLU(0.2)(e2)
-    e3 = Conv2D(256, (3, 3), strides=2, padding='same')(e3)
+    e3 = Conv2D(256, (3, 3), strides=2, padding='same', activation=leaky_relu)(e2)
     e3 = BatchNormalization()(e3)
     
-    e4 = LeakyReLU(0.2)(e3)
-    e4 = Conv2D(512, (3, 3), strides=2, padding='same')(e4)
+    e4 = Conv2D(512, (3, 3), strides=2, padding='same', activation=leaky_relu)(e3)
     e4 = BatchNormalization()(e4)
     
-    e5 = LeakyReLU(0.2)(e4)
-    e5 = Conv2D(512, (3, 3), strides=2, padding='same')(e5)
+    e5 = Conv2D(512, (3, 3), strides=2, padding='same', activation=leaky_relu)(e4)
     e5 = BatchNormalization()(e5)
     
-    e6 = LeakyReLU(0.2)(e5)
-    e6 = Conv2D(512, (3, 3), strides=2, padding='same')(e6)
+    e6 = Conv2D(512, (3, 3), strides=2, padding='same', activation=leaky_relu)(e5)
     e6 = BatchNormalization()(e6)    
 
     e6 = Reshape((-1, 512))(e6)
@@ -546,42 +536,36 @@ def RNN_UNet(n_classes, input_height=256, input_width=512, nChannels=3):
     e6 = Reshape((4, 4, 512))(e6)
 
     
-    d5 = Activation(activation='relu')(e6)
-    d5 = Conv2DTranspose(512, (3, 3), strides=(2, 2), use_bias=False, 
-                         kernel_initializer='he_uniform', padding='same')(d5)
+    d5 = Conv2DTranspose(512, (3, 3), strides=(2, 2), use_bias=False, activation='relu',
+                         kernel_initializer='he_uniform', padding='same')(e6)
     d5 = BatchNormalization()(d5)
     d5 = Dropout(0.5)(d5)
     d5 = concatenate([d5, e5], axis=-1)
     
-    d4 = Activation(activation='relu')(d5)
-    d4 = Conv2DTranspose(512, (3, 3), strides=(2, 2), use_bias=False,
-                        kernel_initializer='he_uniform', padding='same')(d4)
+    d4 = Conv2DTranspose(512, (3, 3), strides=(2, 2), use_bias=False, activation='relu',
+                        kernel_initializer='he_uniform', padding='same')(d5)
     d4 = BatchNormalization()(d4)
     d4 = Dropout(0.5)(d4)
     d4 = concatenate([d4, e4], axis=-1)
 
-    d3 = Activation(activation='relu')(d4)
-    d3 = Conv2DTranspose(256, (3, 3), strides=(2, 2), use_bias=False,
-                        kernel_initializer='he_uniform', padding='same')(d3)
+    d3 = Conv2DTranspose(256, (3, 3), strides=(2, 2), use_bias=False, activation='relu',
+                        kernel_initializer='he_uniform', padding='same')(d4)
     d3 = BatchNormalization()(d3)
     d3 = Dropout(0.5)(d3)
     d3 = concatenate([d3, e3], axis=-1)
 
-    d2 = Activation(activation='relu')(d3)
-    d2 = Conv2DTranspose(128, (3, 3), strides=(2, 2), use_bias=False,
-                        kernel_initializer='he_uniform', padding='same')(d2)
+    d2 = Conv2DTranspose(128, (3, 3), strides=(2, 2), use_bias=False, activation='relu',
+                        kernel_initializer='he_uniform', padding='same')(d3)
     d2 = BatchNormalization()(d2)
     d2 = concatenate([d2, e2], axis=-1)
 
-    d1 = Activation(activation='relu')(d2)
-    d1 = Conv2DTranspose(64, (3, 3), strides=(2, 2), use_bias=False,
-                        kernel_initializer='he_uniform', padding='same')(d1)
+    d1 = Conv2DTranspose(64, (3, 3), strides=(2, 2), use_bias=False, activation='relu',
+                        kernel_initializer='he_uniform', padding='same')(d2)
     d1 = BatchNormalization()(d1)
     d1 = concatenate([d1, e1], axis=-1)
     
-    d0 = Activation(activation='sigmoid')(d1)
-    d0 = Conv2DTranspose(n_classes, (3, 3), strides=(2, 2), use_bias=False,
-                        kernel_initializer='he_uniform', padding='same')(d0)
+    d0 = Conv2DTranspose(n_classes, (3, 3), strides=(2, 2), use_bias=False, activation='sigmoid', 
+                        kernel_initializer='he_uniform', padding='same')(d1)
                 
     if nChannels > 1:
         d0 = multiply([inputs2, d0])
@@ -693,14 +677,14 @@ def Pre_UNet(n_classes, input_height=256, input_width=512, nChannels=3,
     weight = "UNet_1class_8direction_8ch_mulTrue_cinTrue_ipdTrue_vonMisesFalse_weights.hdf5"
 
     pre_cnn = UNet(n_classes=8, input_height=256, input_width=input_width, nChannels=nChannels)
-    pre_cnn.load_weights(os.getcwd()+"/model_results/2019_0728/"+dir_name+weight)
+    pre_cnn.load_weights(os.getcwd()+"/model_results/2019_0729/"+dir_name+weight)
 
     e1 = pre_cnn.layers[1](inputs)
-    pre_cnn.layers[1].trainable = trainable # fixed weight
-    
-    e2 = pre_cnn.layers[2](e1)
+    pre_cnn.layers[1].trainable = trainable # fixed weight   
+    e1 = pre_cnn.layers[2](e1)
     pre_cnn.layers[2].trainable = trainable # fixed weight or fine-tuning    
-    e2 = pre_cnn.layers[3](e2)
+
+    e2 = pre_cnn.layers[3](e1)
     pre_cnn.layers[3].trainable = trainable # fixed weight or fine-tuning    
     e2 = pre_cnn.layers[4](e2)
     pre_cnn.layers[4].trainable = trainable # fixed weight or fine-tuning    
@@ -709,108 +693,85 @@ def Pre_UNet(n_classes, input_height=256, input_width=512, nChannels=3,
     pre_cnn.layers[5].trainable = trainable # fixed weight or fine-tuning    
     e3 = pre_cnn.layers[6](e3)
     pre_cnn.layers[6].trainable = trainable # fixed weight or fine-tuning    
-    e3 = pre_cnn.layers[7](e3)
-    pre_cnn.layers[7].trainable = trainable # fixed weight or fine-tuning    
-    
-    e4 = pre_cnn.layers[8](e3)
+
+    e4 = pre_cnn.layers[7](e3)
+    pre_cnn.layers[7].trainable = trainable # fixed weight or fine-tuning        
+    e4 = pre_cnn.layers[8](e4)
     pre_cnn.layers[8].trainable = trainable # fixed weight or fine-tuning    
-    e4 = pre_cnn.layers[9](e4)
+
+    e5 = pre_cnn.layers[9](e4)
     pre_cnn.layers[9].trainable = trainable # fixed weight or fine-tuning    
-    e4 = pre_cnn.layers[10](e4)
+    e5 = pre_cnn.layers[10](e5)
     pre_cnn.layers[10].trainable = trainable # fixed weight or fine-tuning    
 
-    e5 = pre_cnn.layers[11](e4)
+    e6 = pre_cnn.layers[11](e5)
     pre_cnn.layers[11].trainable = trainable # fixed weight or fine-tuning    
-    e5 = pre_cnn.layers[12](e5)
+    e6 = pre_cnn.layers[12](e6)
     pre_cnn.layers[12].trainable = trainable # fixed weight or fine-tuning    
-    e5 = pre_cnn.layers[13](e5)
+    
+    
+    d5 = pre_cnn.layers[13](e6)
     pre_cnn.layers[13].trainable = trainable # fixed weight or fine-tuning    
-    
-    e6 = pre_cnn.layers[14](e5)
+    d5 = pre_cnn.layers[14](d5)
     pre_cnn.layers[14].trainable = trainable # fixed weight or fine-tuning    
-    e6 = pre_cnn.layers[15](e6)
+    d5 = pre_cnn.layers[15](d5)
     pre_cnn.layers[15].trainable = trainable # fixed weight or fine-tuning    
-    e6 = pre_cnn.layers[16](e6)
-    pre_cnn.layers[16].trainable = trainable # fixed weight or fine-tuning    
-    
-    
-    d5 = pre_cnn.layers[17](e6)
-    pre_cnn.layers[17].trainable = trainable # fixed weight or fine-tuning    
-    d5 = pre_cnn.layers[18](d5)
-    pre_cnn.layers[18].trainable = trainable # fixed weight or fine-tuning    
-    d5 = pre_cnn.layers[19](d5)
-    pre_cnn.layers[19].trainable = trainable # fixed weight or fine-tuning    
-    d5 = pre_cnn.layers[20](d5)
-    pre_cnn.layers[20].trainable = trainable # fixed weight or fine-tuning    
     d5 = concatenate([d5, e5], axis=-1)
-
-    d4 = pre_cnn.layers[21](d5)
-    pre_cnn.layers[21].trainable = trainable # fixed weight or fine-tuning    
-    d4 = pre_cnn.layers[22](d4)
-    pre_cnn.layers[22].trainable = trainable # fixed weight or fine-tuning    
-    d4 = pre_cnn.layers[23](d4)
-    pre_cnn.layers[23].trainable = trainable # fixed weight or fine-tuning    
-    d4 = pre_cnn.layers[24](d4)
-    pre_cnn.layers[24].trainable = trainable # fixed weight or fine-tuning    
+    
+    d4 = pre_cnn.layers[17](d5)
+    pre_cnn.layers[17].trainable = trainable # fixed weight or fine-tuning    
+    d4 = pre_cnn.layers[18](d4)
+    pre_cnn.layers[18].trainable = trainable # fixed weight or fine-tuning    
+    d4 = pre_cnn.layers[19](d4)
+    pre_cnn.layers[19].trainable = trainable # fixed weight or fine-tuning    
     d4 = concatenate([d4, e4], axis=-1)
 
-    d3 = pre_cnn.layers[25](d4)
-    pre_cnn.layers[25].trainable = trainable # fixed weight or fine-tuning    
-    d3 = pre_cnn.layers[26](d3)
-    pre_cnn.layers[26].trainable = trainable # fixed weight or fine-tuning    
-    d3 = pre_cnn.layers[27](d3)
-    pre_cnn.layers[27].trainable = trainable # fixed weight or fine-tuning    
-    d3 = pre_cnn.layers[28](d3)
-    pre_cnn.layers[28].trainable = trainable # fixed weight or fine-tuning    
+    d3 = pre_cnn.layers[21](d4)
+    pre_cnn.layers[21].trainable = trainable # fixed weight or fine-tuning    
+    d3 = pre_cnn.layers[22](d3)
+    pre_cnn.layers[22].trainable = trainable # fixed weight or fine-tuning    
+    d3 = pre_cnn.layers[23](d3)
+    pre_cnn.layers[23].trainable = trainable # fixed weight or fine-tuning    
     d3 = concatenate([d3, e3], axis=-1)
 
-    d2 = pre_cnn.layers[29](d3)
-    pre_cnn.layers[29].trainable = trainable # fixed weight or fine-tuning    
-    d2 = pre_cnn.layers[30](d2)
-    pre_cnn.layers[30].trainable = trainable # fixed weight or fine-tuning    
-    d2 = pre_cnn.layers[31](d2)
-    pre_cnn.layers[31].trainable = trainable # fixed weight or fine-tuning    
+    d2 = pre_cnn.layers[25](d3)
+    pre_cnn.layers[25].trainable = trainable # fixed weight or fine-tuning    
+    d2 = pre_cnn.layers[26](d2)
+    pre_cnn.layers[26].trainable = trainable # fixed weight or fine-tuning    
     d2 = concatenate([d2, e2], axis=-1)
 
-    d1 = pre_cnn.layers[32](d2)
-    pre_cnn.layers[32].trainable = trainable # fixed weight or fine-tuning    
-    d1 = pre_cnn.layers[33](d1)
-    pre_cnn.layers[33].trainable = trainable # fixed weight or fine-tuning    
-    d1 = pre_cnn.layers[34](d1)
-    pre_cnn.layers[34].trainable = trainable # fixed weight or fine-tuning    
+    d1 = pre_cnn.layers[28](d2)
+    pre_cnn.layers[28].trainable = trainable # fixed weight or fine-tuning    
+    d1 = pre_cnn.layers[29](d1)
+    pre_cnn.layers[29].trainable = trainable # fixed weight or fine-tuning    
     d1 = concatenate([d1, e1], axis=-1)
-
-    """
-    d5 = Activation(activation='relu')(e6)
-    d5 = Conv2DTranspose(512, (3, 3), strides=(2, 2), use_bias=False, 
-                         kernel_initializer='he_uniform', padding='same')(d5)
+    
+    """      
+    d5 = Conv2DTranspose(512, (3, 3), strides=(2, 2), use_bias=False, activation='relu', 
+                         kernel_initializer='he_uniform', padding='same')(e6)
     d5 = BatchNormalization()(d5)
     d5 = Dropout(0.5)(d5)
     d5 = concatenate([d5, e5], axis=-1)
     
-    d4 = Activation(activation='relu')(d5)
-    d4 = Conv2DTranspose(512, (3, 3), strides=(2, 2), use_bias=False,
-                        kernel_initializer='he_uniform', padding='same')(d4)
+    d4 = Conv2DTranspose(512, (3, 3), strides=(2, 2), use_bias=False, activation='relu', 
+                        kernel_initializer='he_uniform', padding='same')(d5)
     d4 = BatchNormalization()(d4)
     d4 = Dropout(0.5)(d4)
     d4 = concatenate([d4, e4], axis=-1)
 
-    d3 = Activation(activation='relu')(d4)
-    d3 = Conv2DTranspose(256, (3, 3), strides=(2, 2), use_bias=False,
-                        kernel_initializer='he_uniform', padding='same')(d3)
+    d3 = Conv2DTranspose(256, (3, 3), strides=(2, 2), use_bias=False, activation='relu',
+                        kernel_initializer='he_uniform', padding='same')(d4)
     d3 = BatchNormalization()(d3)
     d3 = Dropout(0.5)(d3)
     d3 = concatenate([d3, e3], axis=-1)
 
-    d2 = Activation(activation='relu')(d3)
-    d2 = Conv2DTranspose(128, (3, 3), strides=(2, 2), use_bias=False,
-                        kernel_initializer='he_uniform', padding='same')(d2)
+    d2 = Conv2DTranspose(128, (3, 3), strides=(2, 2), use_bias=False, activation='relu',
+                        kernel_initializer='he_uniform', padding='same')(d3)
     d2 = BatchNormalization()(d2)
     d2 = concatenate([d2, e2], axis=-1)
 
-    d1 = Activation(activation='relu')(d2)
-    d1 = Conv2DTranspose(64, (3, 3), strides=(2, 2), use_bias=False,
-                        kernel_initializer='he_uniform', padding='same')(d1)
+    d1 = Conv2DTranspose(64, (3, 3), strides=(2, 2), use_bias=False, activation='relu',
+                        kernel_initializer='he_uniform', padding='same')(d2)
     d1 = BatchNormalization()(d1)
     d1 = concatenate([d1, e1], axis=-1)
     """
@@ -839,14 +800,14 @@ def Pre_RNN_UNet(n_classes, input_height=256, input_width=512, nChannels=3,
     weight = "RNN_UNet_1class_8direction_8ch_mulTrue_cinTrue_ipdTrue_vonMisesFalse_weights.hdf5"
 
     pre_cnn = RNN_UNet(n_classes=8, input_height=256, input_width=input_width, nChannels=nChannels)
-    pre_cnn.load_weights(os.getcwd()+"/model_results/2019_0728/"+dir_name+weight)
+    pre_cnn.load_weights(os.getcwd()+"/model_results/2019_0729/"+dir_name+weight)
 
     e1 = pre_cnn.layers[1](inputs)
-    pre_cnn.layers[1].trainable = trainable # fixed weight
-    
-    e2 = pre_cnn.layers[2](e1)
+    pre_cnn.layers[1].trainable = trainable # fixed weight   
+    e1 = pre_cnn.layers[2](e1)
     pre_cnn.layers[2].trainable = trainable # fixed weight or fine-tuning    
-    e2 = pre_cnn.layers[3](e2)
+
+    e2 = pre_cnn.layers[3](e1)
     pre_cnn.layers[3].trainable = trainable # fixed weight or fine-tuning    
     e2 = pre_cnn.layers[4](e2)
     pre_cnn.layers[4].trainable = trainable # fixed weight or fine-tuning    
@@ -855,31 +816,33 @@ def Pre_RNN_UNet(n_classes, input_height=256, input_width=512, nChannels=3,
     pre_cnn.layers[5].trainable = trainable # fixed weight or fine-tuning    
     e3 = pre_cnn.layers[6](e3)
     pre_cnn.layers[6].trainable = trainable # fixed weight or fine-tuning    
-    e3 = pre_cnn.layers[7](e3)
-    pre_cnn.layers[7].trainable = trainable # fixed weight or fine-tuning    
-    
-    e4 = pre_cnn.layers[8](e3)
+
+    e4 = pre_cnn.layers[7](e3)
+    pre_cnn.layers[7].trainable = trainable # fixed weight or fine-tuning        
+    e4 = pre_cnn.layers[8](e4)
     pre_cnn.layers[8].trainable = trainable # fixed weight or fine-tuning    
-    e4 = pre_cnn.layers[9](e4)
+
+    e5 = pre_cnn.layers[9](e4)
     pre_cnn.layers[9].trainable = trainable # fixed weight or fine-tuning    
-    e4 = pre_cnn.layers[10](e4)
+    e5 = pre_cnn.layers[10](e5)
     pre_cnn.layers[10].trainable = trainable # fixed weight or fine-tuning    
 
-    e5 = pre_cnn.layers[11](e4)
+    e6 = pre_cnn.layers[11](e5)
     pre_cnn.layers[11].trainable = trainable # fixed weight or fine-tuning    
-    e5 = pre_cnn.layers[12](e5)
+    e6 = pre_cnn.layers[12](e6)
     pre_cnn.layers[12].trainable = trainable # fixed weight or fine-tuning    
-    e5 = pre_cnn.layers[13](e5)
+    
+    
+    e6 = pre_cnn.layers[13](e6)
     pre_cnn.layers[13].trainable = trainable # fixed weight or fine-tuning    
     
-    e6 = pre_cnn.layers[14](e5)
+    e6 = pre_cnn.layers[14](e6)
     pre_cnn.layers[14].trainable = trainable # fixed weight or fine-tuning    
     e6 = pre_cnn.layers[15](e6)
-    pre_cnn.layers[15].trainable = trainable # fixed weight or fine-tuning    
+    pre_cnn.layers[15].trainable = trainable # fixed weight or fine-tuning        
+    
     e6 = pre_cnn.layers[16](e6)
     pre_cnn.layers[16].trainable = trainable # fixed weight or fine-tuning    
-    
-    # RNN
     e6 = pre_cnn.layers[17](e6)
     pre_cnn.layers[17].trainable = trainable # fixed weight or fine-tuning    
     
@@ -887,101 +850,47 @@ def Pre_RNN_UNet(n_classes, input_height=256, input_width=512, nChannels=3,
     pre_cnn.layers[18].trainable = trainable # fixed weight or fine-tuning    
     e6 = pre_cnn.layers[19](e6)
     pre_cnn.layers[19].trainable = trainable # fixed weight or fine-tuning    
-        
+    
     e6 = pre_cnn.layers[20](e6)
     pre_cnn.layers[20].trainable = trainable # fixed weight or fine-tuning    
-    e6 = pre_cnn.layers[21](e6)
+    
+    
+    d5 = pre_cnn.layers[21](e6)
     pre_cnn.layers[21].trainable = trainable # fixed weight or fine-tuning    
-
-    e6 = pre_cnn.layers[22](e6)
+    d5 = pre_cnn.layers[22](d5)
     pre_cnn.layers[22].trainable = trainable # fixed weight or fine-tuning    
-    e6 = pre_cnn.layers[23](e6)
+    d5 = pre_cnn.layers[23](d5)
     pre_cnn.layers[23].trainable = trainable # fixed weight or fine-tuning    
-
-    e6 = pre_cnn.layers[24](e6)
-    pre_cnn.layers[24].trainable = trainable # fixed weight or fine-tuning    
-
-
-    d5 = pre_cnn.layers[25](e6)
+    d5 = concatenate([d5, e5], axis=-1)
+    
+    d4 = pre_cnn.layers[25](d5)
     pre_cnn.layers[25].trainable = trainable # fixed weight or fine-tuning    
-    d5 = pre_cnn.layers[26](d5)
+    d4 = pre_cnn.layers[26](d4)
     pre_cnn.layers[26].trainable = trainable # fixed weight or fine-tuning    
-    d5 = pre_cnn.layers[27](d5)
+    d4 = pre_cnn.layers[27](d4)
     pre_cnn.layers[27].trainable = trainable # fixed weight or fine-tuning    
-    d5 = pre_cnn.layers[28](d5)
-    pre_cnn.layers[28].trainable = trainable # fixed weight or fine-tuning    
-    d5 = concatenate([d5, e5], axis=-1)
+    d4 = concatenate([d4, e4], axis=-1)
 
-    d4 = pre_cnn.layers[29](d5)
+    d3 = pre_cnn.layers[29](d4)
     pre_cnn.layers[29].trainable = trainable # fixed weight or fine-tuning    
-    d4 = pre_cnn.layers[30](d4)
+    d3 = pre_cnn.layers[30](d3)
     pre_cnn.layers[30].trainable = trainable # fixed weight or fine-tuning    
-    d4 = pre_cnn.layers[31](d4)
+    d3 = pre_cnn.layers[31](d3)
     pre_cnn.layers[31].trainable = trainable # fixed weight or fine-tuning    
-    d4 = pre_cnn.layers[32](d4)
-    pre_cnn.layers[32].trainable = trainable # fixed weight or fine-tuning    
-    d4 = concatenate([d4, e4], axis=-1)
+    d3 = concatenate([d3, e3], axis=-1)
 
-    d3 = pre_cnn.layers[33](d4)
+    d2 = pre_cnn.layers[33](d3)
     pre_cnn.layers[33].trainable = trainable # fixed weight or fine-tuning    
-    d3 = pre_cnn.layers[34](d3)
+    d2 = pre_cnn.layers[34](d2)
     pre_cnn.layers[34].trainable = trainable # fixed weight or fine-tuning    
-    d3 = pre_cnn.layers[35](d3)
-    pre_cnn.layers[35].trainable = trainable # fixed weight or fine-tuning    
-    d3 = pre_cnn.layers[36](d3)
+    d2 = concatenate([d2, e2], axis=-1)
+
+    d1 = pre_cnn.layers[36](d2)
     pre_cnn.layers[36].trainable = trainable # fixed weight or fine-tuning    
-    d3 = concatenate([d3, e3], axis=-1)
-
-    d2 = pre_cnn.layers[37](d3)
+    d1 = pre_cnn.layers[37](d1)
     pre_cnn.layers[37].trainable = trainable # fixed weight or fine-tuning    
-    d2 = pre_cnn.layers[38](d2)
-    pre_cnn.layers[38].trainable = trainable # fixed weight or fine-tuning    
-    d2 = pre_cnn.layers[39](d2)
-    pre_cnn.layers[39].trainable = trainable # fixed weight or fine-tuning    
-    d2 = concatenate([d2, e2], axis=-1)
-
-    d1 = pre_cnn.layers[40](d2)
-    pre_cnn.layers[40].trainable = trainable # fixed weight or fine-tuning    
-    d1 = pre_cnn.layers[41](d1)
-    pre_cnn.layers[41].trainable = trainable # fixed weight or fine-tuning    
-    d1 = pre_cnn.layers[42](d1)
-    pre_cnn.layers[42].trainable = trainable # fixed weight or fine-tuning    
     d1 = concatenate([d1, e1], axis=-1)
     
-    """
-    d5 = Activation(activation='relu')(e6)
-    d5 = Conv2DTranspose(512, (3, 3), strides=(2, 2), use_bias=False, 
-                         kernel_initializer='he_uniform', padding='same')(d5)
-    d5 = BatchNormalization()(d5)
-    d5 = Dropout(0.5)(d5)
-    d5 = concatenate([d5, e5], axis=-1)
-    
-    d4 = Activation(activation='relu')(d5)
-    d4 = Conv2DTranspose(512, (3, 3), strides=(2, 2), use_bias=False,
-                        kernel_initializer='he_uniform', padding='same')(d4)
-    d4 = BatchNormalization()(d4)
-    d4 = Dropout(0.5)(d4)
-    d4 = concatenate([d4, e4], axis=-1)
-
-    d3 = Activation(activation='relu')(d4)
-    d3 = Conv2DTranspose(256, (3, 3), strides=(2, 2), use_bias=False,
-                        kernel_initializer='he_uniform', padding='same')(d3)
-    d3 = BatchNormalization()(d3)
-    d3 = Dropout(0.5)(d3)
-    d3 = concatenate([d3, e3], axis=-1)
-
-    d2 = Activation(activation='relu')(d3)
-    d2 = Conv2DTranspose(128, (3, 3), strides=(2, 2), use_bias=False,
-                        kernel_initializer='he_uniform', padding='same')(d2)
-    d2 = BatchNormalization()(d2)
-    d2 = concatenate([d2, e2], axis=-1)
-
-    d1 = Activation(activation='relu')(d2)
-    d1 = Conv2DTranspose(64, (3, 3), strides=(2, 2), use_bias=False,
-                        kernel_initializer='he_uniform', padding='same')(d1)
-    d1 = BatchNormalization()(d1)
-    d1 = concatenate([d1, e1], axis=-1)
-    """
     
     d0 = Activation(activation='sigmoid')(d1)
     d0 = Conv2DTranspose(n_classes, (3, 3), strides=(2, 2), use_bias=False,
