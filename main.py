@@ -35,7 +35,10 @@ from keras.utils import multi_gpu_model
 
 config = tf.ConfigProto()
 config.gpu_options.allow_growth = True
-config.gpu_options.visible_device_list = "0,1,2"
+if os.getcwd() == '/home/yui-sudo/document/segmentation/sound_segtest':
+    config.gpu_options.visible_device_list = "0"
+else:
+    config.gpu_options.visible_device_list = "0,1,2"
 sess = tf.Session(config=config)
 K.set_session(sess)
 
@@ -824,43 +827,20 @@ def RMS(Y_true, Y_pred):
     return rms_array
 
 
-def save_npy(X, Y, max, phase):
-    name = "train"
-    if not mode == "train":
-        name = "test"
-
-    if complex_input == False and VGG == 0:
-        np.save(dataset+"X_"+name+"_dim1_"+str(load_number)+".npy", X)
-    else:
-        np.save(dataset+"X_"+name+"_dim3_"+str(load_number)+".npy", X)
-    np.save(dataset+name+"_max_"+str(load_number)+".npy", max)
-    
-    if not task == "event":
-        np.save(dataset+"Y_"+name+"_"+str(classes)+train_mode+"_"+str(load_number)+".npy", Y)
-        np.save(dataset+name+"_phase_"+str(load_number)+".npy", phase)
-    else:
-        np.save(dataset+"event_Y_"+name+"_"+str(classes)+train_mode+"_"+str(load_number)+".npy", Y)
+def save_npy(X, Y, max, phase, name):    
+    np.save(dataset+"X_"+name+".npy", X)
+    np.save(dataset+"max_"+name+".npy", max)
+    np.save(dataset+"phase_"+name+".npy", phase)
+    np.save(dataset+"Y_"+name+".npy", Y)
         
     print("npy files were saved\n")
         
         
-def load_npy():
-    name = "train"
-    if not mode == "train":
-        name = "test"
-        
-    if complex_input == False and VGG == 0:
-        X = np.load(dataset+"X_"+name+"_dim1_"+str(load_number)+".npy")
-    else:
-        X = np.load(dataset+"X_"+name+"_dim3_"+str(load_number)+".npy")
-    max = np.load(dataset+name+"_max_"+str(load_number)+".npy")
-    
-    if not task == "event":
-        Y = np.load(dataset+"Y_"+name+"_"+str(classes)+train_mode+"_"+str(load_number)+".npy")
-        phase = np.load(dataset+name+"_phase_"+str(load_number)+".npy")
-    else:
-        Y = np.load(dataset+"event_Y_"+name+"_"+str(classes)+train_mode+"_"+str(load_number)+".npy")
-        phase = 1
+def load_npy(name):
+    X = np.load(dataset+"X_"+name+".npy")
+    max = np.load(dataset+"max_"+name+".npy")
+    phase = np.load(dataset+"phase_"+name+".npy")
+    Y = np.load(dataset+"Y_"+name+".npy")
 
     print("npy files were loaded\n")
     
@@ -875,7 +855,10 @@ if __name__ == '__main__':
     task = "segmentation"
     ang_reso = 1
     
-    gpu_count = 3
+    if os.getcwd() == '/home/yui-sudo/document/segmentation/sound_segtest':
+        gpu_count = 1
+    else:
+        gpu_count = 3
     BATCH_SIZE = 16 * gpu_count
     NUM_EPOCH = 100
     
@@ -939,7 +922,7 @@ if __name__ == '__main__':
                                     else:
                                         channel = 24
                             
-                            load_number = 1000
+                            load_number = 10
         
                             
                             model_name = Model+"_"+str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_mul"+str(mul) + "_cin"+str(complex_input) + "_ipd"+str(ipd)  + "_vonMises"+str(vonMises)
@@ -952,14 +935,17 @@ if __name__ == '__main__':
                                 if not os.path.exists(results_dir + "prediction"):
                                     os.makedirs(results_dir + "prediction/")
                                     os.makedirs(results_dir + "checkpoint/")
-                                
-                                X_train, Y_train, max, phase, Y_train_r, Y_train_i = load(segdata_dir, 
-                                                                                          n_classes=classes, 
-                                                                                          load_number=load_number,
-                                                                                          complex_input=complex_input)
-                                if task == "segmentation" and ang_reso > 1:
-                                    Y_train = Y_train.transpose(4,0,2,3,1)[0]
-                                #save_npy(X_train, Y_train, max, phase) 
+
+                                npy_name = "train_" + task + "_" +str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_cin"+str(complex_input) + "_ipd"+str(ipd)  + "_vonMises"+str(vonMises)+"_"+str(load_number)
+                                if not os.path.exists(dataset+"X_"+npy_name+".npy"):
+                                    X_train, Y_train, max, phase, Y_train_r, Y_train_i = load(segdata_dir, 
+                                                                                              n_classes=classes, 
+                                                                                              load_number=load_number,
+                                                                                              complex_input=complex_input)
+                                    save_npy(X_train, Y_train, max, phase, npy_name)
+
+                                else:
+                                    X_train, Y_train, max, phase = load_npy(npy_name)
                     
                                 # save train condition
                                 train_condition = date + "\t" + results_dir                     + "\n" + \
@@ -1007,12 +993,19 @@ if __name__ == '__main__':
                                 
                             if load_number >= 100:
                                 load_number = 50
-                            X_test, Y_test, max, phase, Y_test_r, Y_test_i = load(valdata_dir, 
+
+                                
+                            npy_name = "test_" + task+ "_" +str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_cin"+str(complex_input) + "_ipd"+str(ipd)  + "_vonMises"+str(vonMises)+"_"+str(load_number)
+                            if not os.path.exists(dataset+"X_"+npy_name+".npy"):
+                                X_test, Y_test, max, phase, Y_test_r, Y_test_i = load(valdata_dir, 
                                                                                   n_classes=classes, 
                                                                                   load_number=load_number, 
                                                                                   complex_input=complex_input)
-                            if task == "segmentation" and ang_reso > 1:
-                                    Y_test = Y_test.transpose(4,0,2,3,1)[0]
+                                save_npy(X_test, Y_test, max, phase, npy_name)
+
+                            else:
+                                X_test, Y_test, max, phase = load_npy(npy_name)
+                            
                             
                             Y_pred = predict(X_test, Model)
                                      
