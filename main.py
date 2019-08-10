@@ -245,7 +245,8 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
     if ang_reso == 1 or task == "event":
         labels = labels.transpose(0, 2, 3, 1)  
     else:
-        labels = labels.transpose(0, 2, 3, 4, 1)
+        labels = labels.transpose(0, 3, 4, 1, 2)
+        labels = labels.reshape((load_number, 256, image_size, n_classes * ang_reso))
     
     if VGG > 0:
         inputs = inputs.transpose(3,0,1,2)
