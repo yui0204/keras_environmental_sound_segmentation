@@ -487,7 +487,7 @@ def UNet(n_classes, input_height=256, input_width=512, nChannels=3):
     
     d0 = Conv2DTranspose(n_classes, (3, 3), strides=(2, 2), use_bias=False, activation='sigmoid',
                         kernel_initializer='he_uniform', padding='same')(d1)
-                    
+
     if nChannels > 1:
         d0 = multiply([inputs2, d0])
         model = Model(input=[inputs, inputs2], output=d0)

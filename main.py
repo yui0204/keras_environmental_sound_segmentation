@@ -174,10 +174,10 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
                         labels[i][label.T[filelist[n][:-4]][cat]] += abs(stft[:256])
                     else:
                         angle = int(re.sub("\\D", "", direction[dn].split("_")[1])) // (360 // ang_reso)
-                        labels[i][label.T[filelist[0][:-4]][cat]][angle] += abs(stft[:256])
+                        labels[i][label.T[filelist[n][:-4]][cat]][angle] += abs(stft[:256])
                         dn += 1
     
-    if complex_input == True and ipd == False and sincos == False and vonMises == False:
+    if complex_input == True and ipd == False and vonMises == False:
         sign = (inputs > 0) * 2 - 1
         sign = sign.astype(np.float16)
         if complex_output == True:
@@ -207,26 +207,6 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
         inputs[0], labels, max, r_labels, i_labels = normalize(inputs[0], labels, r_labels, i_labels)
         inputs = inputs.transpose(1,0,2,3)
 
-    elif sincos == True:
-        inputs = inputs.transpose(1,0,2,3)
-        for ch in [1,2,4,5,7,8,10,11,13,14,16,17,19,20,22,23]:
-            inputs[ch] = inputs[ch] / inputs[ch // 3] # sin, cos
-        inputs[0], labels = log(inputs[0], labels)
-        inputs[0] = np.nan_to_num(inputs[0])
-        labels = np.nan_to_num(labels) 
-        inputs[0] += 120
-        labels += 120
-        for ch in range(1, 8):
-            inputs[ch * 3] += 10**-7
-            inputs[ch * 3] = 20 * np.log10(inputs[ch * 3])
-            inputs[ch * 3] = np.nan_to_num(inputs[ch * 3])
-            inputs[ch * 3] += 120        
-        
-        inputs[0], labels, max, r_labels, i_labels = normalize(inputs[0], labels, r_labels, i_labels)
-        for ch in range(1, 8):
-            inputs[ch * 3] = inputs[ch * 3] / max
-        inputs = inputs.transpose(1,0,2,3)
-
     else:
         inputs, labels = log(inputs, labels)   
         inputs = np.nan_to_num(inputs)
@@ -236,7 +216,7 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
         inputs, labels, max, r_labels, i_labels = normalize(inputs, labels, r_labels, i_labels)
 
 
-    if complex_input == True and ipd == False and sincos == False and vonMises == False:
+    if complex_input == True and ipd == False and vonMises == False:
         inputs = inputs * sign
         if complex_output == True:
             r_labels = r_labels * r_sign
@@ -930,7 +910,6 @@ if __name__ == '__main__':
         
         for Model in ["UNet", "RNN_UNet"]:
             mul = True
-            sincos = False
             for vonMises in [False, True]:
                 for ipd in [False, True]:
                     for mic_num in [1, 8]: # 1 or 8
@@ -955,6 +934,7 @@ if __name__ == '__main__':
                                         continue
                                 elif mic_num == 8:
                                     if complex_input == False:
+                                        continue
                                         channel = 8
                                     else:
                                         channel = 24
@@ -999,7 +979,6 @@ if __name__ == '__main__':
                                                   "\t\t Complex_output, " + str(complex_output) + "\n" + \
                                                   "\t\t IPD input,      " + str(ipd) + "\n" + \
                                                   "\t\t von Mises input," + str(vonMises) + "\n" + \
-                                                  "\t\t sin, cos input, " + str(sincos) + "\n" + \
                                                   "\t\t task     ,      " + task + "\n" + \
                                                   "\t\t Angle reso,     " + str(360 // ang_reso) + "\n" + \
                                                   "\t\t Model,          " + Model               + "\n" + \
@@ -1024,6 +1003,7 @@ if __name__ == '__main__':
                                 results_dir = "./model_results/" + date + "/" + dir_name
                                 with open(results_dir + 'train_condition.txt','r') as f:
                                     train_condition = f.read() 
+                                    print(train_condition)
                                 
                             if load_number >= 100:
                                 load_number = 50
