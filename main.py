@@ -603,12 +603,12 @@ def plot_stft(Y_true, Y_pred, no=0):
     Y_true_total = np.zeros((256, image_size))
     Y_pred_total = np.zeros((256, image_size))
     for i in range(plot_num):
-        if Y_true[no][i].max() >= 0: #含まれているクラスのみグラフ表示
+        if Y_true[no][i].max() > 0: #含まれているクラスのみグラフ表示
             plt.pcolormesh((Y_true[no][i]))
             if ang_reso == 1:
                 plt.title(label.index[i] + "_truth")
             else:
-                plt.title(label.index[i % ang_reso * 0] + "_" + str((360 // ang_reso) * (i % ang_reso)) + "deg_truth")
+                plt.title(label.index[i // ang_reso] + "_" + str((360 // ang_reso) * (i % ang_reso)) + "deg_truth")
             plt.xlabel("time")
             plt.ylabel(ylabel)
             plt.clim(0, 1)
@@ -616,14 +616,14 @@ def plot_stft(Y_true, Y_pred, no=0):
             if ang_reso == 1:
                 plt.savefig(pred_dir + label.index[i] + "_true.png")
             else:
-                plt.savefig(pred_dir + label.index[i % ang_reso * 0] + "_" + str((360 // ang_reso) * (i % ang_reso)) + "deg_true.png")
+                plt.savefig(pred_dir + label.index[i // ang_reso] + "_" + str((360 // ang_reso) * (i % ang_reso)) + "deg_true.png")
             plt.close()
 
             plt.pcolormesh((Y_pred[no][i]))
             if ang_reso == 1:
                 plt.title(label.index[i] + "_prediction")
             else:
-                plt.title(label.index[i % ang_reso * 0] + "_" + str((360 // ang_reso) * (i % ang_reso)) + "deg_prediction")                
+                plt.title(label.index[i // ang_reso] + "_" + str((360 // ang_reso) * (i % ang_reso)) + "deg_prediction")                
             plt.xlabel("time")
             plt.ylabel(ylabel)
             plt.clim(0, 1)
@@ -631,7 +631,7 @@ def plot_stft(Y_true, Y_pred, no=0):
             if ang_reso == 1:
                 plt.savefig(pred_dir + label.index[i] + "_pred.png")
             else:
-                plt.savefig(pred_dir + label.index[i % ang_reso * 0] + "_" + str((360 // ang_reso) * (i % ang_reso)) + "deg_pred.png")         
+                plt.savefig(pred_dir + label.index[i // ang_reso] + "_" + str((360 // ang_reso) * (i % ang_reso)) + "deg_pred.png")         
             plt.close()
             
         Y_true_total += (Y_true[no][i] > 0.45) * (i + 4)
@@ -863,7 +863,7 @@ if __name__ == '__main__':
     BATCH_SIZE = 16 * gpu_count
     NUM_EPOCH = 100
     
-    lr = 0.0001
+    lr = 0.001
     
     loss = "mean_squared_error"
     if task == "event":
@@ -873,6 +873,7 @@ if __name__ == '__main__':
     date = mode       
     plot = True
     
+    Y_train_r, Y_train_i, Y_test_r, Y_test_i = 1,1,1,1
     if os.getcwd() == '/home/yui-sudo/document/segmentation/sound_segtest':
         datasets_dir = "/home/yui-sudo/document/dataset/sound_segmentation/datasets/"
     else:
@@ -892,13 +893,13 @@ if __name__ == '__main__':
         labelfile = dataset + "label.csv"
         label = pd.read_csv(filepath_or_buffer=labelfile, sep=",", index_col=0)            
         
-        for Model in ["UNet", "RNN_UNet"]:
+        for Model in ["UNet"]:
             mul = True
-            for vonMises in [False, True]:
-                for ipd in [False, True]:
-                    for mic_num in [1, 8]: # 1 or 8
+            for vonMises in [False]:
+                for ipd in [True]:
+                    for mic_num in [8]: # 1 or 8
                         soft = False
-                        for complex_input in [False, True]:
+                        for complex_input in [True]:
                             complex_output = False
                             VGG = 0                     #0: False, 1: Red 3: White
                             
@@ -923,7 +924,7 @@ if __name__ == '__main__':
                                     else:
                                         channel = 24
                             
-                            load_number = 10
+                            load_number = 1000
         
                             
                             model_name = Model+"_"+str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_mul"+str(mul) + "_cin"+str(complex_input) + "_ipd"+str(ipd)  + "_vonMises"+str(vonMises)
@@ -947,6 +948,7 @@ if __name__ == '__main__':
 
                                 else:
                                     X_train, Y_train, max, phase = load_npy(npy_name)
+                                
                     
                                 # save train condition
                                 train_condition = date + "\t" + results_dir                     + "\n" + \
@@ -1006,7 +1008,6 @@ if __name__ == '__main__':
 
                             else:
                                 X_test, Y_test, max, phase = load_npy(npy_name)
-                            
                             
                             Y_pred = predict(X_test, Model)
                                      
