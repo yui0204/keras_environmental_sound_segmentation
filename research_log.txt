@@ -1694,3 +1694,141 @@ File Edit Options Buffers Tools Text Help
 		 classes,        3
 
 
+2019_0914	./model_results/2019_0914/CNN8_3class_1direction_1ch_mulTrue_cinFalse_ipdFalse_vonMisesFalse_multi_segdata3_256_no_sound_random_sep/
+	Comapare IPD input and normal complex input and 1ch
+		 segdata_dir, /home/yui-sudo/document/dataset/sound_segmentation/datasets/multi_segdata3_256_no_sound_random_sep/train/
+		 valdata_dir, /home/yui-sudo/document/dataset/sound_segmentation/datasets/multi_segdata3_256_no_sound_random_sep/val/
+		 X(10, 256, 256, 1) Y(10, 1, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     16
+		 NUM_EPOCH,      10
+		 Loss function,  binary_crossentropy
+		 Learning_rate,  0.001
+		 Mic num,        1
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  False
+		 Complex_output, False
+		 IPD input,      False
+		 von Mises input,False
+		 task     ,      event
+		 Angle reso,     360
+		 Model,          CNN8
+		 classes,        3
+
+
+2019_0914	./model_results/2019_0914/CNN8_3class_1direction_1ch_mulTrue_cinTrue_ipdFalse_vonMisesFalse_multi_segdata3_256_no_sound_random_sep/
+	Comapare IPD input and normal complex input and 1ch
+		 segdata_dir, /home/yui-sudo/document/dataset/sound_segmentation/datasets/multi_segdata3_256_no_sound_random_sep/train/
+		 valdata_dir, /home/yui-sudo/document/dataset/sound_segmentation/datasets/multi_segdata3_256_no_sound_random_sep/val/
+		 X(10, 256, 256, 3) Y(10, 1, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     16
+		 NUM_EPOCH,      10
+		 Loss function,  binary_crossentropy
+		 Learning_rate,  0.001
+		 Mic num,        1
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  True
+		 Complex_output, False
+		 IPD input,      False
+		 von Mises input,False
+		 task     ,      event
+		 Angle reso,     360
+		 Model,          CNN8
+		 classes,        3
+
+
+2019_0914	./model_results/2019_0914/CNN8_3class_1direction_1ch_mulTrue_cinTrue_ipdFalse_vonMisesTrue_multi_segdata3_256_no_sound_random_sep/
+	Comapare IPD input and normal complex input and 1ch
+		 segdata_dir, /home/yui-sudo/document/dataset/sound_segmentation/datasets/multi_segdata3_256_no_sound_random_sep/train/
+		 valdata_dir, /home/yui-sudo/document/dataset/sound_segmentation/datasets/multi_segdata3_256_no_sound_random_sep/val/
+		 X(10, 256, 256, 3) Y(10, 1, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     16
+		 NUM_EPOCH,      10
+		 Loss function,  binary_crossentropy
+		 Learning_rate,  0.001
+		 Mic num,        1
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  True
+		 Complex_output, False
+		 IPD input,      False
+		 von Mises input,True
+		 task     ,      event
+		 Angle reso,     360
+		 Model,          CNN8
+		 classes,        3
+
+
+2019_0914	./model_results/2019_0914/CRNN8_3class_1direction_1ch_mulTrue_cinFalse_ipdFalse_vonMisesFalse_multi_segdata3_256_no_sound_random_sep/
+	Comapare IPD input and normal complex input and 1ch
+		 segdata_dir, /home/yui-sudo/document/dataset/sound_segmentation/datasets/multi_segdata3_256_no_sound_random_sep/train/
+		 valdata_dir, /home/yui-sudo/document/dataset/sound_segmentation/datasets/multi_segdata3_256_no_sound_random_sep/val/
+		 X(10, 256, 256, 1) Y(10, 1, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     16
+		 NUM_EPOCH,      10
+		 Loss function,  binary_crossentropy
+		 Learning_rate,  0.001
+		 Mic num,        1
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  False
+		 Complex_output, False
+		 IPD input,      False
+		 von Mises input,False
+		 task     ,      event
+		 Angle reso,     360
+		 Model,          CRNN8
+		 classes,        3
+
+
+2019_0914	./model_results/2019_0914/CRNN8_3class_1direction_1ch_mulTrue_cinTrue_ipdFalse_vonMisesFalse_multi_segdata3_256_no_sound_random_sep/
+	Comapare IPD input and normal complex input and 1ch
+		 segdata_dir, /home/yui-sudo/document/dataset/sound_segmentation/datasets/multi_segdata3_256_no_sound_random_sep/train/
+		 valdata_dir, /home/yui-sudo/document/dataset/sound_segmentation/datasets/multi_segdata3_256_no_sound_random_sep/val/
+		 X(10, 256, 256, 3) Y(10, 1, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     16
+		 NUM_EPOCH,      10
+		 Loss function,  binary_crossentropy
+		 Learning_rate,  0.001
+		 Mic num,        1
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  True
+		 Complex_output, False
+		 IPD input,      False
+		 von Mises input,False
+		 task     ,      event
+		 Angle reso,     360
+		 Model,          CRNN8
+		 classes,        3
+
+
+2019_0914	./model_results/2019_0914/CRNN8_3class_1direction_1ch_mulTrue_cinTrue_ipdFalse_vonMisesTrue_multi_segdata3_256_no_sound_random_sep/
+	Comapare IPD input and normal complex input and 1ch
+		 segdata_dir, /home/yui-sudo/document/dataset/sound_segmentation/datasets/multi_segdata3_256_no_sound_random_sep/train/
+		 valdata_dir, /home/yui-sudo/document/dataset/sound_segmentation/datasets/multi_segdata3_256_no_sound_random_sep/val/
+		 X(10, 256, 256, 3) Y(10, 1, 256, 3)
+		 data_byte,      float16
+		 BATCH_SIZE,     16
+		 NUM_EPOCH,      10
+		 Loss function,  binary_crossentropy
+		 Learning_rate,  0.001
+		 Mic num,        1
+		 Multiply,       True
+		 Softmax,        False
+		 Complex_input,  True
+		 Complex_output, False
+		 IPD input,      False
+		 von Mises input,True
+		 task     ,      event
+		 Angle reso,     360
+		 Model,          CRNN8
+		 classes,        3
+
+

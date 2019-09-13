@@ -78,7 +78,7 @@ def log(inputs, labels):
 def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):   
     print("data loading\n")
     if mic_num == 1:
-        if complex_input == True or VGG > 0:
+        if complex_input == True or VGG > 0 or vonMises == True:
             input_dim = 3
         else:
             input_dim = 1
@@ -130,9 +130,12 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
                         stft = stft[:, 1:len(stft.T) - 1]
                         if not task == "event":
                             inputs_phase[i] = np.angle(stft)
-                        if complex_input == True:
+                        if vonMises == True:
+                            inputs[i][1] = np.cos(np.angle(stft[:256]))
+                            inputs[i][2] = np.sin(np.angle(stft[:256]))
+                        elif complex_input == True:
                             inputs[i][1] = stft[:256].real
-                            inputs[i][2] = stft[:256].imag
+                            inputs[i][2] = stft[:256].imag                        
                         inputs[i][0] = abs(stft[:256])
                 
                 elif filelist[n][:7] == "0_multi":
@@ -327,28 +330,28 @@ def read_model(Model):
             
         elif Model == "CNN4":
             model = CNN.CNN4(n_classes=classes, input_height=256, 
-                                input_width=image_size, nChannels=1)
+                                input_width=image_size, nChannels=channel)
         elif Model == "CNN8":
             model = CNN.CNN8(n_classes=classes, input_height=256, 
-                                input_width=image_size, nChannels=1)
+                                input_width=image_size, nChannels=channel)
         elif Model == "CRNN":
             model = CNN.CRNN(n_classes=classes, input_height=256, 
-                                input_width=image_size, nChannels=1)
+                                input_width=image_size, nChannels=channel)
         elif Model == "CRNN8":
             model = CNN.CRNN8(n_classes=classes, input_height=256, 
-                                input_width=image_size, nChannels=1)
+                                input_width=image_size, nChannels=channel)
         elif Model == "BiCRNN8":
             model = CNN.BiCRNN8(n_classes=classes, input_height=256, 
-                                input_width=image_size, nChannels=1)
+                                input_width=image_size, nChannels=channel)
         elif Model == "Double_CRNN8":
             model = CNN.Double_CRNN8(n_classes=classes, input_height=256, 
-                                input_width=image_size, nChannels=1)
+                                input_width=image_size, nChannels=channel)
         elif Model == "RNN":
             model = CNN.RNN(n_classes=classes, input_height=256, 
-                                input_width=image_size, nChannels=1)
+                                input_width=image_size, nChannels=channel)
         elif Model == "BiRNN":
             model = CNN.BiRNN(n_classes=classes, input_height=256, 
-                                input_width=image_size, nChannels=1)
+                                input_width=image_size, nChannels=channel)
         
         elif Model == "SELD_CRNN":
             if complex_input == False:
@@ -851,9 +854,9 @@ def load_npy(name):
 
 if __name__ == '__main__':
     train_mode = "class"
-    classes = 3
+    classes = 75
     image_size = 256
-    task = "segmentation"
+    task = "event"
     ang_reso = 1
     
     if os.getcwd() == '/home/yui-sudo/document/segmentation/sound_segtest':
@@ -861,7 +864,7 @@ if __name__ == '__main__':
     else:
         gpu_count = 3
     BATCH_SIZE = 16 * gpu_count
-    NUM_EPOCH = 100
+    NUM_EPOCH = 10
     
     lr = 0.001
     
@@ -882,7 +885,7 @@ if __name__ == '__main__':
     for datadir in ["multi_segdata"+str(classes) + "_"+str(image_size)+"_no_sound_random_sep/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_no_sound/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-30dB/", 
-                    #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-20dB_random/", 
+                    "multi_segdata"+str(classes) + "_"+str(image_size)+"_-20dB_random/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-10dB/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_0dB/"
                     ]:
@@ -893,38 +896,41 @@ if __name__ == '__main__':
         labelfile = dataset + "label.csv"
         label = pd.read_csv(filepath_or_buffer=labelfile, sep=",", index_col=0)            
         
-        for Model in ["UNet"]:
+        for Model in ["CNN8", "CRNN8", "BiCRNN8"]:
             mul = True
-            for vonMises in [False]:
-                for ipd in [True]:
-                    for mic_num in [8]: # 1 or 8
+            for vonMises in [False, True]:
+                for ipd in [False]:
+                    for mic_num in [1]: # 1 or 8
                         soft = False
-                        for complex_input in [True]:
+                        for complex_input in [False, True]:
                             complex_output = False
                             VGG = 0                     #0: False, 1: Red 3: White
                             
-                            
-                            if ipd == True:
-                                channel = 15
-                                if mic_num == 1 or complex_input == False or vonMises == True:
-                                    continue
-                            elif vonMises == True:
-                                channel = 24
-                                if mic_num == 1 or complex_input == False or ipd == True:
-                                    continue
-                            else:
-                                if mic_num == 1:
+
+                            channel = 0
+                            if mic_num == 1:
+                                if complex_input == True and ipd == False:
+                                    channel = 3
+                                elif complex_input == False and ipd == False and vonMises == False:
                                     channel = 1
-                                    if complex_input == True:
-                                        continue
-                                elif mic_num == 8:
-                                    if complex_input == False:
-                                        continue
-                                        channel = 8
-                                    else:
+                            else:                                
+                                if complex_input == True:
+                                    if ipd == True and vonMises == False:
+                                        channel = 15
+                                    elif vonMises == True and ipd == False:
                                         channel = 24
+                                    elif vonMises == False and ipd == False:
+                                        channel = 24
+                                    else:
+                                        continue
+                                elif complex_input == False and ipd == False and vonMises == False:
+                                    channel = 8
                             
-                            load_number = 1000
+                            if channel == 0:
+                                continue
+
+                        
+                            load_number = 10
         
                             
                             model_name = Model+"_"+str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_mul"+str(mul) + "_cin"+str(complex_input) + "_ipd"+str(ipd)  + "_vonMises"+str(vonMises)
