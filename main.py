@@ -276,10 +276,6 @@ def read_model(Model):
         elif Model == "vgg_unet":
             model = Unet.VGG_UNet(n_classes=classes, input_height=256, 
                                        input_width=image_size, nChannels=3)
-        elif Model == "mask_unet":
-            model = Unet.Mask_UNet(n_classes=classes, input_height=256, 
-                                   input_width=image_size, nChannels=1, 
-                                   soft=soft, mul=True) 
         elif Model == "glu_mask_unet":
             model = Unet.GLU_Mask_UNet(n_classes=classes, input_height=256, 
                                    input_width=image_size, nChannels=channel, 
@@ -289,7 +285,11 @@ def read_model(Model):
                                    input_width=image_size, nChannels=channel, 
                                    soft=soft, mul=True) 
                     
-            
+        elif Model == "Mask_UNet":
+            model = Unet.Mask_UNet(n_classes=classes, input_height=256, 
+                                   input_width=image_size, nChannels=1, 
+                                   soft=soft, mul=True, trainable=True, 
+                                   sed_model=sed_model, num_layer=num_layer) 
         elif Model == "UNet":
             model = Unet.UNet(n_classes=classes * ang_reso, input_height=256, 
                                    input_width=image_size, nChannels=channel)            
@@ -316,16 +316,19 @@ def read_model(Model):
         elif Model == "Deeplab":
             model = Deeplab.Deeplabv3(weights=None, input_tensor=None, 
                               input_shape=(256, image_size, channel), 
-                              classes=classes * ang_reso, OS=16, mul=mul, soft=soft)
+                              classes=classes * ang_reso, OS=16, mul=mul, 
+                              soft=soft, sed_model=sed_model, num_layer=num_layer)
         elif Model == "RNN_Deeplab":
             model = Deeplab.Deeplabv3(weights=None, input_tensor=None, 
                               input_shape=(256, image_size, channel), 
-                              classes=classes * ang_reso, OS=16, mul=mul, soft=soft, RNN=True)
+                              classes=classes * ang_reso, OS=16, mul=mul, 
+                              soft=soft, RNN=True)
             
         elif Model == "Mask_Deeplab":
             model = Deeplab.Deeplabv3(weights=None, input_tensor=None, 
                                   input_shape=(256,image_size,1), classes=classes, 
-                                  OS=16, mask=True,mul=mul, soft=soft)
+                                  OS=16, mask=True, mul=mul, soft=soft, trainable=True, 
+                                  sed_model=sed_model, num_layer=num_layer)
     
             
         elif Model == "CNN4":
@@ -851,12 +854,27 @@ def load_npy(name):
     return X, Y, max, phase
 
 
+def load_sed_model(Model):
+    if Model == "CNN8":
+        sed_model = CNN.CNN8(n_classes=75, input_height=256, input_width=image_size, nChannels=channel)
+        sed_model.load_weights(os.getcwd()+"/model_results/2019_0917/CNN8_75class_1direction_1ch_mulTrue_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/CNN8_75class_1direction_1ch_mulTrue_cinFalse_ipdFalse_vonMisesFalse_weights.hdf5")
+    elif Model == "CRNN8":
+        sed_model = CNN.CRNN8(n_classes=75, input_height=256, input_width=image_size, nChannels=channel)
+        sed_model.load_weights(os.getcwd()+"/model_results/2019_0917/CRNN8_75class_1direction_1ch_mulTrue_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/CRNN8_75class_1direction_1ch_mulTrue_cinFalse_ipdFalse_vonMisesFalse_weights.hdf5")
+    elif Model == "BiCRNN8":
+        sed_model = CNN.BiCRNN8(n_classes=75, input_height=256, input_width=image_size, nChannels=channel)
+        sed_model.load_weights(os.getcwd()+"/model_results/2019_0922/BiCRNN8_75class_1direction_1ch_mulTrue_cinTrue_ipdFalse_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/BiCRNN8_75class_1direction_1ch_mulTrue_cinTrue_ipdFalse_vonMisesFalse_weights.hdf5")
+    
+    num_layer = len(sed_model.layers)
+
+    return sed_model, num_layer
+
 
 if __name__ == '__main__':
     train_mode = "class"
     classes = 75
     image_size = 256
-    task = "event"
+    task = "segmentation"
     ang_reso = 1
     
     if os.getcwd() == '/home/yui-sudo/document/segmentation/sound_segtest':
@@ -864,7 +882,7 @@ if __name__ == '__main__':
     else:
         gpu_count = 3
     BATCH_SIZE = 16 * gpu_count
-    NUM_EPOCH = 10
+    NUM_EPOCH = 100
     
     lr = 0.001
     
@@ -875,7 +893,10 @@ if __name__ == '__main__':
     mode = "train"
     date = mode       
     plot = True
-    
+
+    mul = True   #multiply
+    soft = False # softmax
+
     Y_train_r, Y_train_i, Y_test_r, Y_test_i = 1,1,1,1
     if os.getcwd() == '/home/yui-sudo/document/segmentation/sound_segtest':
         datasets_dir = "/home/yui-sudo/document/dataset/sound_segmentation/datasets/"
@@ -885,7 +906,7 @@ if __name__ == '__main__':
     for datadir in ["multi_segdata"+str(classes) + "_"+str(image_size)+"_no_sound_random_sep/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_no_sound/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-30dB/", 
-                    "multi_segdata"+str(classes) + "_"+str(image_size)+"_-20dB_random/", 
+                    #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-20dB_random/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-10dB/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_0dB/"
                     ]:
@@ -896,173 +917,178 @@ if __name__ == '__main__':
         labelfile = dataset + "label.csv"
         label = pd.read_csv(filepath_or_buffer=labelfile, sep=",", index_col=0)            
         
-        for Model in ["CNN8", "CRNN8", "BiCRNN8"]:
-            mul = True
-            for vonMises in [False, True]:
-                for ipd in [False]:
-                    for mic_num in [1]: # 1 or 8
-                        soft = False
-                        for complex_input in [False, True]:
-                            complex_output = False
-                            VGG = 0                     #0: False, 1: Red 3: White
-                            
-
-                            channel = 0
-                            if mic_num == 1:
-                                if complex_input == True and ipd == False:
-                                    channel = 3
-                                elif complex_input == False and ipd == False and vonMises == False:
-                                    channel = 1
-                            else:                                
-                                if complex_input == True:
-                                    if ipd == True and vonMises == False:
-                                        channel = 15
-                                    elif vonMises == True and ipd == False:
-                                        channel = 24
-                                    elif vonMises == False and ipd == False:
-                                        channel = 24
-                                    else:
-                                        continue
-                                elif complex_input == False and ipd == False and vonMises == False:
-                                    channel = 8
-                            
-                            if channel == 0:
-                                continue
-
-                        
-                            load_number = 10
-        
-                            
-                            model_name = Model+"_"+str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_mul"+str(mul) + "_cin"+str(complex_input) + "_ipd"+str(ipd)  + "_vonMises"+str(vonMises)
-                            dir_name = model_name + "_"+datadir
-                            date = datetime.datetime.today().strftime("%Y_%m%d")
-                            results_dir = "./model_results/" + date + "/" + dir_name
-                            
-                            if mode == "train":
-                                print("\nTraining start...")
-                                if not os.path.exists(results_dir + "prediction"):
-                                    os.makedirs(results_dir + "prediction/")
-                                    os.makedirs(results_dir + "checkpoint/")
-
-                                npy_name = "train_" + task + "_" +str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_cin"+str(complex_input) + "_ipd"+str(ipd)  + "_vonMises"+str(vonMises)+"_"+str(load_number)
-                                if not os.path.exists(dataset+"X_"+npy_name+".npy"):
-                                    X_train, Y_train, max, phase, Y_train_r, Y_train_i = load(segdata_dir, 
-                                                                                              n_classes=classes, 
-                                                                                              load_number=load_number,
-                                                                                              complex_input=complex_input)
-                                    save_npy(X_train, Y_train, max, phase, npy_name)
-
-                                else:
-                                    X_train, Y_train, max, phase = load_npy(npy_name)
-                                
+        for Model in ["Mask_UNet", "UNet", "Mask_Deeplab", "Deeplab"]:
+            for Sed_Model in ["CNN8", "BiCRNN8"]:
+                if Model == "Mask_UNet" or Model == "Mask_Deeplab":
+                    sed_model, num_layer = load_sed_model(Sed_Model)
+                else:
+                    if Sed_Model == "BiCRNN8":
+                        continue
                     
-                                # save train condition
-                                train_condition = date + "\t" + results_dir                     + "\n" + \
-                                                  "\t"+"Comapare IPD input and normal complex input and 1ch"                          + "\n" + \
-                                                  "\t\t segdata_dir, " + segdata_dir            + "\n" + \
-                                                  "\t\t valdata_dir, " + valdata_dir            + "\n" + \
-                                                  "\t\t X"+str(X_train.shape)+" Y"+str(Y_train.shape)+"\n" \
-                                                  "\t\t data_byte,      " + str(X_train.dtype)  + "\n" + \
-                                                  "\t\t BATCH_SIZE,     " + str(BATCH_SIZE)     + "\n" + \
-                                                  "\t\t NUM_EPOCH,      " + str(NUM_EPOCH)      + "\n" + \
-                                                  "\t\t Loss function,  " + loss                + "\n" + \
-                                                  "\t\t Learning_rate,  " + str(lr)             + "\n" + \
-                                                  "\t\t Mic num,        " + str(mic_num)        + "\n" + \
-                                                  "\t\t Multiply,       " + str(mul)            + "\n" + \
-                                                  "\t\t Softmax,        " + str(soft)           + "\n" + \
-                                                  "\t\t Complex_input,  " + str(complex_input)  + "\n" + \
-                                                  "\t\t Complex_output, " + str(complex_output) + "\n" + \
-                                                  "\t\t IPD input,      " + str(ipd) + "\n" + \
-                                                  "\t\t von Mises input," + str(vonMises) + "\n" + \
-                                                  "\t\t task     ,      " + task + "\n" + \
-                                                  "\t\t Angle reso,     " + str(360 // ang_reso) + "\n" + \
-                                                  "\t\t Model,          " + Model               + "\n" + \
-                                                  "\t\t classes,        " + str(classes)        + "\n\n\n"
-                    
-        
-                                print(train_condition)
+                for vonMises in [False]:
+                    for ipd in [False]:
+                        for mic_num in [1]: # 1 or 8                        
+                            for complex_input in [False]:
+                                complex_output = False
+                                VGG = 0                     #0: False, 1: Red 3: White
                                 
-                                with open(results_dir + 'train_condition.txt','w') as f:
-                                    f.write(train_condition)
+    
+                                channel = 0
+                                if mic_num == 1:
+                                    if complex_input == True and ipd == False:
+                                        channel = 3
+                                    elif complex_input == False and ipd == False and vonMises == False:
+                                        channel = 1
+                                else:                                
+                                    if complex_input == True:
+                                        if ipd == True and vonMises == False:
+                                            channel = 15
+                                        elif vonMises == True and ipd == False:
+                                            channel = 24
+                                        elif vonMises == False and ipd == False:
+                                            channel = 24
+                                        else:
+                                            continue
+                                    elif complex_input == False and ipd == False and vonMises == False:
+                                        channel = 8
                                 
-                                history = train(X_train, Y_train, Model, Y_train_r, Y_train_i)
-                                plot_history(history, model_name)
+                                if channel == 0:
+                                    continue
+    
                             
-                                with open('research_log.txt','a') as f:
-                                    f.write(train_condition)    
-                    
-                            # prediction            
-                            elif not mode == "train":
-                                print("Prediction\n")
-                                date = mode
-                                results_dir = "./model_results/" + date + "/" + dir_name
-                                with open(results_dir + 'train_condition.txt','r') as f:
-                                    train_condition = f.read() 
-                                    print(train_condition)
-                                
-                            if load_number >= 100:
-                                load_number = 50
-
-                                
-                            npy_name = "test_" + task+ "_" +str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_cin"+str(complex_input) + "_ipd"+str(ipd)  + "_vonMises"+str(vonMises)+"_"+str(load_number)
-                            if not os.path.exists(dataset+"X_"+npy_name+".npy"):
-                                X_test, Y_test, max, phase, Y_test_r, Y_test_i = load(valdata_dir, 
-                                                                                  n_classes=classes, 
-                                                                                  load_number=load_number, 
-                                                                                  complex_input=complex_input)
-                                save_npy(X_test, Y_test, max, phase, npy_name)
-
-                            else:
-                                X_test, Y_test, max, phase = load_npy(npy_name)
-                            
-                            Y_pred = predict(X_test, Model)
-                                     
-                            if plot == True:
-                                sdr_array, sir_array, sar_array = np.array(()) ,np.array(()), np.array(())
-                                for i in range (0, load_number):
-                                    origin_stft(X_test, no=i)
-                                    
-                                    if task == "event":
-                                        event_plot(Y_test, Y_pred, no=i)
-                                    else:
-                                        plot_stft(Y_test, Y_pred, no=i)
-                                        sdr, sir, sar = restore(Y_test, Y_pred, max, phase, no=i)
-                                        sdr_array = np.append(sdr_array, sdr)
-                                        sir_array = np.append(sir_array, sir)
-                                        sar_array = np.append(sar_array, sar)
-                        
-                                if task == "segmentation" and ang_reso == 1:
-                                    sdr_array = sdr_array.reshape(load_number, classes)
-                                    sir_array = sir_array.reshape(load_number, classes)
-                                    sar_array = sar_array.reshape(load_number, classes)
-                        
-                            if task == "event":
-                                Y_pred = (Y_pred > 0.5) * 1
-                                f1 = f1_score(Y_test.ravel(), Y_pred.ravel())
-                                Y_pred = np.argmax(Y_pred, axis=3)
-                                print("F1_score", f1)
-                                #Y_pred = Y_pred[:,:,:,np.newaxis]
-                                with open(results_dir + "f1_" + str(f1) + ".txt","w") as f:
-                                    f.write(str(f1))   
-                                    
-                            elif task == "segmentation":
-                                rms = RMS(Y_test, Y_pred) 
-                                print("Total RMSE", rms)
-                                
-                                
-                            if not os.getcwd() == '/home/yui-sudo/document/segmentation/sound_segtest':
-                                shutil.copy("main.py", results_dir)
-                                if not task == "event":
-                                    shutil.copy("Unet.py", results_dir)
-                                    shutil.copy("PSPNet.py", results_dir)
-                                    shutil.copy("Deeplab.py", results_dir)
-                                elif task == "event":
-                                    shutil.copy("CNN.py", results_dir)
-                                    shutil.copy("SELD_CNN.py", results_dir)
-                                #shutil.move("nohup.out", results_dir)
+                                load_number = 10000
             
-                                # copy to export2
-                                shutil.copytree(results_dir, "/misc/export2/sudou/model_results/" + date + "/" + dir_name)
+                                
+                                model_name = Model+"_"+str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_mul"+str(mul) + "_cin"+str(complex_input) + "_ipd"+str(ipd)  + "_vonMises"+str(vonMises)
+                                dir_name = model_name + "_"+datadir
+                                date = datetime.datetime.today().strftime("%Y_%m%d")
+                                results_dir = "./model_results/" + date + "/" + dir_name
+                                
+                                if mode == "train":
+                                    print("\nTraining start...")
+                                    if not os.path.exists(results_dir + "prediction"):
+                                        os.makedirs(results_dir + "prediction/")
+                                        os.makedirs(results_dir + "checkpoint/")
+    
+                                    npy_name = "train_" + task + "_" +str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_cin"+str(complex_input) + "_ipd"+str(ipd)  + "_vonMises"+str(vonMises)+"_"+str(load_number)
+                                    if not os.path.exists(dataset+"X_"+npy_name+".npy"):
+                                        X_train, Y_train, max, phase, Y_train_r, Y_train_i = load(segdata_dir, 
+                                                                                                  n_classes=classes, 
+                                                                                                  load_number=load_number,
+                                                                                                  complex_input=complex_input)
+                                        save_npy(X_train, Y_train, max, phase, npy_name)
+    
+                                    else:
+                                        X_train, Y_train, max, phase = load_npy(npy_name)
+                                    
+                        
+                                    # save train condition
+                                    train_condition = date + "\t" + results_dir                     + "\n" + \
+                                                      "\t"+"Comapare IPD input and normal complex input and 1ch"                          + "\n" + \
+                                                      "\t\t segdata_dir, " + segdata_dir            + "\n" + \
+                                                      "\t\t valdata_dir, " + valdata_dir            + "\n" + \
+                                                      "\t\t X"+str(X_train.shape)+" Y"+str(Y_train.shape)+"\n" \
+                                                      "\t\t data_byte,      " + str(X_train.dtype)  + "\n" + \
+                                                      "\t\t BATCH_SIZE,     " + str(BATCH_SIZE)     + "\n" + \
+                                                      "\t\t NUM_EPOCH,      " + str(NUM_EPOCH)      + "\n" + \
+                                                      "\t\t Loss function,  " + loss                + "\n" + \
+                                                      "\t\t Learning_rate,  " + str(lr)             + "\n" + \
+                                                      "\t\t Mic num,        " + str(mic_num)        + "\n" + \
+                                                      "\t\t Multiply,       " + str(mul)            + "\n" + \
+                                                      "\t\t Softmax,        " + str(soft)           + "\n" + \
+                                                      "\t\t Complex_input,  " + str(complex_input)  + "\n" + \
+                                                      "\t\t Complex_output, " + str(complex_output) + "\n" + \
+                                                      "\t\t IPD input,      " + str(ipd) + "\n" + \
+                                                      "\t\t von Mises input," + str(vonMises) + "\n" + \
+                                                      "\t\t task     ,      " + task + "\n" + \
+                                                      "\t\t Angle reso,     " + str(360 // ang_reso) + "\n" + \
+                                                      "\t\t Model,          " + Model               + "\n" + \
+                                                      "\t\t classes,        " + str(classes)        + "\n\n\n"
+                        
+            
+                                    print(train_condition)
+                                    
+                                    with open(results_dir + 'train_condition.txt','w') as f:
+                                        f.write(train_condition)
+                                    
+                                    history = train(X_train, Y_train, Model, Y_train_r, Y_train_i)
+                                    plot_history(history, model_name)
+                                
+                                    with open('research_log.txt','a') as f:
+                                        f.write(train_condition)    
+                        
+                                # prediction            
+                                elif not mode == "train":
+                                    print("Prediction\n")
+                                    date = mode
+                                    results_dir = "./model_results/" + date + "/" + dir_name
+                                    with open(results_dir + 'train_condition.txt','r') as f:
+                                        train_condition = f.read() 
+                                        print(train_condition)
+                                    
+                                if load_number >= 100:
+                                    load_number = 50
+    
+                                    
+                                npy_name = "test_" + task+ "_" +str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_cin"+str(complex_input) + "_ipd"+str(ipd)  + "_vonMises"+str(vonMises)+"_"+str(load_number)
+                                if not os.path.exists(dataset+"X_"+npy_name+".npy"):
+                                    X_test, Y_test, max, phase, Y_test_r, Y_test_i = load(valdata_dir, 
+                                                                                      n_classes=classes, 
+                                                                                      load_number=load_number, 
+                                                                                      complex_input=complex_input)
+                                    save_npy(X_test, Y_test, max, phase, npy_name)
+    
+                                else:
+                                    X_test, Y_test, max, phase = load_npy(npy_name)
+                                
+                                Y_pred = predict(X_test, Model)
+                                         
+                                if plot == True:
+                                    sdr_array, sir_array, sar_array = np.array(()) ,np.array(()), np.array(())
+                                    for i in range (0, load_number):
+                                        origin_stft(X_test, no=i)
+                                        
+                                        if task == "event":
+                                            event_plot(Y_test, Y_pred, no=i)
+                                        else:
+                                            plot_stft(Y_test, Y_pred, no=i)
+                                            sdr, sir, sar = restore(Y_test, Y_pred, max, phase, no=i)
+                                            sdr_array = np.append(sdr_array, sdr)
+                                            sir_array = np.append(sir_array, sir)
+                                            sar_array = np.append(sar_array, sar)
+                            
+                                    if task == "segmentation" and ang_reso == 1:
+                                        sdr_array = sdr_array.reshape(load_number, classes)
+                                        sir_array = sir_array.reshape(load_number, classes)
+                                        sar_array = sar_array.reshape(load_number, classes)
+                            
+                                if task == "event":
+                                    Y_pred = (Y_pred > 0.5) * 1
+                                    f1 = f1_score(Y_test.ravel(), Y_pred.ravel())
+                                    Y_pred = np.argmax(Y_pred, axis=3)
+                                    print("F1_score", f1)
+                                    #Y_pred = Y_pred[:,:,:,np.newaxis]
+                                    with open(results_dir + "f1_" + str(f1) + ".txt","w") as f:
+                                        f.write(str(f1))   
+                                        
+                                elif task == "segmentation":
+                                    rms = RMS(Y_test, Y_pred) 
+                                    print("Total RMSE", rms)
+                                    
+                                    
+                                if not os.getcwd() == '/home/yui-sudo/document/segmentation/sound_segtest':
+                                    shutil.copy("main.py", results_dir)
+                                    if not task == "event":
+                                        shutil.copy("Unet.py", results_dir)
+                                        shutil.copy("PSPNet.py", results_dir)
+                                        shutil.copy("Deeplab.py", results_dir)
+                                    elif task == "event":
+                                        shutil.copy("CNN.py", results_dir)
+                                        shutil.copy("SELD_CNN.py", results_dir)
+                                    #shutil.move("nohup.out", results_dir)
+                
+                                    # copy to export2
+                                    shutil.copytree(results_dir, "/misc/export2/sudou/model_results/" + date + "/" + dir_name)
                                                     
 
     os.remove("Unet.pyc")

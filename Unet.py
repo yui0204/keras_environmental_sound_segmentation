@@ -310,25 +310,18 @@ def VGG_UNet(n_classes, input_height=256, input_width=512, nChannels=3):
     
 
 def Mask_UNet(n_classes, input_height=256, input_width=512, nChannels=3,
-              soft=True, mul=True, trainable=False):
+              soft=True, mul=True, trainable=False, 
+              sed_model=None, num_layer=None):
     inputs = Input((input_height, input_width, nChannels))
     if nChannels == 3:
-        inputs2 = Input((input_height, input_width, nChannels//3))
+        inputs2 = Input((input_height, input_width, 1))
     
-    #pre_cnn = CNN.CNN4(n_classes=75, input_height=256, input_width=input_width, nChannels=1)
-    #pre_cnn.load_weights(os.getcwd()+"/model_results/2018_1118/CNN_75_class/CNN_75_class_weights.hdf5")
-#    pre_cnn = CNN.CRNN8(n_classes=9, input_height=256, input_width=input_width, nChannels=1)
-#    pre_cnn.load_weights(os.getcwd()+"/model_results/2019_0226/CRNN8_9_class/CRNN8_9_class_weights.hdf5")
-    pre_cnn = CNN.CNN8(n_classes=75, input_height=256, input_width=input_width, nChannels=1)
-    pre_cnn.load_weights(os.getcwd()+"/model_results/2019_0122/CNN8_75_class/CNN8_75_class_weights.hdf5")
-    #pre_cnn = CNN.CRNN8(n_classes=75, input_height=256, input_width=input_width, nChannels=1)
-    #pre_cnn.load_weights(os.getcwd()+"/model_results/2019_0122/CRNN8_75_class/CRNN8_75_class_weights.hdf5")
-    x = pre_cnn.layers[1](inputs)
-    pre_cnn.layers[1].trainable = trainable # fixed weight
+    x = sed_model.layers[1](inputs)
+    sed_model.layers[1].trainable = trainable # fixed weight
     
-    for i in range(2, 34): #CRNN8: 42 CNN8:34 CNN4:18
-        x = pre_cnn.layers[i](x)
-        pre_cnn.layers[i].trainable = trainable # fixed weight or fine-tuning    
+    for i in range(2, num_layer):
+        x = sed_model.layers[i](x)
+        sed_model.layers[i].trainable = trainable # fixed weight or fine-tuning    
     
     x = Flatten()(x)
     x = RepeatVector(256)(x)

@@ -192,7 +192,8 @@ def xception_block(inputs, depth_list, prefix, skip_connection_type, stride,
 
 def Deeplabv3(weights='None', input_tensor=None, 
               input_shape=(256, 256, 1), classes=75, OS=16, 
-              mask=False, trainable=False, soft=False, mul=True, RNN=False):    
+              mask=False, trainable=False, soft=False, mul=True, RNN=False,
+              sed_model=None, num_layer=None):    
     """ Instantiates the Deeplabv3+ architecture
 
     Optionally loads weights pre-trained on PASCAL VOC. 
@@ -243,14 +244,12 @@ def Deeplabv3(weights='None', input_tensor=None,
 
 ################ event detection concatenation
     if mask == True:
-        pre_cnn = CNN.CRNN8(n_classes=75, input_height=256, input_width=256, nChannels=1)
-        pre_cnn.load_weights(os.getcwd()+"/model_results/2019_0122/CRNN8_75_class/CRNN8_75_class_weights.hdf5")
-        x = pre_cnn.layers[1](img_input)
-        pre_cnn.layers[1].trainable = trainable # fixed weight
+        x = sed_model.layers[1](img_input)
+        sed_model.layers[1].trainable = trainable # fixed weight
         
-        for i in range(2, 42): #CRNN8: 42 CNN8:34 CNN4:18
-            x = pre_cnn.layers[i](x)
-            pre_cnn.layers[i].trainable = trainable # fixed weight or fine-tuning    
+        for i in range(2, num_layer):
+            x = sed_model.layers[i](x)
+            sed_model.layers[i].trainable = trainable # fixed weight or fine-tuning    
         
         x = Flatten()(x)
         x = RepeatVector(256)(x)

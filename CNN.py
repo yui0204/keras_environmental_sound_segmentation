@@ -114,7 +114,7 @@ def CRNN(n_classes, input_height=256, input_width=512, nChannels=3):
 
     
     x = Conv1D(n_classes, 1, activation='sigmoid')(x)
-    x = Reshape((1, -1, 75))(x)
+    x = Reshape((1, -1, n_classes))(x)
     
     model = Model(inputs=inputs, outputs=x)
     
