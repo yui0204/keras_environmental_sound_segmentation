@@ -856,13 +856,13 @@ def load_npy(name):
 
 def load_sed_model(Model):
     if Model == "CNN8":
-        sed_model = CNN.CNN8(n_classes=75, input_height=256, input_width=image_size, nChannels=channel)
+        sed_model = CNN.CNN8(n_classes=75, input_height=256, input_width=image_size, nChannels=1)
         sed_model.load_weights(os.getcwd()+"/model_results/2019_0917/CNN8_75class_1direction_1ch_mulTrue_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/CNN8_75class_1direction_1ch_mulTrue_cinFalse_ipdFalse_vonMisesFalse_weights.hdf5")
     elif Model == "CRNN8":
-        sed_model = CNN.CRNN8(n_classes=75, input_height=256, input_width=image_size, nChannels=channel)
+        sed_model = CNN.CRNN8(n_classes=75, input_height=256, input_width=image_size, nChannels=1)
         sed_model.load_weights(os.getcwd()+"/model_results/2019_0917/CRNN8_75class_1direction_1ch_mulTrue_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/CRNN8_75class_1direction_1ch_mulTrue_cinFalse_ipdFalse_vonMisesFalse_weights.hdf5")
     elif Model == "BiCRNN8":
-        sed_model = CNN.BiCRNN8(n_classes=75, input_height=256, input_width=image_size, nChannels=channel)
+        sed_model = CNN.BiCRNN8(n_classes=75, input_height=256, input_width=image_size, nChannels=1)
         sed_model.load_weights(os.getcwd()+"/model_results/2019_0922/BiCRNN8_75class_1direction_1ch_mulTrue_cinTrue_ipdFalse_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/BiCRNN8_75class_1direction_1ch_mulTrue_cinTrue_ipdFalse_vonMisesFalse_weights.hdf5")
     
     num_layer = len(sed_model.layers)
