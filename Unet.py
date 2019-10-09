@@ -311,7 +311,7 @@ def VGG_UNet(n_classes, input_height=256, input_width=512, nChannels=3):
 
 def Mask_UNet(n_classes, input_height=256, input_width=512, nChannels=3,
               soft=True, mul=True, trainable=False, 
-              sed_model=None, num_layer=None):
+              sed_model=None, num_layer=None, aux=False):
     inputs = Input((input_height, input_width, nChannels))
     if nChannels == 3:
         inputs2 = Input((input_height, input_width, 1))
@@ -322,6 +322,8 @@ def Mask_UNet(n_classes, input_height=256, input_width=512, nChannels=3,
     for i in range(2, num_layer):
         x = sed_model.layers[i](x)
         sed_model.layers[i].trainable = trainable # fixed weight or fine-tuning    
+    
+    sed = x
     
     x = Flatten()(x)
     x = RepeatVector(256)(x)
@@ -410,11 +412,18 @@ def Mask_UNet(n_classes, input_height=256, input_width=512, nChannels=3,
     if nChannels == 3:
         if mul == True:
             d0 = multiply([inputs2, d0])
-            model = Model(input=[inputs, inputs2], output=d0)
+            if aux == True:
+                model = Model(input=[inputs, inputs2], output=[sed, d0])
+            else:
+                model = Model(input=[inputs, inputs2], output=d0)
     else:
         if mul == True:
             d0 = multiply([inputs, d0])
-        model = Model(input=inputs, output=d0)
+        
+        if aux == True:
+            model = Model(input=inputs, output=[sed, d0])
+        else:
+            model = Model(input=inputs, output=d0)
                         
     return model
 

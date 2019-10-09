@@ -193,7 +193,7 @@ def xception_block(inputs, depth_list, prefix, skip_connection_type, stride,
 def Deeplabv3(weights='None', input_tensor=None, 
               input_shape=(256, 256, 1), classes=75, OS=16, 
               mask=False, trainable=False, soft=False, mul=True, RNN=False,
-              sed_model=None, num_layer=None):    
+              sed_model=None, num_layer=None, aux=False):    
     """ Instantiates the Deeplabv3+ architecture
 
     Optionally loads weights pre-trained on PASCAL VOC. 
@@ -250,7 +250,7 @@ def Deeplabv3(weights='None', input_tensor=None,
         for i in range(2, num_layer):
             x = sed_model.layers[i](x)
             sed_model.layers[i].trainable = trainable # fixed weight or fine-tuning    
-        
+        sed = x
         x = Flatten()(x)
         x = RepeatVector(256)(x)
         x = Reshape((256, 256, classes))(x)
@@ -388,12 +388,18 @@ def Deeplabv3(weights='None', input_tensor=None,
     if input_shape[2] == 1:
         if mul == True:
             x = multiply([inputs, x])
-        model = Model(inputs, x, name='deeplabv3_plus')
+        if aux == True:
+            model = Model(input=inputs, output=[sed, x])
+        else:
+            model = Model(inputs, x, name='deeplabv3_plus')
     else:
         inputs2 = Input((256, 256, 1))
         if mul == True:
             x = multiply([inputs2, x])
-        model = Model([inputs, inputs2], x, name='deeplabv3_plus')
+        if aux == True:
+            model = Model(input=[inputs, inputs2], output=[sed, x])
+        else:
+            model = Model([inputs, inputs2], x, name='deeplabv3_plus')
 
     # load weights
     #if weights == 'pascal_voc':

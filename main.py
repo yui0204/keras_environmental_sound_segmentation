@@ -285,6 +285,11 @@ def read_model(Model):
                                    input_width=image_size, nChannels=channel, 
                                    soft=soft, mul=True) 
                     
+        elif Model == "aux_Mask_UNet":
+            model = Unet.Mask_UNet(n_classes=classes, input_height=256, 
+                                   input_width=image_size, nChannels=1, 
+                                   soft=soft, mul=True, trainable=True, 
+                                   sed_model=sed_model, num_layer=num_layer, aux=aux) 
         elif Model == "Mask_UNet":
             model = Unet.Mask_UNet(n_classes=classes, input_height=256, 
                                    input_width=image_size, nChannels=1, 
@@ -329,7 +334,11 @@ def read_model(Model):
                                   input_shape=(256,image_size,1), classes=classes, 
                                   OS=16, mask=True, mul=mul, soft=soft, trainable=True, 
                                   sed_model=sed_model, num_layer=num_layer)
-    
+        elif Model == "aux_Mask_Deeplab":
+            model = Deeplab.Deeplabv3(weights=None, input_tensor=None, 
+                                  input_shape=(256,image_size,1), classes=classes, 
+                                  OS=16, mask=True, mul=mul, soft=soft, trainable=True, 
+                                  sed_model=sed_model, num_layer=num_layer, aux=aux)
             
         elif Model == "CNN4":
             model = CNN.CNN4(n_classes=classes, input_height=256, 
@@ -419,6 +428,10 @@ def train(X_train, Y_train, Model, Y_train2, Y_train3):
             if complex_input == True  or mic_num > 1 or ipd == True:
                 X_train = [X_train, 
                            X_train.transpose(3,0,1,2)[0][np.newaxis,:,:,:].transpose(1,2,3,0)]
+            
+            if Model == "aux_Mask_UNet" or Model == "aux_Mask_Deeplab":
+                Y_train = [((Y_train.transpose(3,0,1,2).max(2)[:,:,np.newaxis,:] > 0.1) * 1).transpose(1,2,3,0), 
+                           Y_train]
         
         if gpu_count == 1:            
             history = model.fit(X_train, Y_train, batch_size=BATCH_SIZE, 
@@ -917,13 +930,14 @@ if __name__ == '__main__':
         labelfile = dataset + "label.csv"
         label = pd.read_csv(filepath_or_buffer=labelfile, sep=",", index_col=0)            
         
-        for Model in ["Mask_UNet", "UNet", "Mask_Deeplab", "Deeplab"]:
-            for Sed_Model in ["CNN8", "BiCRNN8"]:
+        for Model in ["aux_Mask_UNet", "aux_Mask_Deeplab"]:
+            for Sed_Model in ["CNN4", "CNN8", "BiCRNN8"]:
                 if Model == "Mask_UNet" or Model == "Mask_Deeplab":
                     sed_model, num_layer = load_sed_model(Sed_Model)
-                else:
-                    if Sed_Model == "BiCRNN8":
-                        continue
+                    aux = False
+                elif "aux_Mask_UNet" or Model == "aux_Mask_Deeplab":
+                    sed_model, num_layer = load_sed_model(Sed_Model)
+                    aux = True
                     
                 for vonMises in [False]:
                     for ipd in [False]:
@@ -954,12 +968,11 @@ if __name__ == '__main__':
                                 
                                 if channel == 0:
                                     continue
-    
                             
                                 load_number = 10000
             
                                 
-                                model_name = Model+"_"+str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_mul"+str(mul) + "_cin"+str(complex_input) + "_ipd"+str(ipd)  + "_vonMises"+str(vonMises)
+                                model_name = Model+"_"+str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_mul"+str(mul) + "_cin"+str(complex_input) + "_ipd"+str(ipd) + "_vonMises"+str(vonMises) + "_"+Sed_Model + "_aux" + aux
                                 dir_name = model_name + "_"+datadir
                                 date = datetime.datetime.today().strftime("%Y_%m%d")
                                 results_dir = "./model_results/" + date + "/" + dir_name
