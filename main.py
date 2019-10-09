@@ -931,7 +931,7 @@ if __name__ == '__main__':
         label = pd.read_csv(filepath_or_buffer=labelfile, sep=",", index_col=0)            
         
         for Model in ["aux_Mask_UNet", "aux_Mask_Deeplab"]:
-            for Sed_Model in ["CNN4", "CNN8", "BiCRNN8"]:
+            for Sed_Model in ["CNN8", "CRNN8", "BiCRNN8"]:
                 if Model == "Mask_UNet" or Model == "Mask_Deeplab":
                     sed_model, num_layer = load_sed_model(Sed_Model)
                     aux = False
@@ -972,7 +972,7 @@ if __name__ == '__main__':
                                 load_number = 10000
             
                                 
-                                model_name = Model+"_"+str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_mul"+str(mul) + "_cin"+str(complex_input) + "_ipd"+str(ipd) + "_vonMises"+str(vonMises) + "_"+Sed_Model + "_aux" + aux
+                                model_name = Model+"_"+str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_mul"+str(mul) + "_cin"+str(complex_input) + "_ipd"+str(ipd) + "_vonMises"+str(vonMises) + "_"+Sed_Model + "_aux" + str(aux)
                                 dir_name = model_name + "_"+datadir
                                 date = datetime.datetime.today().strftime("%Y_%m%d")
                                 results_dir = "./model_results/" + date + "/" + dir_name
@@ -1058,8 +1058,7 @@ if __name__ == '__main__':
                                 if Model == "aux_Mask_UNet" or Model == "aux_Mask_Deeplab":
                                     Y_sedp = Y_pred[0]
                                     Y_pred = Y_pred[1]
-                                    Y_sedt = Y_test[0]
-                                    Y_test = Y_test[1]
+                                    Y_sedt = ((Y_test.transpose(3,0,1,2).max(2)[:,:,np.newaxis,:] > 0.1) * 1).transpose(1,2,3,0)
                                          
                                 if plot == True:
                                     sdr_array, sir_array, sar_array = np.array(()) ,np.array(()), np.array(())
