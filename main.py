@@ -1055,6 +1055,11 @@ if __name__ == '__main__':
                                     X_test, Y_test, max, phase = load_npy(npy_name)
                                 
                                 Y_pred = predict(X_test, Model)
+                                if Model == "aux_Mask_UNet" or Model == "aux_Mask_Deeplab":
+                                    Y_sedp = Y_pred[0]
+                                    Y_pred = Y_pred[1]
+                                    Y_sedt = Y_test[0]
+                                    Y_test = Y_test[1]
                                          
                                 if plot == True:
                                     sdr_array, sir_array, sar_array = np.array(()) ,np.array(()), np.array(())
@@ -1063,6 +1068,13 @@ if __name__ == '__main__':
                                         
                                         if task == "event":
                                             event_plot(Y_test, Y_pred, no=i)
+                                        elif Model == "aux_Mask_UNet" or Model == "aux_Mask_Deeplab":
+                                            event_plot(Y_sedt, Y_sedp, no=i)
+                                            plot_stft(Y_test, Y_pred, no=i)
+                                            sdr, sir, sar = restore(Y_test, Y_pred, max, phase, no=i)
+                                            sdr_array = np.append(sdr_array, sdr)
+                                            sir_array = np.append(sir_array, sir)
+                                            sar_array = np.append(sar_array, sar)
                                         else:
                                             plot_stft(Y_test, Y_pred, no=i)
                                             sdr, sir, sar = restore(Y_test, Y_pred, max, phase, no=i)
@@ -1087,6 +1099,13 @@ if __name__ == '__main__':
                                 elif task == "segmentation":
                                     rms = RMS(Y_test, Y_pred) 
                                     print("Total RMSE", rms)
+                                    if Model == "aux_Mask_UNet" or Model == "aux_Mask_Deeplab":
+                                        Y_sedp = (Y_sedp > 0.5) * 1
+                                        f1 = f1_score(Y_sedt.ravel(), Y_sedp.ravel())
+                                        Y_sedp = np.argmax(Y_sedp, axis=3)
+                                        print("F1_score", f1)
+                                        with open(results_dir + "f1_" + str(f1) + ".txt","w") as f:
+                                            f.write(str(f1))   
                                     
                                     
                                 if not os.getcwd() == '/home/yui-sudo/document/segmentation/sound_segtest':
