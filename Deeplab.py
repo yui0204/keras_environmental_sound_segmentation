@@ -190,9 +190,8 @@ def xception_block(inputs, depth_list, prefix, skip_connection_type, stride,
         return outputs
 
 
-def Deeplabv3(weights='None', input_tensor=None, 
-              input_shape=(256, 256, 1), classes=75, OS=16, 
-              mask=False, trainable=False, soft=False, mul=True, RNN=False,
+def Deeplabv3(weights='None', input_tensor=None, input_shape=(256, 256, 1), 
+              classes=75, OS=16, mask=False, trainable=False, RNN=0,
               sed_model=None, num_layer=None, aux=False):    
     """ Instantiates the Deeplabv3+ architecture
 
@@ -254,14 +253,6 @@ def Deeplabv3(weights='None', input_tensor=None,
         x = Flatten()(x)
         x = RepeatVector(256)(x)
         x = Reshape((256, 256, classes))(x)
-    
-        # GLU
-        a = Conv2D(classes, (3, 3), padding='same', dilation_rate=1)(x)
-        a = BatchNormalization()(a)   
-        g = Conv2D(classes, (3, 3), activation='sigmoid', 
-                   padding='same', dilation_rate=1)(x)
-        g = BatchNormalization()(g)
-        x = multiply([a, g])
         
         x = concatenate([x, img_input], axis=-1)
 #################
@@ -335,20 +326,14 @@ def Deeplabv3(weights='None', input_tensor=None,
     #print(x)
     
 #################################### added RNN
-    if RNN == True:
+    if RNN > 0:
         r = Reshape((16, 16 * 256))(x)
-        r = GRU(16 * 256, activation='tanh', recurrent_activation='hard_sigmoid', 
-                return_sequences=True,
-                dropout=0.25, recurrent_dropout=0.25, stateful=False)(r) 
-        r = BatchNormalization()(r)
-    
-        r = GRU(16 * 256, activation='tanh', recurrent_activation='hard_sigmoid', 
-                return_sequences=True,
-                dropout=0.25, recurrent_dropout=0.25, stateful=False)(r) 
-        r = BatchNormalization()(r)
+        for i in range(RNN):
+            r = GRU(16 * 256, activation='tanh', recurrent_activation='hard_sigmoid', 
+                    return_sequences=True, stateful=False)(r) 
+            #r = BatchNormalization()(r)   
         r = Reshape((16, 16, 256))(r)
         x = r
-    
 ####################################
 
     # DeepLab v.3+ decoder
@@ -381,21 +366,16 @@ def Deeplabv3(weights='None', input_tensor=None,
         inputs = get_source_inputs(input_tensor)
     else:
         inputs = img_input
-    
-    if soft == True:
-        x = Activation('softmax')(x)
-    
+
     if input_shape[2] == 1:
-        if mul == True:
-            x = multiply([inputs, x])
+        x = multiply([inputs, x])
         if aux == True:
             model = Model(input=inputs, output=[sed, x])
         else:
             model = Model(inputs, x, name='deeplabv3_plus')
     else:
         inputs2 = Input((256, 256, 1))
-        if mul == True:
-            x = multiply([inputs2, x])
+        x = multiply([inputs2, x])
         if aux == True:
             model = Model(input=[inputs, inputs2], output=[sed, x])
         else:

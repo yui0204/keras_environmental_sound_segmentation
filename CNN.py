@@ -10,444 +10,56 @@ from keras.layers.wrappers import Bidirectional
 from keras.layers.merge import multiply, dot
 
 
-def CNN4(n_classes, input_height=256, input_width=512, nChannels=3):
+
+def CNN(n_classes, input_height=256, input_width=512, nChannels=3, 
+        filter_list=[64, 64, 128, 128, 256, 256, 512, 512], RNN=2, Bidir=False,
+        ang_reso=1):
     inputs = Input((input_height, input_width, nChannels))
     
-    x = Conv2D(64, (3, 3), activation='relu', padding='same', dilation_rate=1)(inputs)
-    x = BatchNormalization()(x)
-    x = MaxPooling2D((4, 1), strides=(4, 1))(x)
-    
-    x = Conv2D(128, (3, 3), activation='relu', padding='same', dilation_rate=1)(x)
-    x = BatchNormalization()(x)
-    x = MaxPooling2D((4, 1), strides=(4, 1))(x)
-
-    x = Conv2D(256, (3, 3), activation='relu', padding='same', dilation_rate=1)(x)    
-    x = BatchNormalization()(x)
-    x = MaxPooling2D((4, 1), strides=(4, 1))(x)
-    
-    x = Conv2D(512, (3, 3), activation='relu', padding='same', dilation_rate=1)(x)    
-    x = BatchNormalization()(x)
-    x = MaxPooling2D((4, 1), strides=(4, 1))(x)
+    x = inputs
+    for filters in filter_list:
+        if len(filter_list) == 8:
+            freq_pool = (2, 1)
+        elif len(filter_list) == 4:
+            freq_pool = (4, 1)
+        
+        x = Conv2D(filters, (3, 3), padding='same')(x)
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)    
+        x = MaxPooling2D(freq_pool, strides=freq_pool)(x)
+                
+    if RNN > 0:
+        x = Reshape((input_width, 512))(x)
+        
+        for i in range(RNN):
+            if Bidir == False:
+                x = GRU(512, activation='tanh', recurrent_activation='hard_sigmoid', 
+                        return_sequences=True, stateful=False)(x) 
+            else:
+                x = Bidirectional(GRU(512, activation='tanh', recurrent_activation='hard_sigmoid', 
+                                      return_sequences=True, stateful=False))(x) 
             
-    x = Conv2D(n_classes, (1, 1), activation='sigmoid')(x)
+            #x = BatchNormalization()(x)
+        x = Conv1D(n_classes, 1, activation='sigmoid')(x)
+        x = Reshape((1, -1, n_classes))(x)
+    else:
+        x = Conv2D(n_classes, (1, 1), activation='sigmoid')(x)
+        
+    """
+    if ang_reso > 1: 
+        x = Conv2DTranspose(512, kernel_size=(3, 3), strides=(2, 1), activation='relu', padding="same")(x)
+        x = Conv2DTranspose(256, kernel_size=(3, 3), strides=(2, 1), activation='relu', padding="same")(x)
+        x = Conv2DTranspose(128, kernel_size=(3, 3), strides=(2, 1), activation='relu', padding="same")(x) # 8dir
+    #    x = Conv2DTranspose(128, kernel_size=(3, 3), strides=(3, 1), activation='relu', padding="same")(x)    
+    #    x = Conv2DTranspose(64, kernel_size=(3, 3), strides=(3, 1), activation='relu', padding="same")(x) # 72dir   
+    #    x = Conv2DTranspose(64, kernel_size=(3, 3), strides=(5, 1), activation='relu', padding="same")(x) # 360dir
+
+        x = Conv2D(n_classes, (1, 1), activation='sigmoid')(x)
+    """
     
     model = Model(inputs=inputs, outputs=x)
     
     return model
 
 
-def CNN8(n_classes, input_height=256, input_width=512, nChannels=3):
-    inputs = Input((input_height, input_width, nChannels))
-    
-    x = Conv2D(64, (3, 3), activation='relu', padding='same', dilation_rate=1)(inputs)
-    x = BatchNormalization()(x)
-    x = MaxPooling2D((2, 1), strides=(2, 1))(x)
-    
-    x = Conv2D(64, (3, 3), activation='relu', padding='same', dilation_rate=1)(x)
-    x = BatchNormalization()(x)
-    x = MaxPooling2D((2, 1), strides=(2, 1))(x)
 
-    x = Conv2D(128, (3, 3), activation='relu', padding='same', dilation_rate=1)(x)    
-    x = BatchNormalization()(x)
-    x = MaxPooling2D((2, 1), strides=(2, 1))(x)
-    
-    x = Conv2D(128, (3, 3), activation='relu', padding='same', dilation_rate=1)(x)    
-    x = BatchNormalization()(x)
-    x = MaxPooling2D((2, 1), strides=(2, 1))(x)
-    
-    x = Conv2D(256, (3, 3), activation='relu', padding='same', dilation_rate=1)(x)
-    x = BatchNormalization()(x)
-    x = MaxPooling2D((2, 1), strides=(2, 1))(x)
-    
-    x = Conv2D(256, (3, 3), activation='relu', padding='same', dilation_rate=1)(x)
-    x = BatchNormalization()(x)
-    x = MaxPooling2D((2, 1), strides=(2, 1))(x)
-
-    x = Conv2D(512, (3, 3), activation='relu', padding='same', dilation_rate=1)(x)    
-    x = BatchNormalization()(x)
-    x = MaxPooling2D((2, 1), strides=(2, 1))(x)
-    
-    x = Conv2D(512, (3, 3), activation='relu', padding='same', dilation_rate=1)(x)    
-    x = BatchNormalization()(x)
-    x = MaxPooling2D((2, 1), strides=(2, 1))(x)
-            
-    x = Conv2D(n_classes, (1, 1), activation='sigmoid')(x)
-    
-    model = Model(inputs=inputs, outputs=x)
-    
-    return model
-
-
-def CRNN(n_classes, input_height=256, input_width=512, nChannels=3):
-    inputs = Input((input_height, input_width, nChannels))
-    
-    x = Conv2D(64, (3, 3), activation='relu', padding='same', dilation_rate=1)(inputs)
-    x = BatchNormalization()(x)
-    x = MaxPooling2D((4, 1), strides=(4, 1))(x)
-    
-    x = Conv2D(128, (3, 3), activation='relu', padding='same', dilation_rate=1)(x)
-    x = BatchNormalization()(x)
-    x = MaxPooling2D((4, 1), strides=(4, 1))(x)
-
-    x = Conv2D(256, (3, 3), activation='relu', padding='same', dilation_rate=1)(x)    
-    x = BatchNormalization()(x)
-    x = MaxPooling2D((4, 1), strides=(4, 1))(x)
-    
-    x = Conv2D(512, (3, 3), activation='relu', padding='same', dilation_rate=1)(x)    
-    x = BatchNormalization()(x)
-    x = MaxPooling2D((4, 1), strides=(4, 1))(x) # ?, 1, 512, 512
-
-    
-    x = Reshape((input_width, 512))(x)
-        
-    x = GRU(512, activation='tanh', recurrent_activation='hard_sigmoid', 
-            return_sequences=True, stateful=False)(x) 
-    x = BatchNormalization()(x)
-
-    x = GRU(512, activation='tanh', recurrent_activation='hard_sigmoid', 
-            return_sequences=True, stateful=False)(x) 
-    x = BatchNormalization()(x)
-
-    x = GRU(512, activation='tanh', recurrent_activation='hard_sigmoid', 
-            return_sequences=True, stateful=False)(x) 
-    x = BatchNormalization()(x)
-
-    
-    x = Conv1D(n_classes, 1, activation='sigmoid')(x)
-    x = Reshape((1, -1, n_classes))(x)
-    
-    model = Model(inputs=inputs, outputs=x)
-    
-    return model
-
-
-def CRNN8(n_classes, input_height=256, input_width=512, nChannels=3):
-    inputs = Input((input_height, input_width, nChannels))
-    
-    x = Conv2D(64, (3, 3), activation='relu', padding='same', dilation_rate=1)(inputs)
-    x = BatchNormalization()(x)
-    x = MaxPooling2D((2, 1), strides=(2, 1))(x)
-    
-    x = Conv2D(64, (3, 3), activation='relu', padding='same', dilation_rate=1)(x)
-    x = BatchNormalization()(x)
-    x = MaxPooling2D((2, 1), strides=(2, 1))(x)
-
-    x = Conv2D(128, (3, 3), activation='relu', padding='same', dilation_rate=1)(x)    
-    x = BatchNormalization()(x)
-    x = MaxPooling2D((2, 1), strides=(2, 1))(x)
-    
-    x = Conv2D(128, (3, 3), activation='relu', padding='same', dilation_rate=1)(x)    
-    x = BatchNormalization()(x)
-    x = MaxPooling2D((2, 1), strides=(2, 1))(x)
-    
-    x = Conv2D(256, (3, 3), activation='relu', padding='same', dilation_rate=1)(x)
-    x = BatchNormalization()(x)
-    x = MaxPooling2D((2, 1), strides=(2, 1))(x)
-    
-    x = Conv2D(256, (3, 3), activation='relu', padding='same', dilation_rate=1)(x)
-    x = BatchNormalization()(x)
-    x = MaxPooling2D((2, 1), strides=(2, 1))(x)
-
-    x = Conv2D(512, (3, 3), activation='relu', padding='same', dilation_rate=1)(x)    
-    x = BatchNormalization()(x)
-    x = MaxPooling2D((2, 1), strides=(2, 1))(x)
-    
-    x = Conv2D(512, (3, 3), activation='relu', padding='same', dilation_rate=1)(x)    
-    x = BatchNormalization()(x)
-    x = MaxPooling2D((2, 1), strides=(2, 1))(x)
-
-    
-    x = Reshape((input_width, 512))(x)
-        
-    x = GRU(512, activation='tanh', recurrent_activation='hard_sigmoid', 
-            return_sequences=True, stateful=False)(x) 
-    x = BatchNormalization()(x)
-
-    x = GRU(512, activation='tanh', recurrent_activation='hard_sigmoid', 
-            return_sequences=True, stateful=False)(x) 
-    x = BatchNormalization()(x)
-
-    x = GRU(512, activation='tanh', recurrent_activation='hard_sigmoid', 
-            return_sequences=True, stateful=False)(x) 
-    x = BatchNormalization()(x)
-
-    
-    x = Conv1D(n_classes, 1, activation='sigmoid')(x)
-    x = Reshape((1, -1, n_classes))(x)
-    
-    model = Model(inputs=inputs, outputs=x)
-    
-    return model
-
-
-def BiCRNN8(n_classes, input_height=256, input_width=512, nChannels=3):
-    inputs = Input((input_height, input_width, nChannels))
-    
-    x = Conv2D(64, (3, 3), activation='relu', padding='same', dilation_rate=1)(inputs)
-    x = BatchNormalization()(x)
-    x = MaxPooling2D((2, 1), strides=(2, 1))(x)
-    
-    x = Conv2D(64, (3, 3), activation='relu', padding='same', dilation_rate=1)(x)
-    x = BatchNormalization()(x)
-    x = MaxPooling2D((2, 1), strides=(2, 1))(x)
-
-    x = Conv2D(128, (3, 3), activation='relu', padding='same', dilation_rate=1)(x)    
-    x = BatchNormalization()(x)
-    x = MaxPooling2D((2, 1), strides=(2, 1))(x)
-    
-    x = Conv2D(128, (3, 3), activation='relu', padding='same', dilation_rate=1)(x)    
-    x = BatchNormalization()(x)
-    x = MaxPooling2D((2, 1), strides=(2, 1))(x)
-    
-    x = Conv2D(256, (3, 3), activation='relu', padding='same', dilation_rate=1)(x)
-    x = BatchNormalization()(x)
-    x = MaxPooling2D((2, 1), strides=(2, 1))(x)
-    
-    x = Conv2D(256, (3, 3), activation='relu', padding='same', dilation_rate=1)(x)
-    x = BatchNormalization()(x)
-    x = MaxPooling2D((2, 1), strides=(2, 1))(x)
-
-    x = Conv2D(512, (3, 3), activation='relu', padding='same', dilation_rate=1)(x)    
-    x = BatchNormalization()(x)
-    x = MaxPooling2D((2, 1), strides=(2, 1))(x)
-    
-    x = Conv2D(512, (3, 3), activation='relu', padding='same', dilation_rate=1)(x)    
-    x = BatchNormalization()(x)
-    x = MaxPooling2D((2, 1), strides=(2, 1))(x)
-
-    
-    x = Reshape((input_width, 512))(x)
-        
-    x = Bidirectional(GRU(512, activation='tanh', recurrent_activation='hard_sigmoid', 
-            return_sequences=True, stateful=False))(x) 
-    x = BatchNormalization()(x)
-
-    x = Bidirectional(GRU(512, activation='tanh', recurrent_activation='hard_sigmoid', 
-            return_sequences=True, stateful=False))(x) 
-    x = BatchNormalization()(x)
-
-    x = Bidirectional(GRU(512, activation='tanh', recurrent_activation='hard_sigmoid', 
-            return_sequences=True, stateful=False))(x) 
-    x = BatchNormalization()(x)
-
-    
-    x = Conv1D(n_classes, 1, activation='sigmoid')(x)
-    x = Reshape((1, -1, n_classes))(x)
-    
-    model = Model(inputs=inputs, outputs=x)
-    
-    return model
-
-def RNN(n_classes, input_height=256, input_width=512, nChannels=3):
-    inputs = Input((input_height, input_width, nChannels))
-        
-    x = Reshape((input_width, input_height))(inputs)
-        
-    x = GRU(300, activation='tanh', recurrent_activation='hard_sigmoid', 
-            return_sequences=True, stateful=False)(x) 
-    x = BatchNormalization()(x)
-
-    x = GRU(512, activation='tanh', recurrent_activation='hard_sigmoid', 
-            return_sequences=True, stateful=False)(x) 
-    x = BatchNormalization()(x)
-
-    x = GRU(512, activation='tanh', recurrent_activation='hard_sigmoid', 
-            return_sequences=True, stateful=False)(x) 
-    x = BatchNormalization()(x)
-    
-    x = GRU(512, activation='tanh', recurrent_activation='hard_sigmoid', 
-            return_sequences=True, stateful=False)(x) 
-    x = BatchNormalization()(x)
-
-    
-    x = Conv1D(n_classes, 1, activation='sigmoid')(x)
-    x = Reshape((1, -1, 75))(x)
-    
-    model = Model(inputs=inputs, outputs=x)
-    
-    return model
-
-
-def BiRNN(n_classes, input_height=256, input_width=512, nChannels=3):
-    inputs = Input((input_height, input_width, nChannels))
-        
-    x = Reshape((input_width, input_height))(inputs)
-        
-    x = Bidirectional(GRU(512, activation='tanh', recurrent_activation='hard_sigmoid', 
-            return_sequences=True, stateful=False))(x) 
-    x = BatchNormalization()(x)
-
-    x = Bidirectional(GRU(512, activation='tanh', recurrent_activation='hard_sigmoid', 
-            return_sequences=True, stateful=False))(x) 
-    x = BatchNormalization()(x)
-
-    x = Bidirectional(GRU(512, activation='tanh', recurrent_activation='hard_sigmoid', 
-            return_sequences=True, stateful=False))(x) 
-    x = BatchNormalization()(x)
-
-    
-    x = Conv1D(n_classes, 1, activation='sigmoid')(x)
-    x = Reshape((1, -1, 75))(x)
-    
-    model = Model(inputs=inputs, outputs=x)
-    
-    return model
-
-
-def Unet(n_classes, input_height=256, input_width=512, nChannels=3):
-    inputs = Input((input_height, input_width, nChannels))
-    
-    x = Conv2D(64, (3, 3), activation='relu', padding='same', dilation_rate=1)(inputs)
-    x = BatchNormalization()(x)
-    x = MaxPooling2D((4, 4), strides=(4, 4))(x)
-    
-    x = Conv2D(128, (3, 3), activation='relu', padding='same', dilation_rate=1)(x)
-    x = BatchNormalization()(x)
-    x = MaxPooling2D((4, 4), strides=(4, 4))(x)
-
-    x = Conv2D(256, (3, 3), activation='relu', padding='same', dilation_rate=1)(x)    
-    x = BatchNormalization()(x)
-    x = MaxPooling2D((4, 4), strides=(4, 4))(x)
-    
-    x = Conv2D(512, (3, 3), activation='relu', padding='same', dilation_rate=1)(x)    
-    x = BatchNormalization()(x)
-    x = MaxPooling2D((4, 4), strides=(4, 4))(x)
-    
-    x = Conv2DTranspose(512, kernel_size=(1, 4), strides=(1, 4), activation='relu')(x)
-    x = BatchNormalization()(x)
-
-    x = Conv2DTranspose(256, kernel_size=(1, 4), strides=(1, 4), activation='relu')(x)
-    x = BatchNormalization()(x)
-
-    x = Conv2DTranspose(128, kernel_size=(1, 4), strides=(1, 4), activation='relu')(x)
-    x = BatchNormalization()(x)
-
-    x = Conv2DTranspose(64, kernel_size=(1, 4), strides=(1, 4), activation='relu')(x)
-    x = BatchNormalization()(x)
-    
-    x = Conv2D(n_classes, (1, 1), activation='sigmoid')(x)    
-    
-    model = Model(inputs=inputs, outputs=x)
-    
-    return model
-
-
-def Double_CRNN8(n_classes, input_height=256, input_width=512, nChannels=3):
-    inputs = Input((input_height, input_width, nChannels))
-    
-    x = Conv2D(64, (3, 3), activation='relu', padding='same', dilation_rate=1)(inputs)
-    x = BatchNormalization()(x)
-    x = MaxPooling2D((2, 1), strides=(2, 1))(x)
-    
-    x = Conv2D(64, (3, 3), activation='relu', padding='same', dilation_rate=1)(x)
-    x = BatchNormalization()(x)
-    x = MaxPooling2D((2, 1), strides=(2, 1))(x)
-
-    x = Conv2D(128, (3, 3), activation='relu', padding='same', dilation_rate=1)(x)    
-    x = BatchNormalization()(x)
-    x = MaxPooling2D((2, 1), strides=(2, 1))(x)
-    
-    x = Conv2D(128, (3, 3), activation='relu', padding='same', dilation_rate=1)(x)    
-    x = BatchNormalization()(x)
-    x = MaxPooling2D((2, 1), strides=(2, 1))(x)
-    
-    x = Conv2D(256, (3, 3), activation='relu', padding='same', dilation_rate=1)(x)
-    x = BatchNormalization()(x)
-    x = MaxPooling2D((2, 1), strides=(2, 1))(x)
-    
-    x = Conv2D(256, (3, 3), activation='relu', padding='same', dilation_rate=1)(x)
-    x = BatchNormalization()(x)
-    x = MaxPooling2D((2, 1), strides=(2, 1))(x)
-
-    x = Conv2D(512, (3, 3), activation='relu', padding='same', dilation_rate=1)(x)    
-    x = BatchNormalization()(x)
-    x = MaxPooling2D((2, 1), strides=(2, 1))(x)
-    
-    x = Conv2D(512, (3, 3), activation='relu', padding='same', dilation_rate=1)(x)    
-    x = BatchNormalization()(x)
-    x = MaxPooling2D((2, 1), strides=(2, 1))(x)
-
-    
-    x = Reshape((input_width, 512))(x)
-        
-    x = GRU(512, activation='tanh', recurrent_activation='hard_sigmoid', 
-            return_sequences=True, stateful=False)(x) 
-    x = BatchNormalization()(x)
-
-    x = GRU(512, activation='tanh', recurrent_activation='hard_sigmoid', 
-            return_sequences=True, stateful=False)(x) 
-    x = BatchNormalization()(x)
-
-    x = GRU(512, activation='tanh', recurrent_activation='hard_sigmoid', 
-            return_sequences=True, stateful=False)(x) 
-    x = BatchNormalization()(x)
-
-    
-    x = Conv1D(n_classes, 1, activation='sigmoid')(x)
-    #x = Reshape((1, -1, 75))(x)
-    x = Flatten()(x)
-    x = RepeatVector(256)(x)
-    x = Reshape((256, input_width, 75))(x)
-    
-    
-    f = Conv2D(64, (3, 3), activation='relu', padding='same', dilation_rate=1)(inputs)
-    f = BatchNormalization()(f)
-    f = MaxPooling2D((1, 2), strides=(1, 2))(f)
-    
-    f = Conv2D(64, (3, 3), activation='relu', padding='same', dilation_rate=1)(f)
-    f = BatchNormalization()(f)
-    f = MaxPooling2D((1, 2), strides=(1, 2))(f)
-    
-    f = Conv2D(128, (3, 3), activation='relu', padding='same', dilation_rate=1)(f)    
-    f = BatchNormalization()(f)
-    f = MaxPooling2D((1, 2), strides=(1, 2))(f)
-
-    f = Conv2D(128, (3, 3), activation='relu', padding='same', dilation_rate=1)(f)    
-    f = BatchNormalization()(f)
-    f = MaxPooling2D((1, 2), strides=(1, 2))(f)
-    
-    f = Conv2D(256, (3, 3), activation='relu', padding='same', dilation_rate=1)(f)
-    f = BatchNormalization()(f)
-    f = MaxPooling2D((1, 2), strides=(1, 2))(f)
-    
-    f = Conv2D(256, (3, 3), activation='relu', padding='same', dilation_rate=1)(f)
-    f = BatchNormalization()(f)
-    f = MaxPooling2D((1, 2), strides=(1, 2))(f)
-    
-    f = Conv2D(512, (3, 3), activation='relu', padding='same', dilation_rate=1)(f)    
-    f = BatchNormalization()(f)
-    f = MaxPooling2D((1, 2), strides=(1, 2))(f)
-    
-    f = Conv2D(512, (3, 3), activation='relu', padding='same', dilation_rate=1)(f)    
-    f = BatchNormalization()(f)
-    f = MaxPooling2D((1, 2), strides=(1, 2))(f)
-    
-    
-    f = Reshape((input_width, 512))(f)
-        
-    f = GRU(512, activation='tanh', recurrent_activation='hard_sigmoid', 
-            return_sequences=True, stateful=False)(f) 
-    f = BatchNormalization()(f)
-
-    f = GRU(512, activation='tanh', recurrent_activation='hard_sigmoid', 
-            return_sequences=True, stateful=False)(f) 
-    f = BatchNormalization()(f)
-
-    f = GRU(512, activation='tanh', recurrent_activation='hard_sigmoid', 
-            return_sequences=True, stateful=False)(f) 
-    f = BatchNormalization()(f)
-
-    
-    f = Conv1D(n_classes, 1, activation='sigmoid')(f)
-    #f = Reshape((1, -1, 75))(f)
-    f = Flatten()(f)
-    f = RepeatVector(input_width)(f)
-    f = Reshape((256, input_width, 75))(f)
-    
-    
-    x = multiply([x, f])
-    
-    
-    model = Model(inputs=inputs, outputs=x)
-    
-    return model

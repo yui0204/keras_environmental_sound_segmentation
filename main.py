@@ -21,7 +21,7 @@ import keras.backend as K
 from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard
 from keras.utils import plot_model
 
-import CNN, Unet, DC, PSPNet, Deeplab, SELD_CNN, SELD_Deeplab
+import CNN, Unet, PSPNet, Deeplab
 
 from sound import WavfileOperate, Stft
 import cmath
@@ -51,19 +51,15 @@ from sklearn.metrics import f1_score
 import re
 
 
-def normalize(inputs, labels, r_labels=None, i_labels=None):
+def normalize(inputs, labels):
     max = inputs.max()
     inputs = inputs / max
     labels = labels / max
-    r_labels = r_labels / max
-    i_labels = i_labels / max
     
     inputs = np.clip(inputs, 0.0, 1.0)
     labels = np.clip(labels, 0.0, 1.0)
-    r_labels = np.clip(r_labels, 0.0, 1.0)
-    i_labels = np.clip(i_labels, 0.0, 1.0)
     
-    return inputs, labels, max, r_labels, i_labels
+    return inputs, labels, max
 
 
 def log(inputs, labels):
@@ -106,11 +102,6 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
     else:
         labels = np.zeros((load_number, n_classes, ang_reso, 256, image_size), dtype=np.float16)
 
-    if complex_output == True:
-        r_labels = np.zeros((load_number, n_classes, 256, image_size), dtype=np.float16)
-        i_labels = np.zeros((load_number, n_classes, 256, image_size), dtype=np.float16)
-    else:
-        r_labels, i_labels = 1, 1
     
     for i in range(load_number):
         data_dir = segdata_dir + str(i) + "/"
@@ -173,9 +164,7 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
                     freqs, t, stft = signal.stft(x=waveform, fs=fs, nperseg = 512, 
                                                  return_onesided=False)
                     stft = stft[:, 1:len(stft.T) - 1]
-                    if complex_output == True:
-                        r_labels[i][label.T[filelist[n][:-4]][cat]] = stft[:256].real
-                        i_labels[i][label.T[filelist[n][:-4]][cat]] = stft[:256].imag
+
                     if ang_reso == 1:
                         labels[i][label.T[filelist[n][:-4]][cat]] += abs(stft[:256])
                     else:
@@ -186,14 +175,6 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
     if complex_input == True and ipd == False and vonMises == False:
         sign = (inputs > 0) * 2 - 1
         sign = sign.astype(np.float16)
-        if complex_output == True:
-            r_sign = (r_labels > 0) * 2 - 1
-            i_sign = (i_labels > 0) * 2 - 1
-            r_sign = r_sign.astype(np.float16)
-            i_sign = i_sign.astype(np.float16)
-            r_labels, i_labels = log(abs(r_labels), abs(i_labels))
-            r_labels += 120
-            i_labels += 120
         inputs = abs(inputs) ############################# bug fix
             
             
@@ -210,7 +191,7 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
         labels = np.nan_to_num(labels) 
         inputs[0] += 120
         labels += 120
-        inputs[0], labels, max, r_labels, i_labels = normalize(inputs[0], labels, r_labels, i_labels)
+        inputs[0], labels, max = normalize(inputs[0], labels)
         inputs = inputs.transpose(1,0,2,3)
 
     else:
@@ -219,16 +200,12 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
         labels = np.nan_to_num(labels) 
         inputs += 120
         labels += 120
-        inputs, labels, max, r_labels, i_labels = normalize(inputs, labels, r_labels, i_labels)
+        inputs, labels, max = normalize(inputs, labels)
 
 
     if complex_input == True and ipd == False and vonMises == False:
         inputs = inputs * sign
-        if complex_output == True:
-            r_labels = r_labels * r_sign
-            i_labels = i_labels * i_sign
-            r_labels = r_labels.transpose(0, 2, 3, 1)
-            i_labels = i_labels.transpose(0, 2, 3, 1)
+
     
     if task == "event":
         labels = ((labels > 0.1) * 1)
@@ -237,12 +214,6 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
         labels[classes - 1] = labels.max(0) * -1 + 1
         labels = labels.transpose(1,0,2,3)
         """
-    if task == "double_event":
-        t = np.repeat(labels.max(2)[:,:,np.newaxis,:], 256, axis=2)
-        f = np.repeat(labels.max(3)[:,:,:,np.newaxis], 256, axis=3)
-        t = ((t > 0.1) * 1)
-        #f = ((f > 0.5) * 1)
-        labels = t * f
         
     inputs = inputs.transpose(0, 2, 3, 1)
     if ang_reso == 1 or task == "event":
@@ -260,144 +231,99 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
             inputs[2] = inputs[0] # Grayscale to RGB
         inputs = inputs.transpose(1,2,3,0)
     
-    return inputs, labels, max, inputs_phase, r_labels, i_labels
+    return inputs, labels, max, inputs_phase
 
 
 def read_model(Model):
     with tf.device('/cpu:0'):
-        if Model == "unet":    
-            model = Unet.UNet(n_classes=classes, 
-                              input_height=256, 
+            
+        if Model == "aux_Mask_UNet":
+            model = Unet.UNet(n_classes=classes, input_height=256, 
                               input_width=image_size, nChannels=channel, 
-                              soft=soft, mul=True).get_model()
-        elif Model == "complex_unet2":
-            model = Unet.Complex_UNet2(n_classes=classes, input_height=256, 
-                                       input_width=image_size, nChannels=3).get_model()
-        elif Model == "vgg_unet":
-            model = Unet.VGG_UNet(n_classes=classes, input_height=256, 
-                                       input_width=image_size, nChannels=3)
-        elif Model == "glu_mask_unet":
-            model = Unet.GLU_Mask_UNet(n_classes=classes, input_height=256, 
-                                   input_width=image_size, nChannels=channel, 
-                                   soft=soft, mul=True) 
-        elif Model == "complex_mask_unet":
-            model = Unet.Mask_UNet(n_classes=classes, input_height=256, 
-                                   input_width=image_size, nChannels=channel, 
-                                   soft=soft, mul=True) 
-                    
-        elif Model == "aux_Mask_UNet":
-            model = Unet.Mask_UNet(n_classes=classes, input_height=256, 
-                                   input_width=image_size, nChannels=1, 
-                                   soft=soft, mul=True, trainable=True, 
-                                   sed_model=sed_model, num_layer=num_layer, aux=aux) 
+                              trainable=trainable, 
+                              sed_model=sed_model, num_layer=num_layer, aux=aux,
+                              mask=True, RNN=0, freq_pool=False) 
         elif Model == "Mask_UNet":
-            model = Unet.Mask_UNet(n_classes=classes, input_height=256, 
-                                   input_width=image_size, nChannels=1, 
-                                   soft=soft, mul=True, trainable=True, 
-                                   sed_model=sed_model, num_layer=num_layer) 
+            model = Unet.UNet(n_classes=classes, input_height=256, 
+                              input_width=image_size, nChannels=channel, 
+                              trainable=trainable, 
+                              sed_model=sed_model, num_layer=num_layer, aux=aux,
+                              mask=True, RNN=0, freq_pool=False) 
         elif Model == "UNet":
-            model = Unet.UNet(n_classes=classes * ang_reso, input_height=256, 
-                                   input_width=image_size, nChannels=channel)            
+            model = Unet.UNet(n_classes=classes, input_height=256, 
+                              input_width=image_size, nChannels=channel,
+                              trainable=False, 
+                              sed_model=None, num_layer=None, aux=False,
+                              mask=False, RNN=0, freq_pool=False)           
         elif Model == "RNN_UNet":
-            model = Unet.RNN_UNet(n_classes=classes * ang_reso, input_height=256, 
-                                   input_width=image_size, nChannels=channel)                
+            model = Unet.UNet(n_classes=classes, input_height=256, 
+                              input_width=image_size, nChannels=channel,
+                              trainable=False, 
+                              sed_model=None, num_layer=None, aux=False,
+                              mask=False, RNN=2, freq_pool=False)                  
         elif Model == "CR_UNet":
-            model = Unet.CR_UNet(n_classes=classes * ang_reso, input_height=256, 
-                                   input_width=image_size, nChannels=channel) 
-        elif Model == "Pre_UNet":
-            model = Unet.Pre_UNet(n_classes=classes * ang_reso, input_height=256, 
-                                   input_width=image_size, nChannels=channel)            
-        elif Model == "Pre_RNN_UNet":
-            model = Unet.Pre_RNN_UNet(n_classes=classes * ang_reso, input_height=256, 
-                                   input_width=image_size, nChannels=channel)                
-
-        elif Model == "PSPNet":
-            model = PSPNet.build_pspnet(nb_classes=classes, resnet_layers=101, 
-                                    input_shape=(256,image_size), activation='softmax')
-        elif Model == "Mask_PSPNet":
-            model = PSPNet.build_pspnet(nb_classes=classes, resnet_layers=101, 
-                                    input_shape=(256,image_size), activation='softmax', 
-                                    mask=True)
+            model = Unet.UNet(n_classes=classes, input_height=256, 
+                              input_width=image_size, nChannels=channel,
+                              trainable=False, 
+                              sed_model=None, num_layer=None, aux=False,
+                              mask=False, RNN=2, freq_pool=True)   
+               
         elif Model == "Deeplab":
             model = Deeplab.Deeplabv3(weights=None, input_tensor=None, 
-                              input_shape=(256, image_size, channel), 
-                              classes=classes * ang_reso, OS=16, mul=mul, 
-                              soft=soft, sed_model=sed_model, num_layer=num_layer)
+                                      input_shape=(256, image_size, channel), 
+                                      classes=classes * ang_reso, OS=16, 
+                                      RNN=0,
+                                      mask=False, trainable=False, sed_model=None, 
+                                      num_layer=None, aux=False)           
         elif Model == "RNN_Deeplab":
             model = Deeplab.Deeplabv3(weights=None, input_tensor=None, 
-                              input_shape=(256, image_size, channel), 
-                              classes=classes * ang_reso, OS=16, mul=mul, 
-                              soft=soft, RNN=True)
+                                      input_shape=(256, image_size, channel), 
+                                      classes=classes * ang_reso, OS=16, 
+                                      RNN=2,
+                                      mask=False, trainable=False, sed_model=None, 
+                                      num_layer=None, aux=False)
             
         elif Model == "Mask_Deeplab":
             model = Deeplab.Deeplabv3(weights=None, input_tensor=None, 
-                                  input_shape=(256,image_size,1), classes=classes, 
-                                  OS=16, mask=True, mul=mul, soft=soft, trainable=True, 
-                                  sed_model=sed_model, num_layer=num_layer)
+                                      input_shape=(256, image_size, channel), 
+                                      classes=classes * ang_reso, OS=16, 
+                                      RNN=0,
+                                      mask=True, trainable=trainable, sed_model=sed_model, 
+                                      num_layer=num_layer, aux=False)    
         elif Model == "aux_Mask_Deeplab":
             model = Deeplab.Deeplabv3(weights=None, input_tensor=None, 
-                                  input_shape=(256,image_size,1), classes=classes, 
-                                  OS=16, mask=True, mul=mul, soft=soft, trainable=True, 
-                                  sed_model=sed_model, num_layer=num_layer, aux=aux)
+                                      input_shape=(256, image_size, channel), 
+                                      classes=classes * ang_reso, OS=16, 
+                                      RNN=0,
+                                      mask=True, trainable=trainable, sed_model=sed_model, 
+                                      num_layer=num_layer, aux=aux)   
             
         elif Model == "CNN4":
-            model = CNN.CNN4(n_classes=classes, input_height=256, 
-                                input_width=image_size, nChannels=channel)
+            model = CNN.CNN(n_classes=classes, input_height=256, 
+                            input_width=image_size, nChannels=channel,
+                            filter_list=[64, 128, 256, 512], 
+                            RNN=0, Bidir=False)
         elif Model == "CNN8":
-            model = CNN.CNN8(n_classes=classes, input_height=256, 
-                                input_width=image_size, nChannels=channel)
+            model = CNN.CNN(n_classes=classes, input_height=256, 
+                            input_width=image_size, nChannels=channel,
+                            filter_list=[64, 64, 128, 128, 256, 256, 512, 512], 
+                            RNN=0, Bidir=False)
         elif Model == "CRNN":
-            model = CNN.CRNN(n_classes=classes, input_height=256, 
-                                input_width=image_size, nChannels=channel)
+            model = CNN.CNN(n_classes=classes, input_height=256, 
+                            input_width=image_size, nChannels=channel,
+                            filter_list=[64, 128, 256, 512], 
+                            RNN=2, Bidir=False)
         elif Model == "CRNN8":
-            model = CNN.CRNN8(n_classes=classes, input_height=256, 
-                                input_width=image_size, nChannels=channel)
+            model = CNN.CNN(n_classes=classes, input_height=256, 
+                            input_width=image_size, nChannels=channel,
+                            filter_list=[64, 64, 128, 128, 256, 256, 512, 512], 
+                            RNN=2, Bidir=False)
         elif Model == "BiCRNN8":
-            model = CNN.BiCRNN8(n_classes=classes, input_height=256, 
-                                input_width=image_size, nChannels=channel)
-        elif Model == "Double_CRNN8":
-            model = CNN.Double_CRNN8(n_classes=classes, input_height=256, 
-                                input_width=image_size, nChannels=channel)
-        elif Model == "RNN":
-            model = CNN.RNN(n_classes=classes, input_height=256, 
-                                input_width=image_size, nChannels=channel)
-        elif Model == "BiRNN":
-            model = CNN.BiRNN(n_classes=classes, input_height=256, 
-                                input_width=image_size, nChannels=channel)
-        
-        elif Model == "SELD_CRNN":
-            if complex_input == False:
-                model = SELD_CNN.CRNN(n_classes=classes, input_height=256, 
-                                input_width=image_size, nChannels=mic_num)
-
-            elif ipd == True:
-                model = SELD_CNN.CRNN(n_classes=classes, input_height=256, 
-                                input_width=image_size, nChannels=(mic_num-1)*2+1)
-            else:
-                model = SELD_CNN.CRNN(n_classes=classes, input_height=256, 
-                                input_width=image_size, nChannels=mic_num * 3)
-        
-        elif Model == "SELD_Deeplab":
-            if complex_input == False:
-                model = SELD_Deeplab.Deeplabv3(weights=None, input_tensor=None, 
-                                  input_shape=(256, image_size, mic_num), 
-                                  classes=classes, OS=16, mul=mul, soft=soft)
-            elif ipd == True:
-                model = SELD_Deeplab.Deeplabv3(weights=None, input_tensor=None, 
-                                  input_shape=(256, image_size, (mic_num-1)*2+1), 
-                                  classes=classes, OS=16, mul=mul, soft=soft)
-            else:
-                model = SELD_Deeplab.Deeplabv3(weights=None, input_tensor=None, 
-                                  input_shape=(256, image_size, mic_num * 3), 
-                                  classes=classes, OS=16, mul=mul, soft=soft)
-            
-        elif Model == "GLU":
-            model = DC.GLU_DC(n_classes=classes, input_height=256, 
-                                input_width=image_size, nChannels=1)
-        elif Model == "LSTM":
-            model = DC.LSTM_DC(n_classes=classes, input_height=256, 
-                                input_width=image_size, nChannels=1)
-        
+            model = CNN.CNN(n_classes=classes, input_height=256, 
+                            input_width=image_size, nChannels=channel,
+                            filter_list=[64, 64, 128, 128, 256, 256, 512, 512], 
+                            RNN=2, Bidir=True)
+             
     if gpu_count > 1:
         multi_model = multi_gpu_model(model, gpus=gpu_count)
     else:
@@ -407,7 +333,7 @@ def read_model(Model):
 
 
 
-def train(X_train, Y_train, Model, Y_train2, Y_train3):
+def train(X_train, Y_train, Model):
     model, multi_model = read_model(Model)
     
     if gpu_count == 1:
@@ -416,36 +342,29 @@ def train(X_train, Y_train, Model, Y_train2, Y_train3):
         multi_model.compile(loss=loss, optimizer=Adam(lr=lr),metrics=["accuracy"])                
 
     plot_model(model, to_file = results_dir + model_name + '.png')
-
-    early_stopping = EarlyStopping(monitor="val_loss", patience=20, verbose=1,mode="auto")
-    checkpoint = ModelCheckpoint(filepath=results_dir+"/checkpoint/"+model_name+"_{epoch}.hdf5", save_best_only=False, period=100)
-    tensorboard = TensorBoard(log_dir=results_dir, histogram_freq=0, write_graph=True)
-
     model.summary()
 
-    if complex_output == False:
-        if task == "segmentation":
-            if complex_input == True  or mic_num > 1 or ipd == True:
-                X_train = [X_train, 
-                           X_train.transpose(3,0,1,2)[0][np.newaxis,:,:,:].transpose(1,2,3,0)]
-            
-            if Model == "aux_Mask_UNet" or Model == "aux_Mask_Deeplab":
-                Y_train = [((Y_train.transpose(3,0,1,2).max(2)[:,:,np.newaxis,:] > 0.1) * 1).transpose(1,2,3,0), 
-                           Y_train]
+    early_stopping = EarlyStopping(monitor="val_loss", patience=20, verbose=1,mode="auto")
+#    checkpoint = ModelCheckpoint(filepath=results_dir+"/checkpoint/"+model_name+"_{epoch}.hdf5", save_best_only=False, period=100)
+#    tensorboard = TensorBoard(log_dir=results_dir, histogram_freq=0, write_graph=True)
+
+    if task == "segmentation":
+        if complex_input == True  or mic_num > 1 or ipd == True:
+            X_train = [X_train, 
+                       X_train.transpose(3,0,1,2)[0][np.newaxis,:,:,:].transpose(1,2,3,0)]
         
-        if gpu_count == 1:            
-            history = model.fit(X_train, Y_train, batch_size=BATCH_SIZE, 
-                                epochs=NUM_EPOCH, verbose=1, validation_split=0.1,
-                                callbacks=[checkpoint, tensorboard, early_stopping])        
-        else:       
-            history = multi_model.fit(X_train, Y_train, batch_size=BATCH_SIZE, 
-                                epochs=NUM_EPOCH, verbose=1, validation_split=0.1,
-                                callbacks=[early_stopping, tensorboard])                 
-    else:
-        history = model.fit(X_train, [Y_train, Y_train2, Y_train3], 
-                            batch_size=BATCH_SIZE, epochs=NUM_EPOCH, 
-                            verbose=1, validation_split=0.1,
-                            callbacks=[checkpoint, early_stopping, tensorboard])
+        if Model == "aux_Mask_UNet" or Model == "aux_Mask_Deeplab":
+            Y_train = [((Y_train.transpose(3,0,1,2).max(2)[:,:,np.newaxis,:] > 0.1) * 1).transpose(1,2,3,0), 
+                       Y_train]
+    
+    if gpu_count == 1:            
+        history = model.fit(X_train, Y_train, batch_size=BATCH_SIZE, 
+                            epochs=NUM_EPOCH, verbose=1, validation_split=0.1,
+                            callbacks=[early_stopping])        
+    else:       
+        history = multi_model.fit(X_train, Y_train, batch_size=BATCH_SIZE, 
+                            epochs=NUM_EPOCH, verbose=1, validation_split=0.1,
+                            callbacks=[early_stopping])
 
     with open(results_dir + "history.pickle", mode="wb") as f:
         pickle.dump(history.history, f)
@@ -461,16 +380,6 @@ def train(X_train, Y_train, Model, Y_train2, Y_train3):
 
 
 def plot_history(history, model_name):
-    """
-    plt.plot(history.history['acc'])
-    plt.plot(history.history['val_acc'])
-    plt.title('accuracy')
-    plt.xlabel('epoch')
-    plt.ylabel('accuracy')
-    plt.legend(['acc', 'val_acc'], loc='lower right')
-    plt.savefig(results_dir + model_name + "_accuracy.png")
-    plt.close()
-    """
     plt.plot(history.history['loss'])
     plt.plot(history.history['val_loss'])
     plt.title('loss')
@@ -554,10 +463,7 @@ def event_plot(Y_true, Y_pred, no=0):
         plt.close()
     
     else:
-        if complex_output == True:
-            Y_pred = Y_pred[0].transpose(0, 3, 1, 2)
-        else:
-            Y_pred = Y_pred.transpose(0, 3, 1, 2)
+        Y_pred = Y_pred.transpose(0, 3, 1, 2)
         Y_true = Y_true.transpose(0, 3, 1, 2)
             
         Y_true_total = np.zeros((ang_reso, image_size))
@@ -613,10 +519,7 @@ def plot_stft(Y_true, Y_pred, no=0):
         ylabel = "frequency"
     pred_dir = pred_dir_make(no)
 
-    if complex_output == True:
-        Y_pred = Y_pred[0].transpose(0, 3, 1, 2)
-    else:
-        Y_pred = Y_pred.transpose(0, 3, 1, 2)
+    Y_pred = Y_pred.transpose(0, 3, 1, 2)
     Y_true = Y_true.transpose(0, 3, 1, 2)
         
     Y_true_total = np.zeros((256, image_size))
@@ -680,12 +583,7 @@ def restore(Y_true, Y_pred, max, phase, no=0, class_n=1):
 
     pred_dir = pred_dir_make(no)
     
-    if complex_output == True:
-        Y_pred_r = Y_pred[1].transpose(0, 3, 1, 2)
-        Y_pred_i = Y_pred[2].transpose(0, 3, 1, 2)
-        Y_pred = Y_pred[0].transpose(0, 3, 1, 2)
-    else:
-        Y_pred = Y_pred.transpose(0, 3, 1, 2)
+    Y_pred = Y_pred.transpose(0, 3, 1, 2)
     Y_true = Y_true.transpose(0, 3, 1, 2)    
     
     data_dir = valdata_dir + str(no)
@@ -698,21 +596,11 @@ def restore(Y_true, Y_pred, max, phase, no=0, class_n=1):
             Y_linear = 10 ** ((Y_pred[no][class_n] * max - 120) / 20)
             Y_linear = np.vstack((Y_linear, Y_linear[::-1]))
 
-            if complex_output == True:
-                Y_linear_r = 10 ** ((Y_pred_r[no][class_n] * max - 120) / 20)
-                Y_linear_r = np.vstack((Y_linear_r, Y_linear_r[::-1]))
-                Y_linear_i = 10 ** ((Y_pred_i[no][class_n] * max - 120) / 20)
-                Y_linear_i = np.vstack((Y_linear_i, Y_linear_i[::-1]))
-
             Y_complex = np.zeros((512, image_size), dtype=np.complex128)
             for i in range (512):
                 for j in range (image_size):
-                    if complex_output == False:
-                        Y_complex[i][j] = cmath.rect(Y_linear[i][j], phase[no][i][j])
-                    else:
-                        Y_complex[i][j] = cmath.rect(Y_linear[i][j], phase[no][i][j])
-                        #Y_complex[i][j] = cmath.rect(Y_linear[i][j], np.arctan2(Y_linear_r[i][j], Y_linear_i[i][j]))
-                        #Y_complex[i][j] = cmath.rect(np.sqrt(Y_linear_r[i][j]**2 + Y_linear_i[i][j]**2), np.arctan2(Y_linear_r[i][j], Y_linear_i[i][j]))
+                    Y_complex[i][j] = cmath.rect(Y_linear[i][j], phase[no][i][j])
+
             if ang_reso == 1:
                 Y_Stft = Stft(Y_complex, 16000, label.index[class_n]+"_prediction")
             else:
@@ -737,10 +625,7 @@ def restore(Y_true, Y_pred, max, phase, no=0, class_n=1):
     
 
 def RMS(Y_true, Y_pred):
-    if complex_output == True:
-        Y_pred = Y_pred[0].transpose(0, 3, 1, 2)
-    else:
-        Y_pred = Y_pred.transpose(0, 3, 1, 2)
+    Y_pred = Y_pred.transpose(0, 3, 1, 2)
     Y_true = Y_true.transpose(0, 3, 1, 2)    
         
     Y_pred_db = (Y_pred * max - 120)
@@ -887,7 +772,7 @@ if __name__ == '__main__':
     train_mode = "class"
     classes = 75
     image_size = 256
-    task = "segmentation"
+    task = "event"
     ang_reso = 1
     
     if os.getcwd() == '/home/yui-sudo/document/segmentation/sound_segtest':
@@ -895,7 +780,7 @@ if __name__ == '__main__':
     else:
         gpu_count = 3
     BATCH_SIZE = 16 * gpu_count
-    NUM_EPOCH = 100
+    NUM_EPOCH = 10
     
     lr = 0.001
     
@@ -907,10 +792,9 @@ if __name__ == '__main__':
     date = mode       
     plot = True
 
-    mul = True   #multiply
-    soft = False # softmax
+    trainable = False # SED mask
 
-    Y_train_r, Y_train_i, Y_test_r, Y_test_i = 1,1,1,1
+
     if os.getcwd() == '/home/yui-sudo/document/segmentation/sound_segtest':
         datasets_dir = "/home/yui-sudo/document/dataset/sound_segmentation/datasets/"
     else:
@@ -930,23 +814,28 @@ if __name__ == '__main__':
         labelfile = dataset + "label.csv"
         label = pd.read_csv(filepath_or_buffer=labelfile, sep=",", index_col=0)            
         
-        for Model in ["aux_Mask_UNet", "aux_Mask_Deeplab"]:
-            for Sed_Model in ["CNN8", "CRNN8", "BiCRNN8"]:
+        for Model in ["CNN8", "CRNN8", "BiCRNN8", "UNet", "Deeplab", "RNN_UNet", "CR_UNet", "RNN_Deeplab"]:
+            if Model == "UNet":
+                task = "segmentation"
+            for Sed_Model in ["BiCRNN8"]:
                 if Model == "Mask_UNet" or Model == "Mask_Deeplab":
                     sed_model, num_layer = load_sed_model(Sed_Model)
+                    mask=True
                     aux = False
-                elif "aux_Mask_UNet" or Model == "aux_Mask_Deeplab":
+                elif Model == "aux_Mask_UNet" or Model == "aux_Mask_Deeplab":
                     sed_model, num_layer = load_sed_model(Sed_Model)
+                    mask = True
                     aux = True
+                else:
+                    mask = False
+                    aux = False
                     
-                for vonMises in [False]:
+                for vonMises in [False, True]:
                     for ipd in [False]:
                         for mic_num in [1]: # 1 or 8                        
-                            for complex_input in [False]:
-                                complex_output = False
-                                VGG = 0                     #0: False, 1: Red 3: White
-                                
-    
+                            for complex_input in [False, True]:
+                                VGG = 0                     #0: False, 1: Red 3: White                          
+ 
                                 channel = 0
                                 if mic_num == 1:
                                     if complex_input == True and ipd == False:
@@ -972,7 +861,9 @@ if __name__ == '__main__':
                                 load_number = 10000
             
                                 
-                                model_name = Model+"_"+str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_mul"+str(mul) + "_cin"+str(complex_input) + "_ipd"+str(ipd) + "_vonMises"+str(vonMises) + "_"+Sed_Model + "_aux" + str(aux)
+                                model_name = Model+"_"+str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_cin"+str(complex_input) + "_ipd"+str(ipd) + "_vonMises"+str(vonMises)
+                                if mask == True:
+                                    model_name = model_name + "_"+Sed_Model + "_aux" + str(aux)
                                 dir_name = model_name + "_"+datadir
                                 date = datetime.datetime.today().strftime("%Y_%m%d")
                                 results_dir = "./model_results/" + date + "/" + dir_name
@@ -985,10 +876,10 @@ if __name__ == '__main__':
     
                                     npy_name = "train_" + task + "_" +str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_cin"+str(complex_input) + "_ipd"+str(ipd)  + "_vonMises"+str(vonMises)+"_"+str(load_number)
                                     if not os.path.exists(dataset+"X_"+npy_name+".npy"):
-                                        X_train, Y_train, max, phase, Y_train_r, Y_train_i = load(segdata_dir, 
-                                                                                                  n_classes=classes, 
-                                                                                                  load_number=load_number,
-                                                                                                  complex_input=complex_input)
+                                        X_train, Y_train, max, phase = load(segdata_dir, 
+                                                                              n_classes=classes, 
+                                                                              load_number=load_number,
+                                                                              complex_input=complex_input)
                                         save_npy(X_train, Y_train, max, phase, npy_name)
     
                                     else:
@@ -1007,10 +898,7 @@ if __name__ == '__main__':
                                                       "\t\t Loss function,  " + loss                + "\n" + \
                                                       "\t\t Learning_rate,  " + str(lr)             + "\n" + \
                                                       "\t\t Mic num,        " + str(mic_num)        + "\n" + \
-                                                      "\t\t Multiply,       " + str(mul)            + "\n" + \
-                                                      "\t\t Softmax,        " + str(soft)           + "\n" + \
                                                       "\t\t Complex_input,  " + str(complex_input)  + "\n" + \
-                                                      "\t\t Complex_output, " + str(complex_output) + "\n" + \
                                                       "\t\t IPD input,      " + str(ipd) + "\n" + \
                                                       "\t\t von Mises input," + str(vonMises) + "\n" + \
                                                       "\t\t task     ,      " + task + "\n" + \
@@ -1024,7 +912,7 @@ if __name__ == '__main__':
                                     with open(results_dir + 'train_condition.txt','w') as f:
                                         f.write(train_condition)
                                     
-                                    history = train(X_train, Y_train, Model, Y_train_r, Y_train_i)
+                                    history = train(X_train, Y_train, Model)
                                     plot_history(history, model_name)
                                 
                                     with open('research_log.txt','a') as f:
@@ -1039,16 +927,16 @@ if __name__ == '__main__':
                                         train_condition = f.read() 
                                         print(train_condition)
                                     
-                                if load_number >= 100:
-                                    load_number = 50
+                                if load_number >= 1000:
+                                    load_number = 1000
     
                                     
                                 npy_name = "test_" + task+ "_" +str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_cin"+str(complex_input) + "_ipd"+str(ipd)  + "_vonMises"+str(vonMises)+"_"+str(load_number)
                                 if not os.path.exists(dataset+"X_"+npy_name+".npy"):
-                                    X_test, Y_test, max, phase, Y_test_r, Y_test_i = load(valdata_dir, 
-                                                                                      n_classes=classes, 
-                                                                                      load_number=load_number, 
-                                                                                      complex_input=complex_input)
+                                    X_test, Y_test, max, phase = load(valdata_dir, 
+                                                                      n_classes=classes, 
+                                                                      load_number=load_number, 
+                                                                      complex_input=complex_input)
                                     save_npy(X_test, Y_test, max, phase, npy_name)
     
                                 else:
@@ -1063,6 +951,8 @@ if __name__ == '__main__':
                                 if plot == True:
                                     sdr_array, sir_array, sar_array = np.array(()) ,np.array(()), np.array(())
                                     for i in range (0, load_number):
+                                        if i == 50:
+                                            break
                                         origin_stft(X_test, no=i)
                                         
                                         if task == "event":
@@ -1115,7 +1005,6 @@ if __name__ == '__main__':
                                         shutil.copy("Deeplab.py", results_dir)
                                     elif task == "event":
                                         shutil.copy("CNN.py", results_dir)
-                                        shutil.copy("SELD_CNN.py", results_dir)
                                     #shutil.move("nohup.out", results_dir)
                 
                                     # copy to export2
