@@ -806,7 +806,7 @@ if __name__ == '__main__':
     mode = "train"
     date = mode       
     plot = True
-    plot_num = 50
+    graph_num = 50
 
     trainable = False # SED mask
 
@@ -963,14 +963,14 @@ if __name__ == '__main__':
                                     X_test, Y_test, max, phase = load_npy(npy_name)
                                 
                                 Y_pred = predict(X_test, Model)
-                                if Model == "aux_Mask_UNet" or Model == "aux_Mask_Deeplab":
+                                if Model == "aux_Mask_UNet" or Model == "aux_Mask_RNN_UNet" or Model == "aux_Mask_Deeplab:
                                     Y_sedp = Y_pred[0]
                                     Y_pred = Y_pred[1]
                                     Y_sedt = ((Y_test.transpose(3,0,1,2).max(2)[:,:,np.newaxis,:] > 0.1) * 1).transpose(1,2,3,0)
                                          
                                 if plot == True:
                                     sdr_array, sir_array, sar_array = np.array(()) ,np.array(()), np.array(())
-                                    for i in range (0, plot_num):
+                                    for i in range (0, graph_num):
                                         origin_stft(X_test, no=i)
                                         
                                         if task == "event":
@@ -990,9 +990,9 @@ if __name__ == '__main__':
                                             sar_array = np.append(sar_array, sar)
                             
                                     if task == "segmentation" and ang_reso == 1:
-                                        sdr_array = sdr_array.reshape(plot_num, classes)
-                                        sir_array = sir_array.reshape(plot_num, classes)
-                                        sar_array = sar_array.reshape(plot_num, classes)
+                                        sdr_array = sdr_array.reshape(graph_num, classes)
+                                        sir_array = sir_array.reshape(graph_num, classes)
+                                        sar_array = sar_array.reshape(graph_num, classes)
                             
                                 if task == "event":
                                     Y_pred = (Y_pred > 0.5) * 1
