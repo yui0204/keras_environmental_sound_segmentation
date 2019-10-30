@@ -243,7 +243,7 @@ def read_model(Model):
                               trainable=trainable, 
                               sed_model=sed_model, num_layer=num_layer, aux=aux,
                               mask=True, RNN=0, freq_pool=False) 
-        elif Model == "aux_Mask_UNet":
+        elif Model == "aux_Mask_RNN_UNet":
             model = Unet.UNet(n_classes=classes, input_height=256, 
                               input_width=image_size, nChannels=channel, 
                               trainable=trainable, 
@@ -359,7 +359,7 @@ def train(X_train, Y_train, Model):
             X_train = [X_train, 
                        X_train.transpose(3,0,1,2)[0][np.newaxis,:,:,:].transpose(1,2,3,0)]
         
-        if Model == "aux_Mask_UNet" or Model == "aux_Mask_Deeplab":
+        if Model == "aux_Mask_UNet" or Model == "aux_Mask_RNN_UNet" or Model == "aux_Mask_Deeplab":
             Y_train = [((Y_train.transpose(3,0,1,2).max(2)[:,:,np.newaxis,:] > 0.1) * 1).transpose(1,2,3,0), 
                        Y_train]
     
@@ -787,7 +787,7 @@ if __name__ == '__main__':
     train_mode = "class"
     classes = 75
     image_size = 256
-    task = "event"
+    task = "segmentation"
     ang_reso = 1
     
     if os.getcwd() == '/home/yui-sudo/document/segmentation/sound_segtest':
@@ -806,7 +806,7 @@ if __name__ == '__main__':
     mode = "train"
     date = mode       
     plot = True
-    plot_num = 1
+    plot_num = 50
 
     trainable = False # SED mask
 
@@ -832,7 +832,8 @@ if __name__ == '__main__':
         
         for Model in ["CNN8", "CRNN8", "BiCRNN8", 
                       "UNet", "Deeplab", "RNN_UNet", "CR_UNet", "RNN_Deeplab",
-                      "aux_Mask_UNet", "aux_Mask_Deeplab", "aux_Mask_RNN_UNet"
+                      "aux_Mask_UNet", "aux_Mask_Deeplab", 
+                      "aux_Mask_RNN_UNet"
                       ]:
             if Model == "UNet":
                 task = "segmentation"    
@@ -869,7 +870,7 @@ if __name__ == '__main__':
                                     sed_model, num_layer = load_sed_model(Sed_Model)
                                     mask=True
                                     aux = False
-                                elif Model == "aux_Mask_UNet" or Model == "aux_Mask_Deeplab":
+                                elif Model == "aux_Mask_UNet" or Model == "aux_Mask_RNN_UNet" or Model == "aux_Mask_Deeplab":
                                     sed_model, num_layer = load_sed_model(Sed_Model)
                                     mask = True
                                     aux = True
@@ -877,7 +878,7 @@ if __name__ == '__main__':
                                     mask = False
                                     aux = False
                                                 
-                                load_number = 10
+                                load_number = 10000
             
                                 
                                 model_name = Model+"_"+str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_cin"+str(complex_input) + "_ipd"+str(ipd) + "_vonMises"+str(vonMises)
