@@ -243,6 +243,12 @@ def read_model(Model):
                               trainable=trainable, 
                               sed_model=sed_model, num_layer=num_layer, aux=aux,
                               mask=True, RNN=0, freq_pool=False) 
+        elif Model == "aux_Mask_UNet":
+            model = Unet.UNet(n_classes=classes, input_height=256, 
+                              input_width=image_size, nChannels=channel, 
+                              trainable=trainable, 
+                              sed_model=sed_model, num_layer=num_layer, aux=aux,
+                              mask=True, RNN=2, freq_pool=False) 
         elif Model == "Mask_UNet":
             model = Unet.UNet(n_classes=classes, input_height=256, 
                               input_width=image_size, nChannels=channel, 
@@ -754,14 +760,23 @@ def load_npy(name):
 
 def load_sed_model(Model):
     if Model == "CNN8":
-        sed_model = CNN.CNN8(n_classes=75, input_height=256, input_width=image_size, nChannels=1)
-        sed_model.load_weights(os.getcwd()+"/model_results/2019_0917/CNN8_75class_1direction_1ch_mulTrue_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/CNN8_75class_1direction_1ch_mulTrue_cinFalse_ipdFalse_vonMisesFalse_weights.hdf5")
+        sed_model = CNN.CNN(n_classes=classes, input_height=256, 
+                            input_width=image_size, nChannels=channel,
+                            filter_list=[64, 64, 128, 128, 256, 256, 512, 512], 
+                            RNN=0, Bidir=False)
+        #sed_model.load_weights(os.getcwd()+"/model_results/2019_0917/CNN8_75class_1direction_1ch_mulTrue_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/CNN8_75class_1direction_1ch_mulTrue_cinFalse_ipdFalse_vonMisesFalse_weights.hdf5")
     elif Model == "CRNN8":
-        sed_model = CNN.CRNN8(n_classes=75, input_height=256, input_width=image_size, nChannels=1)
-        sed_model.load_weights(os.getcwd()+"/model_results/2019_0917/CRNN8_75class_1direction_1ch_mulTrue_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/CRNN8_75class_1direction_1ch_mulTrue_cinFalse_ipdFalse_vonMisesFalse_weights.hdf5")
+        sed_model = CNN.CNN(n_classes=classes, input_height=256, 
+                            input_width=image_size, nChannels=channel,
+                            filter_list=[64, 64, 128, 128, 256, 256, 512, 512], 
+                            RNN=2, Bidir=False)
+        #sed_model.load_weights(os.getcwd()+"/model_results/2019_0917/CRNN8_75class_1direction_1ch_mulTrue_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/CRNN8_75class_1direction_1ch_mulTrue_cinFalse_ipdFalse_vonMisesFalse_weights.hdf5")
     elif Model == "BiCRNN8":
-        sed_model = CNN.BiCRNN8(n_classes=75, input_height=256, input_width=image_size, nChannels=1)
-        sed_model.load_weights(os.getcwd()+"/model_results/2019_0918/BiCRNN8_75class_1direction_1ch_mulTrue_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/BiCRNN8_75class_1direction_1ch_mulTrue_cinFalse_ipdFalse_vonMisesFalse_weights.hdf5")
+        sed_model = CNN.CNN(n_classes=classes, input_height=256, 
+                            input_width=image_size, nChannels=channel,
+                            filter_list=[64, 64, 128, 128, 256, 256, 512, 512], 
+                            RNN=2, Bidir=True)
+        #sed_model.load_weights(os.getcwd()+"/model_results/2019_0918/BiCRNN8_75class_1direction_1ch_mulTrue_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/BiCRNN8_75class_1direction_1ch_mulTrue_cinFalse_ipdFalse_vonMisesFalse_weights.hdf5")
     
     num_layer = len(sed_model.layers)
 
@@ -780,7 +795,7 @@ if __name__ == '__main__':
     else:
         gpu_count = 3
     BATCH_SIZE = 16 * gpu_count
-    NUM_EPOCH = 10
+    NUM_EPOCH = 1
     
     lr = 0.001
     
@@ -791,6 +806,7 @@ if __name__ == '__main__':
     mode = "train"
     date = mode       
     plot = True
+    plot_num = 1
 
     trainable = False # SED mask
 
@@ -814,51 +830,54 @@ if __name__ == '__main__':
         labelfile = dataset + "label.csv"
         label = pd.read_csv(filepath_or_buffer=labelfile, sep=",", index_col=0)            
         
-        for Model in ["CNN8", "CRNN8", "BiCRNN8", "UNet", "Deeplab", "RNN_UNet", "CR_UNet", "RNN_Deeplab"]:
+        for Model in ["CNN8", "CRNN8", "BiCRNN8", 
+                      "UNet", "Deeplab", "RNN_UNet", "CR_UNet", "RNN_Deeplab",
+                      "aux_Mask_UNet", "aux_Mask_Deeplab", "aux_Mask_RNN_UNet"
+                      ]:
             if Model == "UNet":
-                task = "segmentation"
-            for Sed_Model in ["BiCRNN8"]:
-                if Model == "Mask_UNet" or Model == "Mask_Deeplab":
-                    sed_model, num_layer = load_sed_model(Sed_Model)
-                    mask=True
-                    aux = False
-                elif Model == "aux_Mask_UNet" or Model == "aux_Mask_Deeplab":
-                    sed_model, num_layer = load_sed_model(Sed_Model)
-                    mask = True
-                    aux = True
-                else:
-                    mask = False
-                    aux = False
-                    
-                for vonMises in [False, True]:
-                    for ipd in [False]:
-                        for mic_num in [1]: # 1 or 8                        
-                            for complex_input in [False, True]:
-                                VGG = 0                     #0: False, 1: Red 3: White                          
+                task = "segmentation"    
+            for vonMises in [False, True]:
+                for ipd in [False]:
+                    for mic_num in [1]: # 1 or 8                        
+                        for complex_input in [False, True]:
+                            VGG = 0                     #0: False, 1: Red 3: White                          
  
-                                channel = 0
-                                if mic_num == 1:
-                                    if complex_input == True and ipd == False:
-                                        channel = 3
-                                    elif complex_input == False and ipd == False and vonMises == False:
-                                        channel = 1
-                                else:                                
-                                    if complex_input == True:
-                                        if ipd == True and vonMises == False:
-                                            channel = 15
-                                        elif vonMises == True and ipd == False:
-                                            channel = 24
-                                        elif vonMises == False and ipd == False:
-                                            channel = 24
-                                        else:
-                                            continue
-                                    elif complex_input == False and ipd == False and vonMises == False:
-                                        channel = 8
-                                
-                                if channel == 0:
-                                    continue
+                            channel = 0
+                            if mic_num == 1:
+                                if complex_input == True and ipd == False:
+                                    channel = 3
+                                elif complex_input == False and ipd == False and vonMises == False:
+                                    channel = 1
+                            else:                                
+                                if complex_input == True:
+                                    if ipd == True and vonMises == False:
+                                        channel = 15
+                                    elif vonMises == True and ipd == False:
+                                        channel = 24
+                                    elif vonMises == False and ipd == False:
+                                        channel = 24
+                                    else:
+                                        continue
+                                elif complex_input == False and ipd == False and vonMises == False:
+                                    channel = 8
                             
-                                load_number = 10000
+                            if channel == 0:
+                                continue
+                            
+                            for Sed_Model in ["BiCRNN8"]:
+                                if Model == "Mask_UNet" or Model == "Mask_Deeplab":
+                                    sed_model, num_layer = load_sed_model(Sed_Model)
+                                    mask=True
+                                    aux = False
+                                elif Model == "aux_Mask_UNet" or Model == "aux_Mask_Deeplab":
+                                    sed_model, num_layer = load_sed_model(Sed_Model)
+                                    mask = True
+                                    aux = True
+                                else:
+                                    mask = False
+                                    aux = False
+                                                
+                                load_number = 10
             
                                 
                                 model_name = Model+"_"+str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_cin"+str(complex_input) + "_ipd"+str(ipd) + "_vonMises"+str(vonMises)
@@ -950,9 +969,7 @@ if __name__ == '__main__':
                                          
                                 if plot == True:
                                     sdr_array, sir_array, sar_array = np.array(()) ,np.array(()), np.array(())
-                                    for i in range (0, load_number):
-                                        if i == 50:
-                                            break
+                                    for i in range (0, plot_num):
                                         origin_stft(X_test, no=i)
                                         
                                         if task == "event":
@@ -972,9 +989,9 @@ if __name__ == '__main__':
                                             sar_array = np.append(sar_array, sar)
                             
                                     if task == "segmentation" and ang_reso == 1:
-                                        sdr_array = sdr_array.reshape(load_number, classes)
-                                        sir_array = sir_array.reshape(load_number, classes)
-                                        sar_array = sar_array.reshape(load_number, classes)
+                                        sdr_array = sdr_array.reshape(plot_num, classes)
+                                        sir_array = sir_array.reshape(plot_num, classes)
+                                        sar_array = sar_array.reshape(plot_num, classes)
                             
                                 if task == "event":
                                     Y_pred = (Y_pred > 0.5) * 1
