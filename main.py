@@ -49,6 +49,7 @@ from scipy import signal
 from sklearn.metrics import f1_score
 
 import re
+import gc
 
 
 def normalize(inputs, labels):
@@ -795,7 +796,7 @@ if __name__ == '__main__':
     else:
         gpu_count = 3
     BATCH_SIZE = 16 * gpu_count
-    NUM_EPOCH = 1
+    NUM_EPOCH = 100
     
     lr = 0.001
     
@@ -837,6 +838,7 @@ if __name__ == '__main__':
                       ]:
             if Model == "UNet":
                 task = "segmentation"    
+                loss = "mean_squared_error"
             for vonMises in [False, True]:
                 for ipd in [False]:
                     for mic_num in [1]: # 1 or 8                        
@@ -937,6 +939,9 @@ if __name__ == '__main__':
                                 
                                     with open('research_log.txt','a') as f:
                                         f.write(train_condition)    
+                        
+                                    del X_train, Y_train, max, phase
+                                    gc.collect()
                         
                                 # prediction            
                                 elif not mode == "train":
