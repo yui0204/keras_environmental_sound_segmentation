@@ -980,7 +980,7 @@ if __name__ == '__main__':
                                         
                                         if task == "event":
                                             event_plot(Y_test, Y_pred, no=i)
-                                        elif Model == "aux_Mask_UNet" or Model == "aux_Mask_Deeplab":
+                                        elif Model == "aux_Mask_UNet" or Model == "aux_Mask_RNN_UNet" or Model == "aux_Mask_Deeplab":
                                             event_plot(Y_sedt, Y_sedp, no=i)
                                             plot_stft(Y_test, Y_pred, no=i)
                                             sdr, sir, sar = restore(Y_test, Y_pred, max, phase, no=i)
@@ -1011,7 +1011,7 @@ if __name__ == '__main__':
                                 elif task == "segmentation":
                                     rms = RMS(Y_test, Y_pred) 
                                     print("Total RMSE", rms)
-                                    if Model == "aux_Mask_UNet" or Model == "aux_Mask_Deeplab":
+                                    if Model == "aux_Mask_UNet" or Model == "aux_Mask_RNN_UNet" or Model == "aux_Mask_Deeplab":
                                         Y_sedp = (Y_sedp > 0.5) * 1
                                         f1 = f1_score(Y_sedt.ravel(), Y_sedp.ravel())
                                         Y_sedp = np.argmax(Y_sedp, axis=3)
