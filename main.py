@@ -51,6 +51,30 @@ from sklearn.metrics import f1_score
 import re
 import gc
 
+import smtplib
+from email.mime.text import MIMEText
+from email.utils import formatdate
+
+
+def create_message(body):
+    msg = MIMEText(body)
+    msg['Subject'] = "Training status"
+    msg['From'] = "ysudo0204@gmail.com"
+    msg['To'] = "yui.sudo@gmail.com"
+    msg['Date'] = formatdate()
+    return msg
+
+
+def send_mail(body_msg):
+    smtpobj = smtplib.SMTP('smtp.gmail.com', 587)
+    smtpobj.ehlo()
+    smtpobj.starttls()
+    smtpobj.ehlo()
+    smtpobj.login("ysudo0204@gmail.com", "mrchildren0510")
+    smtpobj.sendmail("ysudo0204@gmail.com", "yui.sudo@gmail.com", body_msg.as_string())
+    smtpobj.close()
+
+
 
 def normalize(inputs, labels):
     max = inputs.max()
@@ -934,6 +958,10 @@ if __name__ == '__main__':
                                     with open(results_dir + 'train_condition.txt','w') as f:
                                         f.write(train_condition)
                                     
+                                    msg = create_message("Training start\n" + train_condition)
+                                    send_mail(msg)
+
+                                    
                                     history = train(X_train, Y_train, Model)
                                     plot_history(history, model_name)
                                 
@@ -1032,6 +1060,9 @@ if __name__ == '__main__':
                 
                                     # copy to export2
                                     shutil.copytree(results_dir, "/misc/export2/sudou/model_results/" + date + "/" + dir_name)
+
+                                    msg = create_message("Evaluation finished\n" + train_condition)
+                                    send_mail(msg)
                                                     
 
     os.remove("Unet.pyc")
