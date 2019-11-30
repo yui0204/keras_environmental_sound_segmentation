@@ -90,7 +90,7 @@ def UNet(n_classes, input_height=256, input_width=512, nChannels=1,
     if enc == True:
         enc = Conv2D(n_classes, (1, 1), activation='sigmoid')(e6)
         sed = MaxPooling2D((4, 1), strides=(4, 1))(enc)
-        sed = UpSampling2D(size=(1, 4))(sed)
+        sed = UpSampling2D(size=(1, 64))(sed)
         e6 = concatenate([enc, e6], axis=-1)
     
     d5 = Conv2DTranspose(512, (3, 3), strides=stride, use_bias=False, 

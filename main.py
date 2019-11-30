@@ -802,7 +802,7 @@ if __name__ == '__main__':
     train_mode = "class"
     classes = 75
     image_size = 256
-    task = "event"
+    task = "segmentation"
     ang_reso = 1
     
     if os.getcwd() == '/home/yui-sudo/document/segmentation/sound_segtest':
@@ -989,7 +989,7 @@ if __name__ == '__main__':
                                     X_test, Y_test, max, phase = load_npy(npy_name)
                                 
                                 Y_pred = predict(X_test, Model)
-                                if Model == "aux_Mask_UNet" or Model == "aux_Mask_RNN_UNet" or Model == "aux_Mask_Deeplab":
+                                if Model == "aux_Mask_UNet" or Model == "aux_Mask_RNN_UNet" or Model == "aux_Mask_Deeplab" or Model == "aux_enc_UNet" :
                                     Y_sedp = Y_pred[0]
                                     Y_pred = Y_pred[1]
                                     Y_sedt = ((Y_test.transpose(3,0,1,2).max(2)[:,:,np.newaxis,:] > 0.1) * 1).transpose(1,2,3,0)
@@ -1001,7 +1001,7 @@ if __name__ == '__main__':
                                         
                                         if task == "event":
                                             event_plot(Y_test, Y_pred, no=i)
-                                        elif Model == "aux_Mask_UNet" or Model == "aux_Mask_RNN_UNet" or Model == "aux_Mask_Deeplab":
+                                        elif Model == "aux_Mask_UNet" or Model == "aux_Mask_RNN_UNet" or Model == "aux_Mask_Deeplab" or Model == "aux_enc_UNet" :
                                             event_plot(Y_sedt, Y_sedp, no=i)
                                             plot_stft(Y_test, Y_pred, no=i)
                                             sdr, sir, sar = restore(Y_test, Y_pred, max, phase, no=i)
@@ -1031,7 +1031,7 @@ if __name__ == '__main__':
                                         
                                 elif task == "segmentation":
                                     RMS(Y_test, Y_pred) 
-                                    if Model == "aux_Mask_UNet" or Model == "aux_Mask_RNN_UNet" or Model == "aux_Mask_Deeplab":
+                                    if Model == "aux_Mask_UNet" or Model == "aux_Mask_RNN_UNet" or Model == "aux_Mask_Deeplab" or Model == "aux_enc_UNet" :
                                         Y_sedp = (Y_sedp > 0.5) * 1
                                         f1 = f1_score(Y_sedt.ravel(), Y_sedp.ravel())
                                         Y_sedp = np.argmax(Y_sedp, axis=3)
