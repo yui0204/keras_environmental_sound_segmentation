@@ -339,7 +339,14 @@ def read_model(Model):
                                       classes=classes * ang_reso, OS=16, 
                                       RNN=0,
                                       mask=True, trainable=trainable, sed_model=sed_model, 
-                                      num_layer=num_layer, aux=aux)   
+                                      num_layer=num_layer, aux=aux)
+        elif Model == "aux_enc_Deeplab":
+            model = Deeplab.Deeplabv3(weights=None, input_tensor=None, 
+                                      input_shape=(256, image_size, channel), 
+                                      classes=classes * ang_reso, OS=16, 
+                                      RNN=0,
+                                      mask=False, trainable=False, sed_model=None, 
+                                      num_layer=None, aux=aux, enc=True)  
             
         elif Model == "CNN4":
             model = CNN.CNN(n_classes=classes, input_height=256, 
@@ -380,7 +387,12 @@ def train(X_train, Y_train, Model):
     model, multi_model = read_model(Model)
     
     if gpu_count == 1:
-        model.compile(loss=loss, optimizer=Adam(lr=lr),metrics=["accuracy"])
+        if aux == False:
+            model.compile(loss=loss, optimizer=Adam(lr=lr),metrics=["accuracy"])
+        else:
+            model.compile(loss=["binary_crossentropy", "mean_squared_error"],
+                          loss_weights=[0.4, 1.0], 
+                          optimizer=Adam(lr=lr),metrics=["accuracy"])
     else:
         if aux == False:
             multi_model.compile(loss=loss, optimizer=Adam(lr=lr),metrics=["accuracy"])     
@@ -402,7 +414,7 @@ def train(X_train, Y_train, Model):
             X_train = [X_train, 
                        X_train.transpose(3,0,1,2)[0][np.newaxis,:,:,:].transpose(1,2,3,0)]
         
-        if Model == "aux_Mask_UNet" or Model == "aux_Mask_RNN_UNet" or Model == "aux_Mask_Deeplab" or Model == "aux_enc_UNet" :
+        if Model == "aux_Mask_UNet" or Model == "aux_Mask_RNN_UNet" or Model == "aux_Mask_Deeplab" or Model == "aux_enc_UNet" or Model == "aux_enc_Deeplab":
             Y_train = [((Y_train.transpose(3,0,1,2).max(2)[:,:,np.newaxis,:] > 0.1) * 1).transpose(1,2,3,0), 
                        Y_train]
     
@@ -810,7 +822,7 @@ if __name__ == '__main__':
     else:
         gpu_count = 3
     BATCH_SIZE = 16 * gpu_count
-    NUM_EPOCH = 100
+    NUM_EPOCH = 10
     
     lr = 0.001
     
@@ -821,7 +833,7 @@ if __name__ == '__main__':
     mode = "train"
     date = mode       
     plot = True
-    graph_num = 50
+    graph_num = 10
 
     trainable = False # SED mask
 
@@ -849,8 +861,9 @@ if __name__ == '__main__':
                       #"UNet", "Deeplab", "RNN_UNet", "CR_UNet", "RNN_Deeplab",
                       #"aux_Mask_UNet", "aux_Mask_Deeplab", 
                       #"aux_Mask_RNN_UNet"
-                      "aux_enc_UNet", 
-                      #"aux_enc_RNN_UNet", "aux_enc_Deeplab", 
+                      #"aux_enc_UNet", 
+                      #"aux_enc_RNN_UNet", 
+                      "aux_enc_Deeplab", 
                       ]:
 
             for vonMises in [False]:
@@ -890,14 +903,14 @@ if __name__ == '__main__':
                                     sed_model, num_layer = load_sed_model(Sed_Model)
                                     mask = True
                                     aux = True
-                                elif Model == "aux_enc_UNet":
+                                elif Model == "aux_enc_UNet" or Model == "aux_enc_Deeplab":
                                     mask = False
                                     aux = True
                                 else:
                                     mask = False
                                     aux = False
                                                 
-                                load_number = 10
+                                load_number = 100
             
                                 
                                 model_name = Model+"_"+str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_cin"+str(complex_input) + "_ipd"+str(ipd) + "_vonMises"+str(vonMises)
@@ -989,7 +1002,7 @@ if __name__ == '__main__':
                                     X_test, Y_test, max, phase = load_npy(npy_name)
                                 
                                 Y_pred = predict(X_test, Model)
-                                if Model == "aux_Mask_UNet" or Model == "aux_Mask_RNN_UNet" or Model == "aux_Mask_Deeplab" or Model == "aux_enc_UNet" :
+                                if Model == "aux_Mask_UNet" or Model == "aux_Mask_RNN_UNet" or Model == "aux_Mask_Deeplab" or Model == "aux_enc_UNet" or Model == "aux_enc_Deeplab":
                                     Y_sedp = Y_pred[0]
                                     Y_pred = Y_pred[1]
                                     Y_sedt = ((Y_test.transpose(3,0,1,2).max(2)[:,:,np.newaxis,:] > 0.1) * 1).transpose(1,2,3,0)
@@ -1001,7 +1014,7 @@ if __name__ == '__main__':
                                         
                                         if task == "event":
                                             event_plot(Y_test, Y_pred, no=i)
-                                        elif Model == "aux_Mask_UNet" or Model == "aux_Mask_RNN_UNet" or Model == "aux_Mask_Deeplab" or Model == "aux_enc_UNet" :
+                                        elif Model == "aux_Mask_UNet" or Model == "aux_Mask_RNN_UNet" or Model == "aux_Mask_Deeplab" or Model == "aux_enc_UNet" or Model == "aux_enc_Deeplab":
                                             event_plot(Y_sedt, Y_sedp, no=i)
                                             plot_stft(Y_test, Y_pred, no=i)
                                             sdr, sir, sar = restore(Y_test, Y_pred, max, phase, no=i)
@@ -1031,7 +1044,7 @@ if __name__ == '__main__':
                                         
                                 elif task == "segmentation":
                                     RMS(Y_test, Y_pred) 
-                                    if Model == "aux_Mask_UNet" or Model == "aux_Mask_RNN_UNet" or Model == "aux_Mask_Deeplab" or Model == "aux_enc_UNet" :
+                                    if Model == "aux_Mask_UNet" or Model == "aux_Mask_RNN_UNet" or Model == "aux_Mask_Deeplab" or Model == "aux_enc_UNet" or Model == "aux_enc_Deeplab":
                                         Y_sedp = (Y_sedp > 0.5) * 1
                                         f1 = f1_score(Y_sedt.ravel(), Y_sedp.ravel())
                                         Y_sedp = np.argmax(Y_sedp, axis=3)
