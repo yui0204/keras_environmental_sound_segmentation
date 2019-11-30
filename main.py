@@ -213,6 +213,12 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
         inputs = inputs.transpose(1,0,2,3)
         inputs[0], labels = log(inputs[0], labels)   
         inputs[0] = np.nan_to_num(inputs[0])
+        if vonMises == True and mic_num == 8:
+            for ch in mic_num:
+                inputs[ch * 3], labels = log(inputs[ch * 3], labels)
+                inputs[ch * 3] = np.nan_to_num(inputs[ch * 3])
+                inputs[ch * 3] += 120
+                inputs[ch * 3], a, a = normalize(inputs[ch * 3], labels)
         labels = np.nan_to_num(labels) 
         inputs[0] += 120
         labels += 120
@@ -267,7 +273,13 @@ def read_model(Model):
                               input_width=image_size, nChannels=channel, 
                               trainable=trainable, 
                               sed_model=sed_model, num_layer=num_layer, aux=aux,
-                              mask=True, RNN=0, freq_pool=False) 
+                              mask=True, RNN=0, freq_pool=False)
+        elif Model == "aux_enc_UNet":
+            model = Unet.UNet(n_classes=classes, input_height=256, 
+                              input_width=image_size, nChannels=channel, 
+                              trainable=trainable, 
+                              sed_model=sed_model, num_layer=num_layer, aux=True,
+                              mask=True, RNN=2, freq_pool=False, enc=True) 
         elif Model == "aux_Mask_RNN_UNet":
             model = Unet.UNet(n_classes=classes, input_height=256, 
                               input_width=image_size, nChannels=channel, 
@@ -370,7 +382,13 @@ def train(X_train, Y_train, Model):
     if gpu_count == 1:
         model.compile(loss=loss, optimizer=Adam(lr=lr),metrics=["accuracy"])
     else:
-        multi_model.compile(loss=loss, optimizer=Adam(lr=lr),metrics=["accuracy"])                
+        if aux == False:
+            multi_model.compile(loss=loss, optimizer=Adam(lr=lr),metrics=["accuracy"])     
+
+        elif aux == True:
+            multi_model.compile(loss=["binary_crossentropy", "mean_squared_error"],
+                                loss_weights=[0.4, 1.0],
+                                optimizer=Adam(lr=lr),metrics=["accuracy"])              
 
     plot_model(model, to_file = results_dir + model_name + '.png')
     model.summary()
@@ -656,72 +674,58 @@ def restore(Y_true, Y_pred, max, phase, no=0, class_n=1):
     
 
 def RMS(Y_true, Y_pred):
-    Y_pred = Y_pred.transpose(0, 3, 1, 2)
-    Y_true = Y_true.transpose(0, 3, 1, 2)    
+    Y_pred = Y_pred.transpose(0, 3, 1, 2) # (data number, class, freq, time)
+    Y_true = Y_true.transpose(0, 3, 1, 2)
         
     Y_pred_db = (Y_pred * max - 120)
     Y_true_db = (Y_true * max - 120)
-    total_rms_array = np.zeros(classes + 1)
-    rms_array = np.zeros(classes + 1)
-    num_array = np.zeros(classes + 1)
-    area_array = np.zeros(classes + 1)
-    spl_array =  np.zeros(classes + 1)
-    overlap_array = np.zeros(classes + 1)
-    lapnum_array = np.zeros(classes + 1)
-    for no in range(load_number):
-        lap_detect = ((Y_true[no].max(1) > 0.5).sum(0) > 1)
-        for class_n in range(classes):
-            if Y_true[no][class_n].max() > 0: #含まれているクラスのみRMS
-                
-                num_array[classes] += 1
-                num_array[class_n] += 1
-                on_detect = Y_true[no][class_n].max(0) > 0.000
-                lap_on_detect = on_detect * lap_detect
-                
-                per_rms = ((Y_true_db[no][class_n] - Y_pred_db[no][class_n]) ** 2).mean(0)
-                rms_array[class_n] += per_rms.sum()  / on_detect.sum()
-                
-                if lap_on_detect.sum() > 0:
-                    lapnum_array[classes] += 1
-                    lapnum_array[class_n] += 1
-                    overlap_array[class_n] += (per_rms * lap_on_detect).sum() / lap_on_detect.sum()
-                    
-                area_array[class_n] += ((Y_true[no][class_n] > 0.3) * 1).sum()
-                spl_array[class_n] += ((Y_true_db[no][class_n]+120).mean(0)*lap_on_detect).sum() / lap_on_detect.sum() - 120
-                total_rms_array[class_n] += per_rms.mean()
-    rms_array[classes] = rms_array.sum()
-    rms_array = np.sqrt(rms_array / num_array)
-    overlap_array[classes] = overlap_array.sum()
-    overlap_array = np.sqrt(overlap_array / lapnum_array)
-    area_array[classes] = area_array.sum()
-    area_array = area_array // num_array
-    spl_array[classes] = spl_array.sum()
-    spl_array = spl_array // num_array
-    total_rms_array[classes] = total_rms_array.sum()
-    total_rms_array = np.sqrt(total_rms_array / num_array)
-    #print(area_array)
-    #print("total\n", total_rms_array, "\n") 
-    print("per-class\n", rms_array, "\n")     
-    print("overlap\n", overlap_array, "\n") 
-    print("num\n", num_array, "\n")
-    print("lapnum\n", lapnum_array, "\n")
 
-    np.savetxt(results_dir+"prediction/class_num_"+str(load_number)+".csv", num_array)
-    np.savetxt(results_dir+"prediction/class_rms_"+str(load_number)+".csv", rms_array, fmt ='%.3f')
-    np.savetxt(results_dir+"prediction/lap_rms_"+str(load_number)+".csv", overlap_array, fmt ='%.3f')
-    np.savetxt(results_dir+"prediction/class_area_"+str(load_number)+".csv", area_array)
-    np.savetxt(results_dir+"prediction/total_num_"+str(load_number)+".csv", num_array)
+    rms_array = np.zeros(classes + 1)
+    num_array = np.zeros(classes + 1) # the number of data of each class
+
+    area_array = np.zeros(classes + 1) # area size of each class
     
+    spl_array =  np.zeros(classes + 1) #average SPL of each class 
+    percent_array =  np.zeros(classes + 1) 
+
+    for no in range(load_number):
+        for class_n in range(classes):
+            if Y_true[no][class_n].max() > 0: # calculate RMS of active event class               
+                num_array[classes] += 1 # total number of all classes
+                num_array[class_n] += 1 # the number of data of each class
+                on_detect = Y_true[no][class_n].max(0) > 0.000 # active section of this spectrogram image
+                
+                per_rms = ((Y_true_db[no][class_n] - Y_pred_db[no][class_n]) ** 2).mean(0) # mean squared error about freq axis of this spectrogram
+                rms_array[class_n] += per_rms.sum() / on_detect.sum() # mean squared error of one data
+                
+                per_spl = Y_true_db[no][class_n].mean(0) # mean spl about freq axis
+                spl_array[class_n] += per_spl.sum() / on_detect.sum() # mean spl of one data
+                
+                area_array[class_n] += ((Y_true[no][class_n] > 0.0) * 1).sum() # number of active bins = area size
+                
+    rms_array[classes] = rms_array.sum()
+    rms_array = np.sqrt(rms_array / num_array) # Squared error is divided by the number of data = MSE then root = RMSE
+
+    spl_array[classes] = spl_array.sum()
+    spl_array = spl_array / num_array # Sum of each spl is divided by the number of data = average spl
+
+    area_array[classes] = area_array.sum()
+    area_array = area_array // num_array # average area size of each class
     
-    plt.plot(rms_array, marker='o', linestyle="None")
-    plt.plot(overlap_array, marker='o', linestyle="None")
-    #plt.plot(total_rms_array, marker='o', linestyle="None")
-    plt.title("rms_overlap")
-    plt.xlabel("overlap")
-    plt.ylabel('rms')
-    plt.savefig(results_dir + "rms_laprms_result.png")
-    plt.ylim(0, 50)
-    plt.close()
+    percent_array = rms_array / spl_array
+
+
+    #print(area_array)
+    print("rms\n", rms_array, "\n")     
+    print("num\n", num_array, "\n")
+    print("percent\n", percent_array, "\n")
+
+    np.savetxt(results_dir+"prediction/datanum_"+str(load_number)+".csv", num_array)
+    np.savetxt(results_dir+"prediction/rmse_"+str(load_number)+".csv", rms_array, fmt ='%.3f')
+    np.savetxt(results_dir+"prediction/area_"+str(load_number)+".csv", area_array)
+    np.savetxt(results_dir+"prediction/spl_"+str(load_number)+".csv", spl_array, fmt ='%.3f')
+    np.savetxt(results_dir+"prediction/percent_"+str(load_number)+".csv", percent_array, fmt ='%.3f')
+    
 
     plt.plot(rms_array, marker='o', linestyle="None")
     plt.title("rms")
@@ -738,29 +742,15 @@ def RMS(Y_true, Y_pred):
     plt.savefig(results_dir + "area-rms_result.png")
     plt.ylim(0, 50)
     plt.close()
-
-    plt.plot(spl_array, overlap_array, marker='o', linestyle="None")
-    plt.title("spl-overlap")
-    plt.xlabel("")
-    plt.ylabel('')
+    
+    plt.plot(spl_array, rms_array, marker='o', linestyle="None")
+    plt.title("spl-rms")
+    plt.xlabel("spl")
+    plt.ylabel('rms')
     plt.savefig(results_dir + "spl-rms_result.png")
     plt.ylim(0, 50)
     plt.close()
 
-    """
-    for i in range(75):
-        print(i)
-        plt.pcolormesh(Y_true_db[i][0])
-        plt.clim(-120,0)
-        plt.colorbar()
-        plt.pcolormesh(Y_pred_db[i][0])
-        plt.clim(-120,0)
-        plt.colorbar()
-    if task == "event":    
-        labels = labels.max(2)[:,:,np.newaxis,:]
-        labels = ((labels > 0.1) * 1)
-    """
-    return rms_array
 
 
 def save_npy(X, Y, max, phase, name):    
@@ -855,18 +845,18 @@ if __name__ == '__main__':
         labelfile = dataset + "label.csv"
         label = pd.read_csv(filepath_or_buffer=labelfile, sep=",", index_col=0)            
         
-        for Model in ["CNN8", "CRNN8", "BiCRNN8", 
-                      "UNet", "Deeplab", "RNN_UNet", "CR_UNet", "RNN_Deeplab",
-                      "aux_Mask_UNet", "aux_Mask_Deeplab", 
-                      "aux_Mask_RNN_UNet"
+        for Model in [#"CNN8", "CRNN8", "BiCRNN8", 
+                      #"UNet", "Deeplab", "RNN_UNet", "CR_UNet", "RNN_Deeplab",
+                      #"aux_Mask_UNet", "aux_Mask_Deeplab", 
+                      #"aux_Mask_RNN_UNet"
+                      "aux_enc_UNet", 
+                      #"aux_enc_RNN_UNet", "aux_enc_Deeplab", 
                       ]:
-            if Model == "UNet":
-                task = "segmentation"    
-                loss = "mean_squared_error"
-            for vonMises in [False, True]:
+
+            for vonMises in [False]:
                 for ipd in [False]:
                     for mic_num in [1]: # 1 or 8                        
-                        for complex_input in [False, True]:
+                        for complex_input in [True]:
                             VGG = 0                     #0: False, 1: Red 3: White                          
  
                             channel = 0
@@ -900,6 +890,9 @@ if __name__ == '__main__':
                                     sed_model, num_layer = load_sed_model(Sed_Model)
                                     mask = True
                                     aux = True
+                                elif Model == "aux_enc_UNet":
+                                    mask = False
+                                    aux = True
                                 else:
                                     mask = False
                                     aux = False
@@ -931,7 +924,7 @@ if __name__ == '__main__':
                                     else:
                                         X_train, Y_train, max, phase = load_npy(npy_name)
                                     
-                        
+
                                     # save train condition
                                     train_condition = date + "\t" + results_dir                     + "\n" + \
                                                       "\t"+"Comapare IPD input and normal complex input and 1ch"                          + "\n" + \
@@ -958,8 +951,8 @@ if __name__ == '__main__':
                                     with open(results_dir + 'train_condition.txt','w') as f:
                                         f.write(train_condition)
                                     
-                                    msg = create_message("Training start\n" + train_condition)
-                                    send_mail(msg)
+                                    #msg = create_message("Training start\n" + train_condition)
+                                    #send_mail(msg)
 
                                     
                                     history = train(X_train, Y_train, Model)
@@ -1037,8 +1030,7 @@ if __name__ == '__main__':
                                         f.write(str(f1))   
                                         
                                 elif task == "segmentation":
-                                    rms = RMS(Y_test, Y_pred) 
-                                    print("Total RMSE", rms)
+                                    RMS(Y_test, Y_pred) 
                                     if Model == "aux_Mask_UNet" or Model == "aux_Mask_RNN_UNet" or Model == "aux_Mask_Deeplab":
                                         Y_sedp = (Y_sedp > 0.5) * 1
                                         f1 = f1_score(Y_sedt.ravel(), Y_sedp.ravel())
@@ -1061,13 +1053,13 @@ if __name__ == '__main__':
                                     # copy to export2
                                     shutil.copytree(results_dir, "/misc/export2/sudou/model_results/" + date + "/" + dir_name)
 
-                                    msg = create_message("Evaluation finished\n" + train_condition)
-                                    send_mail(msg)
+                                    #msg = create_message("Evaluation finished\n" + train_condition)
+                                    #send_mail(msg)
                                                     
 
     os.remove("Unet.pyc")
     os.remove("PSPNet.pyc")
     os.remove("Deeplab.pyc")
-    os.remove("DC.pyc")
+    #os.remove("DC.pyc")
     os.remove("CNN.pyc")
     os.remove("sound.pyc")

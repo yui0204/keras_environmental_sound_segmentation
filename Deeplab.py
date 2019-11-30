@@ -21,6 +21,7 @@ from keras.layers import ZeroPadding2D
 from keras.layers import GlobalAveragePooling2D
 from keras.layers import GlobalMaxPooling2D
 from keras.layers import AveragePooling2D
+from keras.layers import UpSampling2D
 from keras.engine import Layer
 from keras.engine import InputSpec
 from keras.engine.topology import get_source_inputs
@@ -192,7 +193,7 @@ def xception_block(inputs, depth_list, prefix, skip_connection_type, stride,
 
 def Deeplabv3(weights='None', input_tensor=None, input_shape=(256, 256, 1), 
               classes=75, OS=16, mask=False, trainable=False, RNN=0,
-              sed_model=None, num_layer=None, aux=False):    
+              sed_model=None, num_layer=None, aux=False, enc=False):    
     """ Instantiates the Deeplabv3+ architecture
 
     Optionally loads weights pre-trained on PASCAL VOC. 
@@ -334,8 +335,14 @@ def Deeplabv3(weights='None', input_tensor=None, input_shape=(256, 256, 1),
             #r = BatchNormalization()(r)   
         r = Reshape((16, 16, 256))(r)
         x = r
-####################################
-
+#################################### 
+    if enc == True:
+        enc = Conv2D(classes, (1, 1), activation='sigmoid')(x)
+        sed = MaxPooling2D((16, 1), strides=(16, 1))(enc)
+        sed = UpSampling2D(size=(1, 16))(sed)
+        x = concatenate([sed, x], axis=-1)
+#################################### 
+        
     # DeepLab v.3+ decoder
 
     # Feature projection

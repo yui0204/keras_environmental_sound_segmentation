@@ -61,5 +61,3 @@ def CNN(n_classes, input_height=256, input_width=512, nChannels=3,
     
     return model
 
-
-
