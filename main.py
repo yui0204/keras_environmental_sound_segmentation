@@ -822,7 +822,7 @@ if __name__ == '__main__':
     else:
         gpu_count = 3
     BATCH_SIZE = 16 * gpu_count
-    NUM_EPOCH = 10
+    NUM_EPOCH = 100
     
     lr = 0.001
     
@@ -858,12 +858,12 @@ if __name__ == '__main__':
         label = pd.read_csv(filepath_or_buffer=labelfile, sep=",", index_col=0)            
         
         for Model in [#"CNN8", "CRNN8", "BiCRNN8", 
-                      "UNet", #"Deeplab", "RNN_UNet", "CR_UNet", "RNN_Deeplab",
+                      #"UNet", #"Deeplab", "RNN_UNet", "CR_UNet", "RNN_Deeplab",
                       #"aux_Mask_UNet", "aux_Mask_Deeplab", 
                       #"aux_Mask_RNN_UNet"
                       #"aux_enc_UNet", 
                       #"aux_enc_RNN_UNet", 
-                      #"aux_enc_Deeplab", 
+                      "aux_enc_Deeplab", 
                       ]:
 
             for vonMises in [False]:
@@ -910,7 +910,7 @@ if __name__ == '__main__':
                                     mask = False
                                     aux = False
                                                 
-                                load_number = 100
+                                load_number = 10000
             
                                 
                                 model_name = Model+"_"+str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_cin"+str(complex_input) + "_ipd"+str(ipd) + "_vonMises"+str(vonMises)

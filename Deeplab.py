@@ -339,7 +339,8 @@ def Deeplabv3(weights='None', input_tensor=None, input_shape=(256, 256, 1),
     if enc == True:
         enc = Conv2D(classes, (1, 1), activation='sigmoid')(x)
         sed = MaxPooling2D((16, 1), strides=(16, 1))(enc)
-        sed = UpSampling2D(size=(1, 16))(sed)
+        #sed = UpSampling2D(size=(1, 16))(sed)
+        sed = BilinearUpsampling(output_size=(1, input_shape[1]))(sed)
         x = concatenate([enc, x], axis=-1)
 #################################### 
         
