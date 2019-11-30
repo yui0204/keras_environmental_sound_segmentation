@@ -278,7 +278,7 @@ def read_model(Model):
             model = Unet.UNet(n_classes=classes, input_height=256, 
                               input_width=image_size, nChannels=channel,
                               trainable=False, 
-                              sed_model=None, num_layer=None, aux=False,
+                              sed_model=None, num_layer=None, aux=aux,
                               mask=False, RNN=0, freq_pool=False, enc=True)   
         elif Model == "aux_Mask_RNN_UNet":
             model = Unet.UNet(n_classes=classes, input_height=256, 
@@ -402,7 +402,7 @@ def train(X_train, Y_train, Model):
             X_train = [X_train, 
                        X_train.transpose(3,0,1,2)[0][np.newaxis,:,:,:].transpose(1,2,3,0)]
         
-        if Model == "aux_Mask_UNet" or Model == "aux_Mask_RNN_UNet" or Model == "aux_Mask_Deeplab":
+        if Model == "aux_Mask_UNet" or Model == "aux_Mask_RNN_UNet" or Model == "aux_Mask_Deeplab" or Model == "aux_enc_UNet" :
             Y_train = [((Y_train.transpose(3,0,1,2).max(2)[:,:,np.newaxis,:] > 0.1) * 1).transpose(1,2,3,0), 
                        Y_train]
     
