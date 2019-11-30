@@ -689,8 +689,8 @@ def RMS(Y_true, Y_pred):
     Y_pred = Y_pred.transpose(0, 3, 1, 2) # (data number, class, freq, time)
     Y_true = Y_true.transpose(0, 3, 1, 2)
         
-    Y_pred_db = (Y_pred * max - 120)
-    Y_true_db = (Y_true * max - 120)
+    Y_pred_db = (Y_pred * max) # 0~120dB
+    Y_true_db = (Y_true * max)
 
     rms_array = np.zeros(classes + 1)
     num_array = np.zeros(classes + 1) # the number of data of each class
@@ -705,7 +705,7 @@ def RMS(Y_true, Y_pred):
             if Y_true[no][class_n].max() > 0: # calculate RMS of active event class               
                 num_array[classes] += 1 # total number of all classes
                 num_array[class_n] += 1 # the number of data of each class
-                on_detect = Y_true[no][class_n].max(0) > 0.000 # active section of this spectrogram image
+                on_detect = Y_true[no][class_n].max(0) > 0.0 # active section of this spectrogram image
                 
                 per_rms = ((Y_true_db[no][class_n] - Y_pred_db[no][class_n]) ** 2).mean(0) # mean squared error about freq axis of this spectrogram
                 rms_array[class_n] += per_rms.sum() / on_detect.sum() # mean squared error of one data
@@ -724,7 +724,7 @@ def RMS(Y_true, Y_pred):
     area_array[classes] = area_array.sum()
     area_array = area_array // num_array # average area size of each class
     
-    percent_array = rms_array / spl_array
+    percent_array = rms_array / spl_array * 100 
 
 
     #print(area_array)
@@ -858,12 +858,12 @@ if __name__ == '__main__':
         label = pd.read_csv(filepath_or_buffer=labelfile, sep=",", index_col=0)            
         
         for Model in [#"CNN8", "CRNN8", "BiCRNN8", 
-                      #"UNet", "Deeplab", "RNN_UNet", "CR_UNet", "RNN_Deeplab",
+                      "UNet", #"Deeplab", "RNN_UNet", "CR_UNet", "RNN_Deeplab",
                       #"aux_Mask_UNet", "aux_Mask_Deeplab", 
                       #"aux_Mask_RNN_UNet"
                       #"aux_enc_UNet", 
                       #"aux_enc_RNN_UNet", 
-                      "aux_enc_Deeplab", 
+                      #"aux_enc_Deeplab", 
                       ]:
 
             for vonMises in [False]:
