@@ -276,10 +276,10 @@ def read_model(Model):
                               mask=True, RNN=0, freq_pool=False)
         elif Model == "aux_enc_UNet":
             model = Unet.UNet(n_classes=classes, input_height=256, 
-                              input_width=image_size, nChannels=channel, 
-                              trainable=trainable, 
-                              sed_model=sed_model, num_layer=num_layer, aux=True,
-                              mask=True, RNN=2, freq_pool=False, enc=True) 
+                              input_width=image_size, nChannels=channel,
+                              trainable=False, 
+                              sed_model=None, num_layer=None, aux=False,
+                              mask=False, RNN=0, freq_pool=False, enc=True)   
         elif Model == "aux_Mask_RNN_UNet":
             model = Unet.UNet(n_classes=classes, input_height=256, 
                               input_width=image_size, nChannels=channel, 
@@ -897,7 +897,7 @@ if __name__ == '__main__':
                                     mask = False
                                     aux = False
                                                 
-                                load_number = 10000
+                                load_number = 10
             
                                 
                                 model_name = Model+"_"+str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_cin"+str(complex_input) + "_ipd"+str(ipd) + "_vonMises"+str(vonMises)
