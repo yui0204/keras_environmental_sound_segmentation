@@ -791,19 +791,19 @@ def load_sed_model(Model):
                             input_width=image_size, nChannels=channel,
                             filter_list=[64, 64, 128, 128, 256, 256, 512, 512], 
                             RNN=0, Bidir=False)
-        #sed_model.load_weights(os.getcwd()+"/model_results/2019_0917/CNN8_75class_1direction_1ch_mulTrue_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/CNN8_75class_1direction_1ch_mulTrue_cinFalse_ipdFalse_vonMisesFalse_weights.hdf5")
+        sed_model.load_weights(os.getcwd()+"/model_results/advanced_robotics/CNN8_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/CNN8_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_weights.hdf5")
     elif Model == "CRNN8":
         sed_model = CNN.CNN(n_classes=classes, input_height=256, 
                             input_width=image_size, nChannels=channel,
                             filter_list=[64, 64, 128, 128, 256, 256, 512, 512], 
                             RNN=2, Bidir=False)
-        #sed_model.load_weights(os.getcwd()+"/model_results/2019_0917/CRNN8_75class_1direction_1ch_mulTrue_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/CRNN8_75class_1direction_1ch_mulTrue_cinFalse_ipdFalse_vonMisesFalse_weights.hdf5")
+        sed_model.load_weights(os.getcwd()+"/model_results/advanced_robotics/CRNN8_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/CRNN8_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_weights.hdf5")
     elif Model == "BiCRNN8":
         sed_model = CNN.CNN(n_classes=classes, input_height=256, 
                             input_width=image_size, nChannels=channel,
                             filter_list=[64, 64, 128, 128, 256, 256, 512, 512], 
                             RNN=2, Bidir=True)
-        #sed_model.load_weights(os.getcwd()+"/model_results/2019_0918/BiCRNN8_75class_1direction_1ch_mulTrue_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/BiCRNN8_75class_1direction_1ch_mulTrue_cinFalse_ipdFalse_vonMisesFalse_weights.hdf5")
+        sed_model.load_weights(os.getcwd()+"/model_results/advanced_robotics/BiCRNN8_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/BiCRNN8_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_weights.hdf5")
     
     num_layer = len(sed_model.layers)
 
@@ -859,17 +859,17 @@ if __name__ == '__main__':
         
         for Model in [#"CNN8", "CRNN8", "BiCRNN8", 
                       #"UNet", #"Deeplab", "RNN_UNet", "CR_UNet", "RNN_Deeplab",
-                      #"aux_Mask_UNet", "aux_Mask_Deeplab", 
+                      "aux_Mask_UNet", "aux_Mask_Deeplab", 
                       #"aux_Mask_RNN_UNet"
                       #"aux_enc_UNet", 
                       #"aux_enc_RNN_UNet", 
-                      "aux_enc_Deeplab", 
+                      #"aux_enc_Deeplab", 
                       ]:
 
             for vonMises in [False]:
                 for ipd in [False]:
                     for mic_num in [1]: # 1 or 8                        
-                        for complex_input in [True]:
+                        for complex_input in [False]:
                             VGG = 0                     #0: False, 1: Red 3: White                          
  
                             channel = 0
