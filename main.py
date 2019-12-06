@@ -835,9 +835,6 @@ if __name__ == '__main__':
     plot = True
     graph_num = 10
 
-    trainable = False # SED mask
-
-
     if os.getcwd() == '/home/yui-sudo/document/segmentation/sound_segtest':
         datasets_dir = "/home/yui-sudo/document/dataset/sound_segmentation/datasets/"
     else:
@@ -899,10 +896,12 @@ if __name__ == '__main__':
                                     sed_model, num_layer = load_sed_model(Sed_Model)
                                     mask=True
                                     aux = False
+                                    trainable = False # SED mask
                                 elif Model == "aux_Mask_UNet" or Model == "aux_Mask_RNN_UNet" or Model == "aux_Mask_Deeplab":
                                     sed_model, num_layer = load_sed_model(Sed_Model)
                                     mask = True
                                     aux = True
+                                    trainable = True # SED mask
                                 elif Model == "aux_enc_UNet" or Model == "aux_enc_Deeplab":
                                     mask = False
                                     aux = True
