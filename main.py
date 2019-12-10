@@ -691,6 +691,9 @@ def RMS(Y_true, Y_pred):
         
     Y_pred_db = (Y_pred * max) # 0~120dB
     Y_true_db = (Y_true * max)
+    
+    total_rmse = np.sqrt(((Y_true_db - Y_pred_db) ** 2).mean())
+    print("Total RMSE =", total_rmse)
 
     rms_array = np.zeros(classes + 1)
     num_array = np.zeros(classes + 1) # the number of data of each class
@@ -1000,7 +1003,11 @@ if __name__ == '__main__':
                                 else:
                                     X_test, Y_test, max, phase = load_npy(npy_name)
                                 
+                                start = time.time()
                                 Y_pred = predict(X_test, Model)
+                                elapsed_time = time.time() - start
+                                print("prediction time = ", elapsed_time)
+                                
                                 if Model == "aux_Mask_UNet" or Model == "aux_Mask_RNN_UNet" or Model == "aux_Mask_Deeplab" or Model == "aux_enc_UNet" or Model == "aux_enc_Deeplab":
                                     Y_sedp = Y_pred[0]
                                     Y_pred = Y_pred[1]
@@ -1036,7 +1043,7 @@ if __name__ == '__main__':
                                     Y_pred = (Y_pred > 0.5) * 1
                                     f1 = f1_score(Y_test.ravel(), Y_pred.ravel())
                                     Y_pred = np.argmax(Y_pred, axis=3)
-                                    print("F1_score", f1)
+                                    print("F_score", f1)
                                     #Y_pred = Y_pred[:,:,:,np.newaxis]
                                     with open(results_dir + "f1_" + str(f1) + ".txt","w") as f:
                                         f.write(str(f1))   
@@ -1047,10 +1054,13 @@ if __name__ == '__main__':
                                         Y_sedp = (Y_sedp > 0.5) * 1
                                         f1 = f1_score(Y_sedt.ravel(), Y_sedp.ravel())
                                         Y_sedp = np.argmax(Y_sedp, axis=3)
-                                        print("F1_score", f1)
+                                        print("aux_F_score", f1)
                                         with open(results_dir + "f1_" + str(f1) + ".txt","w") as f:
                                             f.write(str(f1))   
                                     
+                                    f1 = f1_score(((Y_test.max(1) > 0.1) * 1).ravel(),
+                                                  ((Y_pred.max(1) > 0.1) * 1).ravel())
+                                    print("segmentation F-score =", f1)
                                     
                                 if not os.getcwd() == '/home/yui-sudo/document/segmentation/sound_segtest':
                                     shutil.copy("main.py", results_dir)
