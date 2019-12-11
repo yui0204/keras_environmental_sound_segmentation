@@ -639,7 +639,7 @@ def plot_stft(Y_true, Y_pred, no=0):
     plt.close()
 
 
-def restore(Y_true, Y_pred, max, phase, no=0, class_n=1):
+def restore(Y_true, Y_pred, max, phase, no=0, class_n=1, save=False):
     plot_num = classes * ang_reso
 
     pred_dir = pred_dir_make(no)
@@ -669,7 +669,8 @@ def restore(Y_true, Y_pred, max, phase, no=0, class_n=1):
                 
             Y_pred_wave = Y_Stft.scipy_istft()
             print(class_n)
-            Y_pred_wave.write_wav_sf(dir=pred_dir, filename=None, bit=16)
+            if save == True:
+                Y_pred_wave.write_wav_sf(dir=pred_dir, filename=None, bit=16)
 
             if task == "segmentation" and ang_reso == 1:
                 Y_pred_wave = Y_pred_wave.norm_sound
@@ -680,7 +681,7 @@ def restore(Y_true, Y_pred, max, phase, no=0, class_n=1):
                 
                 sdr_array[class_n] = sdr
                 sir_array[class_n] = sir
-                sar_array[class_n] = sar    
+                sar_array[class_n] = sar
             
     return sdr_array, sir_array, sar_array
     
@@ -1015,10 +1016,12 @@ if __name__ == '__main__':
                                          
                                 if plot == True:
                                     sdr_array, sir_array, sar_array = np.array(()) ,np.array(()), np.array(())
+                                    
                                     for i in range (0, load_number):
+                                        save = False
                                         if i < graph_num:
                                             origin_stft(X_test, no=i)
-                                        
+                                            save = True
                                         if task == "event":
                                             if i < graph_num:
                                                 event_plot(Y_test, Y_pred, no=i)
@@ -1027,17 +1030,19 @@ if __name__ == '__main__':
                                                 if Model == "aux_Mask_UNet" or Model == "aux_Mask_RNN_UNet" or Model == "aux_Mask_Deeplab" or Model == "aux_enc_UNet" or Model == "aux_enc_Deeplab":
                                                     event_plot(Y_sedt, Y_sedp, no=i)
                                                 plot_stft(Y_test, Y_pred, no=i)
-                                            sdr, sir, sar = restore(Y_test, Y_pred, max, phase, no=i)
+                                            sdr, sir, sar = restore(Y_test, Y_pred, max, phase, no=i, save=save)
                                             sdr_array = np.append(sdr_array, sdr)
                                             sir_array = np.append(sir_array, sir)
                                             sar_array = np.append(sar_array, sar)
                                         
                                     if task == "segmentation" and ang_reso == 1:
-                                        sdr_array = sdr_array.reshape(graph_num, classes).mean(0)
-                                        sir_array = sir_array.reshape(graph_num, classes).mean(0)
-                                        sar_array = sar_array.reshape(graph_num, classes).mean(0)
+                                        sdr_array = np.append(sdr_array.reshape(graph_num, classes).mean(0), sdr_array.mean())
+                                        sir_array = np.append(sir_array.reshape(graph_num, classes).mean(0), sir_array.mean())
+                                        sar_array = np.append(sar_array.reshape(graph_num, classes).mean(0), sar_array.mean())
+                                        
                                         np.savetxt(results_dir+"prediction/sdr_"+str(load_number)+".csv", sdr_array, fmt ='%.3f')
-                            
+                                        print("SDR\n", sdr_array, "\n")   
+                                        
                                 if task == "event":
                                     Y_pred = (Y_pred > 0.5) * 1
                                     f1 = f1_score(Y_test.ravel(), Y_pred.ravel())
