@@ -1015,29 +1015,28 @@ if __name__ == '__main__':
                                          
                                 if plot == True:
                                     sdr_array, sir_array, sar_array = np.array(()) ,np.array(()), np.array(())
-                                    for i in range (0, graph_num):
-                                        origin_stft(X_test, no=i)
+                                    for i in range (0, load_number):
+                                        if i < graph_num:
+                                            origin_stft(X_test, no=i)
                                         
                                         if task == "event":
-                                            event_plot(Y_test, Y_pred, no=i)
-                                        elif Model == "aux_Mask_UNet" or Model == "aux_Mask_RNN_UNet" or Model == "aux_Mask_Deeplab" or Model == "aux_enc_UNet" or Model == "aux_enc_Deeplab":
-                                            event_plot(Y_sedt, Y_sedp, no=i)
-                                            plot_stft(Y_test, Y_pred, no=i)
-                                            sdr, sir, sar = restore(Y_test, Y_pred, max, phase, no=i)
-                                            sdr_array = np.append(sdr_array, sdr)
-                                            sir_array = np.append(sir_array, sir)
-                                            sar_array = np.append(sar_array, sar)
+                                            if i < graph_num:
+                                                event_plot(Y_test, Y_pred, no=i)
                                         else:
-                                            plot_stft(Y_test, Y_pred, no=i)
+                                            if i < graph_num:
+                                                if Model == "aux_Mask_UNet" or Model == "aux_Mask_RNN_UNet" or Model == "aux_Mask_Deeplab" or Model == "aux_enc_UNet" or Model == "aux_enc_Deeplab":
+                                                    event_plot(Y_sedt, Y_sedp, no=i)
+                                                plot_stft(Y_test, Y_pred, no=i)
                                             sdr, sir, sar = restore(Y_test, Y_pred, max, phase, no=i)
                                             sdr_array = np.append(sdr_array, sdr)
                                             sir_array = np.append(sir_array, sir)
                                             sar_array = np.append(sar_array, sar)
-                            
+                                        
                                     if task == "segmentation" and ang_reso == 1:
-                                        sdr_array = sdr_array.reshape(graph_num, classes)
-                                        sir_array = sir_array.reshape(graph_num, classes)
-                                        sar_array = sar_array.reshape(graph_num, classes)
+                                        sdr_array = sdr_array.reshape(graph_num, classes).mean(0)
+                                        sir_array = sir_array.reshape(graph_num, classes).mean(0)
+                                        sar_array = sar_array.reshape(graph_num, classes).mean(0)
+                                        np.savetxt(results_dir+"prediction/sdr_"+str(load_number)+".csv", sdr_array, fmt ='%.3f')
                             
                                 if task == "event":
                                     Y_pred = (Y_pred > 0.5) * 1
