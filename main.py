@@ -1037,7 +1037,7 @@ if __name__ == '__main__':
                                             sdr_array += sdr
                                             sir_array += sir
                                             sar_array += sar
-                                            sdr_num += (sdr > 0) * 1
+                                            sdr_num += (sdr != 0.000) * 1
                                                                         
                                     if task == "segmentation" and ang_reso == 1:
                                         sdr_array = sdr_array / sdr_num
