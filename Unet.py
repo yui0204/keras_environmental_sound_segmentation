@@ -47,7 +47,16 @@ def UNet(n_classes, input_height=256, input_width=512, nChannels=1,
         x = RepeatVector(256)(x)
         x = Reshape((256, input_width, n_classes))(x)
         
-        e1 = concatenate([x, inputs], axis=-1)     
+        e1 = concatenate([x, inputs], axis=-1)
+        
+        e1 = Conv2D(64, (3, 3), strides=(1, 1), padding='same')(e1)
+        e1 = BatchNormalization()(e1)
+        e1 = LeakyReLU(0.2)(e1)
+
+        e1 = Conv2D(64, (3, 3), strides=(1, 1), padding='same')(e1)
+        e1 = BatchNormalization()(e1)
+        e1 = LeakyReLU(0.2)(e1)
+
     else:
         e1 = inputs
         
