@@ -668,7 +668,7 @@ def restore(Y_true, Y_pred, max, phase, no=0, class_n=1, save=False):
                 Y_Stft = Stft(Y_complex, 16000, label.index[i % ang_reso * 0] + "_" + str((360 // ang_reso) * (class_n % ang_reso)) + "deg_prediction")
                 
             Y_pred_wave = Y_Stft.scipy_istft()
-            print(class_n)
+            
             if save == True:
                 Y_pred_wave.write_wav_sf(dir=pred_dir, filename=None, bit=16)
 
@@ -677,7 +677,7 @@ def restore(Y_true, Y_pred, max, phase, no=0, class_n=1, save=False):
                 Y_true_wave = WavfileOperate(data_dir + "/" + label.index[class_n] + ".wav").wavedata.norm_sound            
                 Y_true_wave = Y_true_wave[:len(Y_pred_wave)]    
                 sdr, sir, sar, per = bss_eval_sources(Y_true_wave[np.newaxis,:], Y_pred_wave[np.newaxis,:], compute_permutation=True)
-                print(sdr)
+                #print("No.", no, class_n, label.index[class_n], round(sdr[0], 2))
                 
                 sdr_array[class_n] = sdr
                 sir_array[class_n] = sir
@@ -1015,8 +1015,11 @@ if __name__ == '__main__':
                                     Y_sedt = ((Y_test.transpose(3,0,1,2).max(2)[:,:,np.newaxis,:] > 0.1) * 1).transpose(1,2,3,0)
                                          
                                 if plot == True:
-                                    sdr_array, sir_array, sar_array = np.array(()) ,np.array(()), np.array(())
-                                    
+                                    sdr_array = np.zeros((classes, 1))
+                                    sir_array = np.zeros((classes, 1))
+                                    sar_array = np.zeros((classes, 1))
+                                    sdr_num = np.zeros((classes, 1))
+                                        
                                     for i in range (0, load_number):
                                         save = False
                                         if i < graph_num:
@@ -1031,14 +1034,19 @@ if __name__ == '__main__':
                                                     event_plot(Y_sedt, Y_sedp, no=i)
                                                 plot_stft(Y_test, Y_pred, no=i)
                                             sdr, sir, sar = restore(Y_test, Y_pred, max, phase, no=i, save=save)
-                                            sdr_array = np.append(sdr_array, sdr)
-                                            sir_array = np.append(sir_array, sir)
-                                            sar_array = np.append(sar_array, sar)
-                                        
+                                            sdr_array += sdr
+                                            sir_array += sir
+                                            sar_array += sar
+                                            sdr_num += (sdr > 0) * 1
+                                                                        
                                     if task == "segmentation" and ang_reso == 1:
-                                        sdr_array = np.append(sdr_array.reshape(graph_num, classes).mean(0), sdr_array.mean())
-                                        sir_array = np.append(sir_array.reshape(graph_num, classes).mean(0), sir_array.mean())
-                                        sar_array = np.append(sar_array.reshape(graph_num, classes).mean(0), sar_array.mean())
+                                        sdr_array = sdr_array / sdr_num
+                                        sir_array = sir_array / sdr_num
+                                        sar_array = sar_array / sdr_num
+                                        
+                                        sdr_array = np.append(sdr_array, sdr_array.mean())
+                                        sir_array = np.append(sir_array, sir_array.mean())
+                                        sar_array = np.append(sar_array, sar_array.mean())
                                         
                                         np.savetxt(results_dir+"prediction/sdr_"+str(load_number)+".csv", sdr_array, fmt ='%.3f')
                                         print("SDR\n", sdr_array, "\n")   
