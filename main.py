@@ -852,18 +852,19 @@ def load_cascade(segdata_dir, load_number=9999999):
 
 def Segtoclsdata(Y_in):
     Y_in = Y_in.transpose(0, 3, 1, 2) # (data number, class, freq, time)
-    X_cls = np.zeros((1, 256, image_size))
-    Y_cls = np.zeros((1, classes))
+    X_cls = np.zeros((load_number * 3, 256, image_size))
+    Y_cls = np.zeros((load_number * 3, classes))
     
+    data_num = 0
     for no in range(load_number):
         for class_n in range(classes):
-            Y = np.zeros((1, classes))
-            if Y_in[no][class_n].max() > 0:            
-                X_cls = np.concatenate((X_cls, Y_in[no][class_n][np.newaxis, :, :]), axis=0)
-                Y[0][class_n] = 1
-                Y_cls = np.concatenate((Y_cls, Y), axis=0)
+            if Y_in[no][class_n].max() > 0:
+                X_cls[data_num] = Y_in[no][class_n]
+                Y_cls[data_num][class_n] = 1
+                data_num += 1
+    print(data_num)
 
-    return X_cls[1:][:, :, :, np.newaxis], Y_cls[1:]
+    return X_cls[:data_num][:, :, :, np.newaxis], Y_cls[:data_num]
 
 
 
