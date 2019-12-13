@@ -823,6 +823,7 @@ def load_cascade(segdata_dir, load_number=9999999):
     print("data loading\n")
                 
     inputs = np.zeros((1, 256, image_size), dtype=np.float16)
+    sep_num = np.zeros((load_number), dtype=np.int16)
     
     for i in range(load_number):
         data_dir = segdata_dir + str(i) + "/"
@@ -836,6 +837,7 @@ def load_cascade(segdata_dir, load_number=9999999):
                 stft = stft[:, 1:len(stft.T) - 1]
                 
                 inputs = np.concatenate((inputs, abs(stft[:256])[np.newaxis, :, :]), axis=0)
+                sep_num[i] += 1
                 
     inputs += 10**-7
     inputs = 20 * np.log10(inputs)
@@ -845,7 +847,7 @@ def load_cascade(segdata_dir, load_number=9999999):
     inputs = inputs / max
     inputs = np.clip(inputs, 0.0, 1.0)
     
-    return inputs[1:][:, :, :, np.newaxis]
+    return inputs[1:][:, :, :, np.newaxis], sep_num
 
 
 def Segtoclsdata(Y_in):
@@ -1065,7 +1067,7 @@ if __name__ == '__main__':
                                 
                                 if Model == "Cascade":
                                     X_origin = X_test
-                                    X_test = load_cascade(dataset + "val_hark/", load_number=load_number)
+                                    X_test, sep_num = load_cascade(dataset + "val_hark/", load_number=load_number)
                                 
                                 start = time.time()
                                 Y_pred = predict(X_test, Model)
@@ -1079,8 +1081,11 @@ if __name__ == '__main__':
                                 elif Model == "Cascade":
                                     Y_argmax = np.argmax(Y_pred, axis=1)
                                     Y_pred = np.zeros((load_number, classes, 256, image_size))
+                                    datanum = 0
                                     for n in range(load_number):
-                                        Y_pred[n][Y_argmax[n]] = X_test[n].transpose(2,0,1)
+                                        for sep in range(sep_num[n]):
+                                            Y_pred[n][Y_argmax[datanum]] = X_test[datanum].transpose(2,0,1)[0]
+                                            datanum += 1
                                     Y_pred = Y_pred.transpose(0,2,3,1)
                                     X_test = X_origin
 
