@@ -2,9 +2,9 @@ from keras.models import Model
 from keras.layers import Input
 from keras.layers.convolutional import Conv1D, Conv2D, ZeroPadding2D, Conv2DTranspose
 from keras.layers.merge import concatenate
-from keras.layers import LeakyReLU, BatchNormalization, Activation, Dropout
+from keras.layers import LeakyReLU, BatchNormalization, Activation, Dropout, Dense
 from keras.layers import Activation, RepeatVector, Flatten, Reshape
-from keras.layers import merge, MaxPooling2D, UpSampling2D, core, GRU, LSTM
+from keras.layers import merge, MaxPooling2D, UpSampling2D, core, GRU, LSTM, GlobalAveragePooling2D
 from keras.layers.wrappers import Bidirectional
 
 from keras.layers.merge import multiply, dot
@@ -61,3 +61,31 @@ def CNN(n_classes, input_height=256, input_width=512, nChannels=3,
     
     return model
 
+
+
+def CNNtag(n_classes, input_height=256, input_width=512, nChannels=3, 
+        filter_list=[64, 64, 128, 128, 256, 256, 512, 512]):
+    inputs = Input((input_height, input_width, nChannels))
+    
+    x = inputs
+    
+    for filters in filter_list:
+        x = Conv2D(filters, (3, 3), padding='same')(x)
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)    
+        #x = Conv2D(filters, (3, 3), padding='same')(x)
+        #x = BatchNormalization()(x)
+        #x = Activation('relu')(x)    
+        x = MaxPooling2D((2, 2), strides=(2,2))(x)
+        x = Dropout(0.3)(x)
+                
+    x = GlobalAveragePooling2D()(x)
+    
+#    x = Flatten()(x)
+    x = Dense(1024, activation='relu')(x)
+    x = Dropout(0.3)(x)
+    x = Dense(n_classes, activation='softmax')(x)
+    
+    model = Model(inputs=inputs, outputs=x)
+    
+    return model

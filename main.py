@@ -373,6 +373,11 @@ def read_model(Model):
                             input_width=image_size, nChannels=channel,
                             filter_list=[64, 64, 128, 128, 256, 256, 512, 512], 
                             RNN=2, Bidir=True)
+            
+        elif Model == "Cascade":
+            model = CNN.CNNtag(n_classes=classes, input_height=256, 
+                            input_width=image_size, nChannels=channel,
+                            filter_list=[64, 64, 128, 128, 256, 256, 512, 512])
              
     if gpu_count > 1:
         multi_model = multi_gpu_model(model, gpus=gpu_count)
@@ -814,6 +819,53 @@ def load_sed_model(Model):
     return sed_model, num_layer
 
 
+def load_cascade(segdata_dir, load_number=9999999):
+    print("data loading\n")
+                
+    inputs = np.zeros((1, 256, image_size), dtype=np.float16)
+    
+    for i in range(load_number):
+        data_dir = segdata_dir + str(i) + "/"
+        filelist = os.listdir(data_dir)  
+                    
+        for n in range(len(filelist)):
+            if filelist[n][:4] == "sep_":
+                waveform, fs = sf.read(data_dir + filelist[n]) 
+                freqs, t, stft = signal.stft(x=waveform, fs=fs, nperseg=512, 
+                                                       return_onesided=False)
+                stft = stft[:, 1:len(stft.T) - 1]
+                
+                inputs = np.concatenate((inputs, abs(stft[:256])[np.newaxis, :, :]), axis=0)
+                
+    inputs += 10**-7
+    inputs = 20 * np.log10(inputs)
+    inputs = np.nan_to_num(inputs)
+    inputs += 120
+    max = inputs.max()
+    inputs = inputs / max
+    inputs = np.clip(inputs, 0.0, 1.0)
+    
+    return inputs[1:][:, :, :, np.newaxis]
+
+
+def Segtoclsdata(Y_in):
+    Y_in = Y_in.transpose(0, 3, 1, 2) # (data number, class, freq, time)
+    X_cls = np.zeros((1, 256, image_size))
+    Y_cls = np.zeros((1, classes))
+    
+    for no in range(load_number):
+        for class_n in range(classes):
+            Y = np.zeros((1, classes))
+            if Y_in[no][class_n].max() > 0:            
+                X_cls = np.concatenate((X_cls, Y_in[no][class_n][np.newaxis, :, :]), axis=0)
+                Y[0][class_n] = 1
+                Y_cls = np.concatenate((Y_cls, Y), axis=0)
+
+    return X_cls[1:][:, :, :, np.newaxis], Y_cls[1:]
+
+
+
+
 if __name__ == '__main__':
     train_mode = "class"
     classes = 75
@@ -860,12 +912,16 @@ if __name__ == '__main__':
         
         for Model in [#"CNN8", "CRNN8", "BiCRNN8", 
                       #"UNet", #"Deeplab", "RNN_UNet", "CR_UNet", "RNN_Deeplab",
-                      "aux_Mask_UNet", "aux_Mask_Deeplab", 
+                      #"aux_Mask_UNet", "aux_Mask_Deeplab", 
                       #"aux_Mask_RNN_UNet"
                       #"aux_enc_UNet", 
                       #"aux_enc_RNN_UNet", 
                       #"aux_enc_Deeplab", 
-                      ]:
+                      "Cascade"]:
+            
+            if Model == "Cascade":
+                loss = "categorical_crossentropy"
+
 
             for vonMises in [False]:
                 for ipd in [False]:
@@ -940,6 +996,9 @@ if __name__ == '__main__':
                                     else:
                                         X_train, Y_train, max, phase = load_npy(npy_name)
                                     
+                                    if Model == "Cascade":
+                                        X_train, Y_train = Segtoclsdata(Y_train)
+                                    
 
                                     # save train condition
                                     train_condition = date + "\t" + results_dir                     + "\n" + \
@@ -977,8 +1036,8 @@ if __name__ == '__main__':
                                     with open('research_log.txt','a') as f:
                                         f.write(train_condition)    
                         
-                                    del X_train, Y_train, max, phase
-                                    gc.collect()
+                                    #del X_train, Y_train, max, phase
+                                    #gc.collect()
                         
                                 # prediction            
                                 elif not mode == "train":
@@ -1004,6 +1063,10 @@ if __name__ == '__main__':
                                 else:
                                     X_test, Y_test, max, phase = load_npy(npy_name)
                                 
+                                if Model == "Cascade":
+                                    X_origin = X_test
+                                    X_test = load_cascade(dataset + "val_hark/", load_number=load_number)
+                                
                                 start = time.time()
                                 Y_pred = predict(X_test, Model)
                                 elapsed_time = time.time() - start
@@ -1013,7 +1076,15 @@ if __name__ == '__main__':
                                     Y_sedp = Y_pred[0]
                                     Y_pred = Y_pred[1]
                                     Y_sedt = ((Y_test.transpose(3,0,1,2).max(2)[:,:,np.newaxis,:] > 0.1) * 1).transpose(1,2,3,0)
-                                         
+                                elif Model == "Cascade":
+                                    Y_argmax = np.argmax(Y_pred, axis=1)
+                                    Y_pred = np.zeros((load_number, classes, 256, image_size))
+                                    for n in range(load_number):
+                                        Y_pred[n][Y_argmax[n]] = X_test[n].transpose(2,0,1)
+                                    Y_pred = Y_pred.transpose(0,2,3,1)
+                                    X_test = X_origin
+
+                                    
                                 if plot == True:
                                     sdr_array = np.zeros((classes, 1))
                                     sir_array = np.zeros((classes, 1))

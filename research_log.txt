@@ -2578,3 +2578,243 @@ File Edit Options Buffers Tools Text Help
 		 classes,        75
 
 
+2019_1213	./model_results/2019_1213/UNet_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/
+	Comapare IPD input and normal complex input and 1ch
+		 segdata_dir, /home/yui-sudo/document/dataset/sound_segmentation/datasets/multi_segdata75_256_no_sound_random_sep/train/
+		 valdata_dir, /home/yui-sudo/document/dataset/sound_segmentation/datasets/multi_segdata75_256_no_sound_random_sep/val/
+		 X(10, 256, 256, 1) Y(10, 256, 256, 75)
+		 data_byte,      float16
+		 BATCH_SIZE,     16
+		 NUM_EPOCH,      1
+		 Loss function,  mean_squared_error
+		 Learning_rate,  0.001
+		 Mic num,        1
+		 Complex_input,  False
+		 IPD input,      False
+		 von Mises input,False
+		 task     ,      segmentation
+		 Angle reso,     360
+		 Model,          UNet
+		 classes,        75
+
+
+2019_1213	./model_results/2019_1213/UNet_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/
+	Comapare IPD input and normal complex input and 1ch
+		 segdata_dir, /home/yui-sudo/document/dataset/sound_segmentation/datasets/multi_segdata75_256_no_sound_random_sep/train/
+		 valdata_dir, /home/yui-sudo/document/dataset/sound_segmentation/datasets/multi_segdata75_256_no_sound_random_sep/val/
+		 X(10, 256, 256, 1) Y(10, 256, 256, 75)
+		 data_byte,      float16
+		 BATCH_SIZE,     16
+		 NUM_EPOCH,      1
+		 Loss function,  mean_squared_error
+		 Learning_rate,  0.001
+		 Mic num,        1
+		 Complex_input,  False
+		 IPD input,      False
+		 von Mises input,False
+		 task     ,      segmentation
+		 Angle reso,     360
+		 Model,          UNet
+		 classes,        75
+
+
+2019_1213	./model_results/2019_1213/Cascade_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/
+	Comapare IPD input and normal complex input and 1ch
+		 segdata_dir, /home/yui-sudo/document/dataset/sound_segmentation/datasets/multi_segdata75_256_no_sound_random_sep/train/
+		 valdata_dir, /home/yui-sudo/document/dataset/sound_segmentation/datasets/multi_segdata75_256_no_sound_random_sep/val/
+		 X(29, 256, 256, 1) Y(29, 75)
+		 data_byte,      float64
+		 BATCH_SIZE,     16
+		 NUM_EPOCH,      1
+		 Loss function,  mean_squared_error
+		 Learning_rate,  0.001
+		 Mic num,        1
+		 Complex_input,  False
+		 IPD input,      False
+		 von Mises input,False
+		 task     ,      segmentation
+		 Angle reso,     360
+		 Model,          Cascade
+		 classes,        75
+
+
+2019_1213	./model_results/2019_1213/Cascade_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/
+	Comapare IPD input and normal complex input and 1ch
+		 segdata_dir, /home/yui-sudo/document/dataset/sound_segmentation/datasets/multi_segdata75_256_no_sound_random_sep/train/
+		 valdata_dir, /home/yui-sudo/document/dataset/sound_segmentation/datasets/multi_segdata75_256_no_sound_random_sep/val/
+		 X(29, 256, 256, 1) Y(29, 75)
+		 data_byte,      float64
+		 BATCH_SIZE,     16
+		 NUM_EPOCH,      1
+		 Loss function,  mean_squared_error
+		 Learning_rate,  0.001
+		 Mic num,        1
+		 Complex_input,  False
+		 IPD input,      False
+		 von Mises input,False
+		 task     ,      segmentation
+		 Angle reso,     360
+		 Model,          Cascade
+		 classes,        75
+
+
+2019_1213	./model_results/2019_1213/Cascade_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/
+	Comapare IPD input and normal complex input and 1ch
+		 segdata_dir, /home/yui-sudo/document/dataset/sound_segmentation/datasets/multi_segdata75_256_no_sound_random_sep/train/
+		 valdata_dir, /home/yui-sudo/document/dataset/sound_segmentation/datasets/multi_segdata75_256_no_sound_random_sep/val/
+		 X(29, 256, 256, 1) Y(29, 75)
+		 data_byte,      float64
+		 BATCH_SIZE,     16
+		 NUM_EPOCH,      1
+		 Loss function,  categorical_crossentropy
+		 Learning_rate,  0.001
+		 Mic num,        1
+		 Complex_input,  False
+		 IPD input,      False
+		 von Mises input,False
+		 task     ,      segmentation
+		 Angle reso,     360
+		 Model,          Cascade
+		 classes,        75
+
+
+2019_1213	./model_results/2019_1213/Cascade_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/
+	Comapare IPD input and normal complex input and 1ch
+		 segdata_dir, /home/yui-sudo/document/dataset/sound_segmentation/datasets/multi_segdata75_256_no_sound_random_sep/train/
+		 valdata_dir, /home/yui-sudo/document/dataset/sound_segmentation/datasets/multi_segdata75_256_no_sound_random_sep/val/
+		 X(29, 256, 256, 1) Y(29, 75)
+		 data_byte,      float64
+		 BATCH_SIZE,     16
+		 NUM_EPOCH,      1
+		 Loss function,  categorical_crossentropy
+		 Learning_rate,  0.001
+		 Mic num,        1
+		 Complex_input,  False
+		 IPD input,      False
+		 von Mises input,False
+		 task     ,      segmentation
+		 Angle reso,     360
+		 Model,          Cascade
+		 classes,        75
+
+
+2019_1213	./model_results/2019_1213/Cascade_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/
+	Comapare IPD input and normal complex input and 1ch
+		 segdata_dir, /home/yui-sudo/document/dataset/sound_segmentation/datasets/multi_segdata75_256_no_sound_random_sep/train/
+		 valdata_dir, /home/yui-sudo/document/dataset/sound_segmentation/datasets/multi_segdata75_256_no_sound_random_sep/val/
+		 X(29, 256, 256, 1) Y(29, 75)
+		 data_byte,      float64
+		 BATCH_SIZE,     16
+		 NUM_EPOCH,      1
+		 Loss function,  categorical_crossentropy
+		 Learning_rate,  0.001
+		 Mic num,        1
+		 Complex_input,  False
+		 IPD input,      False
+		 von Mises input,False
+		 task     ,      segmentation
+		 Angle reso,     360
+		 Model,          Cascade
+		 classes,        75
+
+
+2019_1213	./model_results/2019_1213/Cascade_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/
+	Comapare IPD input and normal complex input and 1ch
+		 segdata_dir, /home/yui-sudo/document/dataset/sound_segmentation/datasets/multi_segdata75_256_no_sound_random_sep/train/
+		 valdata_dir, /home/yui-sudo/document/dataset/sound_segmentation/datasets/multi_segdata75_256_no_sound_random_sep/val/
+		 X(29, 256, 256, 1) Y(29, 75)
+		 data_byte,      float64
+		 BATCH_SIZE,     16
+		 NUM_EPOCH,      1
+		 Loss function,  categorical_crossentropy
+		 Learning_rate,  0.001
+		 Mic num,        1
+		 Complex_input,  False
+		 IPD input,      False
+		 von Mises input,False
+		 task     ,      segmentation
+		 Angle reso,     360
+		 Model,          Cascade
+		 classes,        75
+
+
+2019_1213	./model_results/2019_1213/Cascade_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/
+	Comapare IPD input and normal complex input and 1ch
+		 segdata_dir, /home/yui-sudo/document/dataset/sound_segmentation/datasets/multi_segdata75_256_no_sound_random_sep/train/
+		 valdata_dir, /home/yui-sudo/document/dataset/sound_segmentation/datasets/multi_segdata75_256_no_sound_random_sep/val/
+		 X(29, 256, 256, 1) Y(29, 75)
+		 data_byte,      float64
+		 BATCH_SIZE,     16
+		 NUM_EPOCH,      1
+		 Loss function,  categorical_crossentropy
+		 Learning_rate,  0.001
+		 Mic num,        1
+		 Complex_input,  False
+		 IPD input,      False
+		 von Mises input,False
+		 task     ,      segmentation
+		 Angle reso,     360
+		 Model,          Cascade
+		 classes,        75
+
+
+2019_1213	./model_results/2019_1213/Cascade_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/
+	Comapare IPD input and normal complex input and 1ch
+		 segdata_dir, /home/yui-sudo/document/dataset/sound_segmentation/datasets/multi_segdata75_256_no_sound_random_sep/train/
+		 valdata_dir, /home/yui-sudo/document/dataset/sound_segmentation/datasets/multi_segdata75_256_no_sound_random_sep/val/
+		 X(29, 256, 256, 1) Y(29, 75)
+		 data_byte,      float64
+		 BATCH_SIZE,     16
+		 NUM_EPOCH,      1
+		 Loss function,  categorical_crossentropy
+		 Learning_rate,  0.001
+		 Mic num,        1
+		 Complex_input,  False
+		 IPD input,      False
+		 von Mises input,False
+		 task     ,      segmentation
+		 Angle reso,     360
+		 Model,          Cascade
+		 classes,        75
+
+
+2019_1213	./model_results/2019_1213/Cascade_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/
+	Comapare IPD input and normal complex input and 1ch
+		 segdata_dir, /home/yui-sudo/document/dataset/sound_segmentation/datasets/multi_segdata75_256_no_sound_random_sep/train/
+		 valdata_dir, /home/yui-sudo/document/dataset/sound_segmentation/datasets/multi_segdata75_256_no_sound_random_sep/val/
+		 X(29, 256, 256, 1) Y(29, 75)
+		 data_byte,      float64
+		 BATCH_SIZE,     16
+		 NUM_EPOCH,      1
+		 Loss function,  categorical_crossentropy
+		 Learning_rate,  0.001
+		 Mic num,        1
+		 Complex_input,  False
+		 IPD input,      False
+		 von Mises input,False
+		 task     ,      segmentation
+		 Angle reso,     360
+		 Model,          Cascade
+		 classes,        75
+
+
+2019_1213	./model_results/2019_1213/Cascade_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/
+	Comapare IPD input and normal complex input and 1ch
+		 segdata_dir, /home/yui-sudo/document/dataset/sound_segmentation/datasets/multi_segdata75_256_no_sound_random_sep/train/
+		 valdata_dir, /home/yui-sudo/document/dataset/sound_segmentation/datasets/multi_segdata75_256_no_sound_random_sep/val/
+		 X(29, 256, 256, 1) Y(29, 75)
+		 data_byte,      float64
+		 BATCH_SIZE,     16
+		 NUM_EPOCH,      1
+		 Loss function,  categorical_crossentropy
+		 Learning_rate,  0.001
+		 Mic num,        1
+		 Complex_input,  False
+		 IPD input,      False
+		 von Mises input,False
+		 task     ,      segmentation
+		 Angle reso,     360
+		 Model,          Cascade
+		 classes,        75
+
+
