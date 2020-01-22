@@ -170,11 +170,9 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
                                     inputs[i][nchan*2] = np.sin(np.angle(stft[0][:256]) - np.angle(stft[nchan][:256]))
                                     
                             elif vonMises == True:
-                                if nchan % 8 == 0:
-                                    inputs[i][nchan] = abs(stft[nchan][:256])
-                                else:
-                                    inputs[i][nchan*3+1] = np.cos(np.angle(stft[nchan][:256]))
-                                    inputs[i][nchan*3+2] = np.sin(np.angle(stft[nchan][:256]))
+                                inputs[i][nchan] = abs(stft[nchan][:256])
+                                inputs[i][nchan*3+1] = np.cos(np.angle(stft[nchan][:256]))
+                                inputs[i][nchan*3+2] = np.sin(np.angle(stft[nchan][:256]))
                                 
                             elif complex_input == True:
                                 inputs[i][nchan * 3] = abs(stft[nchan][:256])
@@ -214,7 +212,7 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
         inputs[0], labels = log(inputs[0], labels)   
         inputs[0] = np.nan_to_num(inputs[0])
         if vonMises == True and mic_num == 8:
-            for ch in mic_num:
+            for ch in range(1, mic_num):
                 inputs[ch * 3], labels = log(inputs[ch * 3], labels)
                 inputs[ch * 3] = np.nan_to_num(inputs[ch * 3])
                 inputs[ch * 3] += 120
