@@ -105,7 +105,9 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
             input_dim = 1
     else:
         if ipd == True:
-            input_dim = 15    
+            input_dim = 15   
+        elif tdoa == True:
+            input_dim = 8
         elif complex_input == True or VGG > 0 or vonMises == True:
             input_dim = 24
         else:
@@ -173,7 +175,22 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
                                 inputs[i][nchan] = abs(stft[nchan][:256])
                                 inputs[i][nchan*3+1] = np.cos(np.angle(stft[nchan][:256]))
                                 inputs[i][nchan*3+2] = np.sin(np.angle(stft[nchan][:256]))
-                                
+                            
+                            elif tdoa == True:
+                                if nchan == 0:
+                                    inputs[i][nchan] = abs(stft[nchan][:256])
+                                else:
+                                    diff = np.angle(stft[0][:256]) - np.angle(stft[nchan][:256])
+                                    diff = np.where(diff > np.pi, diff-2*np.pi, diff)
+                                    diff = np.where(diff < -np.pi, diff+2*np.pi, diff)
+                                    for freq in range(256):
+                                        for t in range(image_size):
+                                            diff[freq][t] = diff[freq][t] / 2*np.pi / (freq * 31.25 + 31.25)
+                                    diff = diff / diff.std()
+                                    diff = np.clip(diff, -1.0, 1.0)
+                                    #diff = abs(diff) * (20 * np.log10(inputs[i][0]) + 120) / 120
+                                    inputs[i][nchan] = diff
+                                    
                             elif complex_input == True:
                                 inputs[i][nchan * 3] = abs(stft[nchan][:256])
                                 inputs[i][nchan*3 + 1] = stft[nchan][:256].real
@@ -193,6 +210,7 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
                     else:
                         angle = int(re.sub("\\D", "", direction[dn].split("_")[1])) // (360 // ang_reso)
                         labels[i][label.T[filelist[n][:-4]][cat]][angle] += abs(stft[:256])
+                        #labels[i][0][angle] += abs(stft[:256]) # when only SSS
                         dn += 1
     
     if complex_input == True and ipd == False and vonMises == False:
@@ -207,7 +225,7 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
         else:
             labels = labels.max(3)#[:,:,:,np.newaxis,:]
         
-    if ipd == True or vonMises == True:
+    if ipd == True or vonMises == True or tdoa == True:
         inputs = inputs.transpose(1,0,2,3)
         inputs[0], labels = log(inputs[0], labels)   
         inputs[0] = np.nan_to_num(inputs[0])
@@ -232,7 +250,7 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
         inputs, labels, max = normalize(inputs, labels)
 
 
-    if complex_input == True and ipd == False and vonMises == False:
+    if complex_input == True and ipd == False and vonMises == False and tdoa == False:
         inputs = inputs * sign
 
     
@@ -912,13 +930,14 @@ if __name__ == '__main__':
         label = pd.read_csv(filepath_or_buffer=labelfile, sep=",", index_col=0)            
         
         for Model in [#"CNN8", "CRNN8", "BiCRNN8", 
-                      #"UNet", #"Deeplab", "RNN_UNet", "CR_UNet", "RNN_Deeplab",
+                      "UNet", 
+                      "Deeplab", 
+                      "CR_UNet", 
                       #"aux_Mask_UNet", "aux_Mask_Deeplab", 
-                      #"aux_Mask_RNN_UNet"
                       #"aux_enc_UNet", 
-                      #"aux_enc_RNN_UNet", 
                       #"aux_enc_Deeplab", 
-                      "Cascade"]:
+                      #"Cascade"
+                      ]:
             
             if Model == "Cascade":
                 loss = "categorical_crossentropy"
@@ -927,9 +946,9 @@ if __name__ == '__main__':
             for vonMises in [False]:
                 for ipd in [False]:
                     for mic_num in [1]: # 1 or 8                        
-                        for complex_input in [False]:
+                        for complex_input in [True]:
                             VGG = 0                     #0: False, 1: Red 3: White                          
- 
+                            tdoa = True
                             channel = 0
                             if mic_num == 1:
                                 if complex_input == True and ipd == False:
@@ -938,11 +957,13 @@ if __name__ == '__main__':
                                     channel = 1
                             else:                                
                                 if complex_input == True:
-                                    if ipd == True and vonMises == False:
+                                    if ipd == True and vonMises == False and tdoa == False:
                                         channel = 15
-                                    elif vonMises == True and ipd == False:
+                                    elif vonMises == True and ipd == False and tdoa == False:
                                         channel = 24
-                                    elif vonMises == False and ipd == False:
+                                    elif vonMises == False and ipd == False and tdoa == True:
+                                        channel = 8
+                                    elif vonMises == False and ipd == False and tdoa == False:
                                         channel = 24
                                     else:
                                         continue
@@ -973,7 +994,7 @@ if __name__ == '__main__':
                                 load_number = 10000
             
                                 
-                                model_name = Model+"_"+str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_cin"+str(complex_input) + "_ipd"+str(ipd) + "_vonMises"+str(vonMises)
+                                model_name = Model+"_"+str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_cin"+str(complex_input) + "_ipd"+str(ipd) + "_vonMises"+str(vonMises) + "_tdoa"+str(tdoa)
                                 if mask == True:
                                     model_name = model_name + "_"+Sed_Model + "_aux" + str(aux)
                                 dir_name = model_name + "_"+datadir
@@ -986,7 +1007,7 @@ if __name__ == '__main__':
                                         os.makedirs(results_dir + "prediction/")
                                         os.makedirs(results_dir + "checkpoint/")
     
-                                    npy_name = "train_" + task + "_" +str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_cin"+str(complex_input) + "_ipd"+str(ipd)  + "_vonMises"+str(vonMises)+"_"+str(load_number)
+                                    npy_name = "train_" + task + "_" +str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_cin"+str(complex_input) + "_ipd"+str(ipd)  + "_vonMises"+str(vonMises) + "_tdoa"+str(tdoa) + "_"+str(load_number)
                                     if not os.path.exists(dataset+"X_"+npy_name+".npy"):
                                         X_train, Y_train, max, phase = load(segdata_dir, 
                                                                               n_classes=classes, 
@@ -1016,6 +1037,7 @@ if __name__ == '__main__':
                                                       "\t\t Complex_input,  " + str(complex_input)  + "\n" + \
                                                       "\t\t IPD input,      " + str(ipd) + "\n" + \
                                                       "\t\t von Mises input," + str(vonMises) + "\n" + \
+                                                      "\t\t TDOA input,     " + str(tdoa) + "\n" + \
                                                       "\t\t task     ,      " + task + "\n" + \
                                                       "\t\t Angle reso,     " + str(360 // ang_reso) + "\n" + \
                                                       "\t\t Model,          " + Model               + "\n" + \
@@ -1053,7 +1075,7 @@ if __name__ == '__main__':
                                     load_number = 1000
     
                                     
-                                npy_name = "test_" + task+ "_" +str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_cin"+str(complex_input) + "_ipd"+str(ipd)  + "_vonMises"+str(vonMises)+"_"+str(load_number)
+                                npy_name = "test_" + task+ "_" +str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_cin"+str(complex_input) + "_ipd"+str(ipd)  + "_vonMises"+str(vonMises) + "_tdoa"+str(tdoa)+ "_"+str(load_number)
                                 if not os.path.exists(dataset+"X_"+npy_name+".npy"):
                                     X_test, Y_test, max, phase = load(valdata_dir, 
                                                                       n_classes=classes, 
