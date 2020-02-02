@@ -186,7 +186,8 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
                                     for freq in range(256):
                                         for t in range(image_size):
                                             diff[freq][t] = diff[freq][t] / 2*np.pi / (freq * 31.25 + 31.25)
-                                    diff = diff / diff.std()
+                                    if not diff.std() == 0:
+                                        diff = diff / diff.std()
                                     diff = np.clip(diff, -1.0, 1.0)
                                     #diff = abs(diff) * (20 * np.log10(inputs[i][0]) + 120) / 120
                                     inputs[i][nchan] = diff
