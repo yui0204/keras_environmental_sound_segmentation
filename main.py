@@ -945,15 +945,15 @@ if __name__ == '__main__':
 
             for vonMises in [False]:
                 for ipd in [False]:
-                    for mic_num in [1]: # 1 or 8                        
+                    for mic_num in [8]: # 1 or 8                        
                         for complex_input in [True]:
                             VGG = 0                     #0: False, 1: Red 3: White                          
                             tdoa = True
                             channel = 0
                             if mic_num == 1:
-                                if complex_input == True and ipd == False:
+                                if complex_input == True and ipd == False and tdoa == False:
                                     channel = 3
-                                elif complex_input == False and ipd == False and vonMises == False:
+                                elif complex_input == False and ipd == False and vonMises == False and tdoa == False:
                                     channel = 1
                             else:                                
                                 if complex_input == True:
@@ -967,7 +967,7 @@ if __name__ == '__main__':
                                         channel = 24
                                     else:
                                         continue
-                                elif complex_input == False and ipd == False and vonMises == False:
+                                elif complex_input == False and ipd == False and vonMises == False and tdoa == False:
                                     channel = 8
                             
                             if channel == 0:
