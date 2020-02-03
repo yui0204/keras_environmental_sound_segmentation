@@ -373,6 +373,13 @@ def read_model(Model):
                               trainable=False, 
                               sed_model=None, num_layer=None, aux=False,
                               mask=False, RNN=0, freq_pool=False, ang_reso=8)   
+        
+        elif Model == "WDeeplab":
+            model = Unet.UNet_Deeplab(n_classes=classes, input_height=256, 
+                              input_width=image_size, nChannels=channel,
+                              trainable=False, 
+                              sed_model=None, num_layer=None, aux=False,
+                              mask=False, RNN=0, freq_pool=False, ang_reso=8)   
             
         elif Model == "CNN4":
             model = CNN.CNN(n_classes=classes, input_height=256, 
@@ -945,7 +952,7 @@ if __name__ == '__main__':
         
         for Model in [#"CNN8", "CRNN8", "BiCRNN8", 
                       "WUNet", 
-                      "Deeplab", 
+                      "WDeeplab", 
                       "CR_UNet", 
                       #"aux_Mask_UNet", "aux_Mask_Deeplab", 
                       #"aux_enc_UNet", 

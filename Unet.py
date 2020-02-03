@@ -15,7 +15,7 @@ from keras.applications.vgg16 import VGG16
 
 from keras.layers.advanced_activations import LeakyReLU
 
-import CNN
+import CNN, Deeplab
 import os    
     
 
@@ -161,101 +161,65 @@ def WNet(n_classes, input_height=256, input_width=512, nChannels=1,
          trainable=False, sed_model=None, num_layer=None, aux=False,
          mask=False, RNN=0, freq_pool=False, enc=False, ang_reso=8):
 
-    if freq_pool == True:
-        stride = (2, 1)
-    else:
-        stride = (2, 2)
-
-    sss_model = UNet(n_classes = ang_reso, input_height=256,  # direction resolution
-                      input_width=input_width, nChannels=nChannels,
-                      trainable=trainable, 
-                      sed_model=sed_model, num_layer=num_layer, aux=aux,
-                      mask=mask, RNN=RNN, freq_pool=freq_pool)
+    sss_model = UNet(n_classes = ang_reso, # direction resolution
+                     input_height=256, input_width=input_width, 
+                     nChannels=nChannels,  # input feature channels
+                     trainable=trainable, 
+                     sed_model=sed_model, num_layer=num_layer, aux=aux,
+                     mask=mask, RNN=RNN, freq_pool=freq_pool)
+    
+    # pretrained SSS U-Net
     sss_model.load_weights(os.getcwd()+"/model_results/iros2020/UNet_1class_8direction_8ch_cinTrue_ipdTrue_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/UNet_1class_8direction_8ch_cinTrue_ipdTrue_vonMisesFalse_weights.hdf5")
     
     for i in range(0, len(sss_model.layers)):
-        sss_model.layers[i].trainable = trainable # fixed weight or fine-tuning
+        sss_model.layers[i].trainable = trainable # fixed weight
     
-    e1 = sss_model.output
-    e1 = concatenate([sss_model.input[1], e1], axis=-1)
+    x = sss_model.output
+    x = concatenate([sss_model.input[1], x], axis=-1) # concatenate mixes spectrogram
     
-    e1 = Conv2D(64, (3, 3), strides=stride, padding='same')(e1)
-    e1 = BatchNormalization()(e1)
-    e1 = LeakyReLU(0.2)(e1)
-
-    e2 = Conv2D(128, (3, 3), strides=stride, padding='same')(e1)
-    e2 = BatchNormalization()(e2)
-    e2 = LeakyReLU(0.2)(e2)
+    unet = UNet(n_classes = n_classes,  # number of classes
+                input_height=256, input_width=input_width, 
+                nChannels = ang_reso + 1, # number of direction resoluton
+                trainable=trainable, sed_model=sed_model, num_layer=num_layer, 
+                aux=aux, mask=mask, RNN=RNN, freq_pool=freq_pool)
     
-    e3 = Conv2D(256, (3, 3), strides=stride, padding='same')(e2)
-    e3 = BatchNormalization()(e3)
-    e3 = LeakyReLU(0.2)(e3)
+    model = Model(inputs=[sss_model.input[0], sss_model.input[1]], outputs=unet([x, sss_model.input[1]]))
     
-    e4 = Conv2D(512, (3, 3), strides=stride, padding='same')(e3)
-    e4 = BatchNormalization()(e4)
-    e4 = LeakyReLU(0.2)(e4)
-    
-    e5 = Conv2D(512, (3, 3), strides=stride, padding='same')(e4)
-    e5 = BatchNormalization()(e5)
-    e5 = LeakyReLU(0.2)(e5)
-    
-    e6 = Conv2D(512, (3, 3), strides=stride, padding='same')(e5)
-    e6 = BatchNormalization()(e6)    
-    e6 = LeakyReLU(0.2)(e6)  # 4
-    
-    
-    if RNN > 0:
-        e6 = Reshape((-1, 512))(e6)
-        
-        for i in range(RNN):
-            e6 = GRU(512, activation='tanh', recurrent_activation='hard_sigmoid', 
-                    return_sequences=True, stateful=False)(e6) 
-            #e6 = BatchNormalization()(e6)
-        
-        e6 = Reshape((4, -1, 512))(e6)
-    
-    d5 = Conv2DTranspose(512, (3, 3), strides=stride, use_bias=False, 
-                         kernel_initializer='he_uniform', padding='same')(e6)
-    d5 = BatchNormalization()(d5)
-    d5 = Activation('relu')(d5)
-    d5 = Dropout(0.5)(d5)
-    d5 = concatenate([d5, e5], axis=-1)
-    
-    d4 = Conv2DTranspose(512, (3, 3), strides=stride, use_bias=False, 
-                        kernel_initializer='he_uniform', padding='same')(d5)
-    d4 = BatchNormalization()(d4)
-    d4 = Activation('relu')(d4)
-    d4 = Dropout(0.5)(d4)
-    d4 = concatenate([d4, e4], axis=-1)
-
-    d3 = Conv2DTranspose(256, (3, 3), strides=stride, use_bias=False, 
-                        kernel_initializer='he_uniform', padding='same')(d4)
-    d3 = BatchNormalization()(d3)
-    d3 = Activation('relu')(d3)
-    d3 = Dropout(0.5)(d3)
-    d3 = concatenate([d3, e3], axis=-1)
-
-    d2 = Conv2DTranspose(128, (3, 3), strides=stride, use_bias=False, 
-                        kernel_initializer='he_uniform', padding='same')(d3)
-    d2 = BatchNormalization()(d2)
-    d2 = Activation('relu')(d2)
-    d2 = concatenate([d2, e2], axis=-1)
-
-    d1 = Conv2DTranspose(64, (3, 3), strides=stride, use_bias=False, 
-                        kernel_initializer='he_uniform', padding='same')(d2)
-    d1 = BatchNormalization()(d1)
-    d1 = Activation('relu')(d1)
-    d1 = concatenate([d1, e1], axis=-1)
-    
-    d0 = Conv2DTranspose(n_classes, (3, 3), strides=stride, use_bias=False, 
-                         activation='sigmoid',
-                         kernel_initializer='he_uniform', padding='same')(d1)
-       
-    d0 = multiply([sss_model.input[1], d0])
-
-    model = Model(inputs=[sss_model.input[0], sss_model.input[1]], outputs=d0)
                         
     return model
+
+
+
+def UNet_Deeplab(n_classes, input_height=256, input_width=512, nChannels=1,
+         trainable=False, sed_model=None, num_layer=None, aux=False,
+         mask=False, RNN=0, freq_pool=False, enc=False, ang_reso=8):
+
+    sss_model = UNet(n_classes = ang_reso,  # direction resolution
+                     input_height=256, input_width=input_width, 
+                     nChannels=nChannels,   # input feature channels
+                     trainable=trainable, 
+                     sed_model=sed_model, num_layer=num_layer, aux=aux,
+                     mask=mask, RNN=RNN, freq_pool=freq_pool)
+
+    # pretrained SSS U-Net
+    sss_model.load_weights(os.getcwd()+"/model_results/iros2020/UNet_1class_8direction_8ch_cinTrue_ipdTrue_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/UNet_1class_8direction_8ch_cinTrue_ipdTrue_vonMisesFalse_weights.hdf5")
+    
+    for i in range(0, len(sss_model.layers)):
+        sss_model.layers[i].trainable = trainable # fixed weight
+    
+    x = sss_model.output
+    x = concatenate([sss_model.input[1], x], axis=-1)    # concatenate mixes spectrogram
+    
+    deeplab = Deeplab.Deeplabv3(weights=None, input_tensor=None, 
+                                input_shape=(256, input_width, ang_reso + 1), # number of direction resoluton
+                                classes=n_classes,                            # number of classes
+                                OS=16, RNN=0, mask=mask, trainable=trainable, 
+                                sed_model=sed_model, num_layer=num_layer, aux=aux)     
+
+    model = Model(inputs=[sss_model.input[0], sss_model.input[1]], outputs=deeplab([x, sss_model.input[1]]))
+                        
+    return model
+
 
 
 def VGG_UNet(n_classes, input_height=256, input_width=512, nChannels=3):
