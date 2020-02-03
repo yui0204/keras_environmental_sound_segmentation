@@ -177,6 +177,7 @@ def WNet(n_classes, input_height=256, input_width=512, nChannels=1,
         sss_model.layers[i].trainable = trainable # fixed weight or fine-tuning
     
     e1 = sss_model.output
+    e1 = concatenate([sss_model.input[1], e1], axis=-1)
     
     e1 = Conv2D(64, (3, 3), strides=stride, padding='same')(e1)
     e1 = BatchNormalization()(e1)

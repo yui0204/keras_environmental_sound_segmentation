@@ -1008,7 +1008,7 @@ if __name__ == '__main__':
                                 load_number = 10000
             
                                 
-                                model_name = Model+"_"+str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_cin"+str(complex_input) + "_ipd"+str(ipd) + "_vonMises"+str(vonMises) + "_tdoa"+str(tdoa)
+                                model_name = Model+"_"+str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_cin"+str(complex_input) + "_ipd"+str(ipd) + "_vonMises"+str(vonMises)# + "_tdoa"+str(tdoa)
                                 if mask == True:
                                     model_name = model_name + "_"+Sed_Model + "_aux" + str(aux)
                                 dir_name = model_name + "_"+datadir
@@ -1021,7 +1021,8 @@ if __name__ == '__main__':
                                         os.makedirs(results_dir + "prediction/")
                                         os.makedirs(results_dir + "checkpoint/")
     
-                                    npy_name = "train_" + task + "_" +str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_cin"+str(complex_input) + "_ipd"+str(ipd)  + "_vonMises"+str(vonMises) + "_tdoa"+str(tdoa) + "_"+str(load_number)
+#                                    npy_name = "train_" + task + "_" +str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_cin"+str(complex_input) + "_ipd"+str(ipd)  + "_vonMises"+str(vonMises) + "_tdoa"+str(tdoa) + "_"+str(load_number)
+                                    npy_name = "train_" + task + "_" +str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_cin"+str(complex_input) + "_ipd"+str(ipd)  + "_vonMises"+str(vonMises) + "_"+str(load_number)
                                     if not os.path.exists(dataset+"X_"+npy_name+".npy"):
                                         X_train, Y_train, max, phase = load(segdata_dir, 
                                                                               n_classes=classes, 
@@ -1089,7 +1090,8 @@ if __name__ == '__main__':
                                     load_number = 1000
     
                                     
-                                npy_name = "test_" + task+ "_" +str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_cin"+str(complex_input) + "_ipd"+str(ipd)  + "_vonMises"+str(vonMises) + "_tdoa"+str(tdoa)+ "_"+str(load_number)
+#                                npy_name = "test_" + task+ "_" +str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_cin"+str(complex_input) + "_ipd"+str(ipd)  + "_vonMises"+str(vonMises) + "_tdoa"+str(tdoa)+ "_"+str(load_number)
+                                npy_name = "test_" + task+ "_" +str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_cin"+str(complex_input) + "_ipd"+str(ipd)  + "_vonMises"+str(vonMises) + "_"+str(load_number)
                                 if not os.path.exists(dataset+"X_"+npy_name+".npy"):
                                     X_test, Y_test, max, phase = load(valdata_dir, 
                                                                       n_classes=classes, 
