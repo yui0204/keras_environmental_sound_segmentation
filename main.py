@@ -680,7 +680,8 @@ def plot_stft(Y_true, Y_pred, no=0):
 def restore(Y_true, Y_pred, max, phase, no=0, class_n=1, save=False):
     plot_num = classes * ang_reso
 
-    pred_dir = pred_dir_make(no)
+    if save == True:
+        pred_dir = pred_dir_make(no)
     
     Y_pred = Y_pred.transpose(0, 3, 1, 2)
     Y_true = Y_true.transpose(0, 3, 1, 2)    
