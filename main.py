@@ -372,7 +372,7 @@ def read_model(Model):
                               input_width=image_size, nChannels=channel,
                               trainable=False, 
                               sed_model=None, num_layer=None, aux=False,
-                              mask=False, RNN=0, freq_pool=False, ang_reso=ang_reso)   
+                              mask=False, RNN=0, freq_pool=False, ang_reso=8)   
             
         elif Model == "CNN4":
             model = CNN.CNN(n_classes=classes, input_height=256, 
