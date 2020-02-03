@@ -37,6 +37,8 @@ config = tf.ConfigProto()
 config.gpu_options.allow_growth = True
 if os.getcwd() == '/home/yui-sudo/document/segmentation/sound_segtest':
     config.gpu_options.visible_device_list = "0"
+elif os.getcwd() == '/home/sudou/python/sound_segtest':
+    config.gpu_options.visible_device_list = "0"
 else:
     config.gpu_options.visible_device_list = "0,1,2"
 sess = tf.Session(config=config)
@@ -314,7 +316,7 @@ def read_model(Model):
                               input_width=image_size, nChannels=channel,
                               trainable=False, 
                               sed_model=None, num_layer=None, aux=False,
-                              mask=False, RNN=0, freq_pool=False)           
+                              mask=False, RNN=0, freq_pool=False)
         elif Model == "RNN_UNet":
             model = Unet.UNet(n_classes=classes, input_height=256, 
                               input_width=image_size, nChannels=channel,
@@ -363,7 +365,14 @@ def read_model(Model):
                                       classes=classes * ang_reso, OS=16, 
                                       RNN=0,
                                       mask=False, trainable=False, sed_model=None, 
-                                      num_layer=None, aux=aux, enc=True)  
+                                      num_layer=None, aux=aux, enc=True)
+            
+        elif Model == "WUNet":
+            model = Unet.WNet(n_classes=classes, input_height=256, 
+                              input_width=image_size, nChannels=channel,
+                              trainable=False, 
+                              sed_model=None, num_layer=None, aux=False,
+                              mask=False, RNN=0, freq_pool=False, ang_reso=ang_reso)   
             
         elif Model == "CNN4":
             model = CNN.CNN(n_classes=classes, input_height=256, 
@@ -895,6 +904,8 @@ if __name__ == '__main__':
     
     if os.getcwd() == '/home/yui-sudo/document/segmentation/sound_segtest':
         gpu_count = 1
+    elif os.getcwd() == '/home/sudou/python/sound_segtest':
+        gpu_count = 1
     else:
         gpu_count = 3
     BATCH_SIZE = 16 * gpu_count
@@ -913,6 +924,8 @@ if __name__ == '__main__':
 
     if os.getcwd() == '/home/yui-sudo/document/segmentation/sound_segtest':
         datasets_dir = "/home/yui-sudo/document/dataset/sound_segmentation/datasets/"
+    elif os.getcwd() == '/home/sudou/python/sound_segtest':
+        datasets_dir = '/media/sudou/d0e7ca7c-34a8-4983-945f-a0783e5a55c5/dataset/dataset/datasets/'
     else:
         datasets_dir = "/misc/export2/sudou/sound_data/datasets/"
     
@@ -931,7 +944,7 @@ if __name__ == '__main__':
         label = pd.read_csv(filepath_or_buffer=labelfile, sep=",", index_col=0)            
         
         for Model in [#"CNN8", "CRNN8", "BiCRNN8", 
-                      "UNet", 
+                      "WUNet", 
                       "Deeplab", 
                       "CR_UNet", 
                       #"aux_Mask_UNet", "aux_Mask_Deeplab", 
@@ -945,11 +958,11 @@ if __name__ == '__main__':
 
 
             for vonMises in [False]:
-                for ipd in [False]:
+                for ipd in [True]:
                     for mic_num in [8]: # 1 or 8                        
                         for complex_input in [True]:
                             VGG = 0                     #0: False, 1: Red 3: White                          
-                            tdoa = True
+                            tdoa = False
                             channel = 0
                             if mic_num == 1:
                                 if complex_input == True and ipd == False and tdoa == False:

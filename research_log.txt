@@ -2959,3 +2959,24 @@ File Edit Options Buffers Tools Text Help
 		 classes,        75
 
 
+2020_0203	./model_results/2020_0203/WUNet_75class_1direction_8ch_cinTrue_ipdTrue_vonMisesFalse_tdoaFalse_multi_segdata75_256_no_sound_random_sep/
+	Comapare IPD input and normal complex input and 1ch
+		 segdata_dir, /media/sudou/d0e7ca7c-34a8-4983-945f-a0783e5a55c5/dataset/dataset/datasets/multi_segdata75_256_no_sound_random_sep/train/
+		 valdata_dir, /media/sudou/d0e7ca7c-34a8-4983-945f-a0783e5a55c5/dataset/dataset/datasets/multi_segdata75_256_no_sound_random_sep/val/
+		 X(10, 256, 256, 15) Y(10, 256, 256, 75)
+		 data_byte,      float16
+		 BATCH_SIZE,     16
+		 NUM_EPOCH,      100
+		 Loss function,  mean_squared_error
+		 Learning_rate,  0.001
+		 Mic num,        8
+		 Complex_input,  True
+		 IPD input,      True
+		 von Mises input,False
+		 TDOA input,     False
+		 task     ,      segmentation
+		 Angle reso,     360
+		 Model,          WUNet
+		 classes,        75
+
+
