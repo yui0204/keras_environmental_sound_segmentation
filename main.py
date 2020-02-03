@@ -710,7 +710,7 @@ def restore(Y_true, Y_pred, max, phase, no=0, class_n=1, save=False):
             if save == True:
                 Y_pred_wave.write_wav_sf(dir=pred_dir, filename=None, bit=16)
 
-            if task == "segmentation" and ang_reso == 1:
+            if task == "segmentation":
                 Y_pred_wave = Y_pred_wave.norm_sound
                 Y_true_wave = WavfileOperate(data_dir + "/" + label.index[class_n] + ".wav").wavedata.norm_sound            
                 Y_true_wave = Y_true_wave[:len(Y_pred_wave)]    
@@ -1159,7 +1159,7 @@ if __name__ == '__main__':
                                             sar_array += sar
                                             sdr_num += (sdr != 0.000) * 1
                                                                         
-                                    if task == "segmentation" and ang_reso == 1:
+                                    if task == "segmentation":
                                         sdr_array = sdr_array / sdr_num
                                         sir_array = sir_array / sdr_num
                                         sar_array = sar_array / sdr_num
