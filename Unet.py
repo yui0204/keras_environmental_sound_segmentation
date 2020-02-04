@@ -175,7 +175,7 @@ def WNet(n_classes, input_height=256, input_width=512, nChannels=1,
         sss_model.layers[i].trainable = trainable # fixed weight
     
     x = sss_model.output
-    x = concatenate([sss_model.input[1], x], axis=-1) # concatenate mixes spectrogram
+    #x = concatenate([sss_model.input[1], x], axis=-1) # concatenate mixes spectrogram
     e1 = x
 
     if freq_pool == True:
@@ -255,7 +255,7 @@ def WNet(n_classes, input_height=256, input_width=512, nChannels=1,
                          activation='sigmoid',
                          kernel_initializer='he_uniform', padding='same')(d1)
         
-    #d0 = multiply([sss_model.input[1], d0])
+    d0 = multiply([sss_model.input[1], d0])
     model = Model(input=[sss_model.input[0], sss_model.input[1]], output=d0)
                         
     return model
@@ -280,10 +280,10 @@ def UNet_Deeplab(n_classes, input_height=256, input_width=512, nChannels=1,
         sss_model.layers[i].trainable = trainable # fixed weight
     
     x = sss_model.output
-    x = concatenate([sss_model.input[1], x], axis=-1)    # concatenate mixes spectrogram
+    #x = concatenate([sss_model.input[1], x], axis=-1)    # concatenate mixes spectrogram
     
     deeplab = Deeplab.Deeplabv3(weights=None, input_tensor=None, 
-                                input_shape=(256, input_width, ang_reso + 1), # number of direction resoluton
+                                input_shape=(256, input_width, ang_reso), # + 1), # number of direction resoluton
                                 classes=n_classes,                            # number of classes
                                 OS=16, RNN=0, mask=mask, trainable=trainable, 
                                 sed_model=sed_model, num_layer=num_layer, aux=aux)     
