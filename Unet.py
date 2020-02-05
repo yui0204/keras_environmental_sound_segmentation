@@ -190,7 +190,7 @@ def WNet(n_classes, input_height=256, input_width=512, nChannels=1,
         o = unet([o, sss_model.input[1]])
         netlist.append(o)
 
-    out = add(netlist, axis=-1)
+    out = add(netlist)
     #out = concatenate(netlist, axis=-1)
     #out = Conv2D(n_classes, (1, 1), padding='same')(out)
 
@@ -233,7 +233,7 @@ def UNet_Deeplab(n_classes, input_height=256, input_width=512, nChannels=1,
         o = deeplab([o, sss_model.input[1]])
         netlist.append(o)
 
-    out = add(netlist, axis=-1)
+    out = add(netlist)
     #out = concatenate(netlist, axis=-1)
     #out = Conv2D(n_classes, (1, 1), padding='same')(out)
 
