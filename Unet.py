@@ -179,15 +179,17 @@ def WNet(n_classes, input_height=256, input_width=512, nChannels=1,
 #    x = concatenate([sss_model.input[1], x], axis=-1) # concatenate mixes spectrogram
 
     unet = UNet(n_classes=n_classes, input_height=256, 
-                              input_width=input_width, nChannels=2,
+                              input_width=input_width, nChannels=1,
                               trainable=True, 
                               sed_model=None, num_layer=None, aux=False,
                               mask=False, RNN=0, freq_pool=False)
     netlist = []
     for i in range(8):
         o = Lambda(lambda y: y[:,:,:, i:i+1])(x)
-        o = concatenate([sss_model.input[1], o], axis=-1)       
-        o = unet([o, sss_model.input[1]])
+        #o = concatenate([sss_model.input[1], o], axis=-1)       
+        #o = unet([o, sss_model.input[1]])
+        o = unet(o)
+        #o = multiply([sss_model.input[1], o])
         netlist.append(o)
 
     out = add(netlist)
@@ -221,7 +223,7 @@ def UNet_Deeplab(n_classes, input_height=256, input_width=512, nChannels=1,
     #x = concatenate([sss_model.input[1], x], axis=-1)    # concatenate mixes spectrogram
     
     deeplab = Deeplab.Deeplabv3(weights=None, input_tensor=None, 
-                                input_shape=(256, input_width, 2), # + 1), # number of direction resoluton
+                                input_shape=(256, input_width, 1), # + 1), # number of direction resoluton
                                 classes=n_classes,                            # number of classes
                                 OS=16, RNN=0, mask=mask, trainable=trainable, 
                                 sed_model=sed_model, num_layer=num_layer, aux=aux)
@@ -229,8 +231,10 @@ def UNet_Deeplab(n_classes, input_height=256, input_width=512, nChannels=1,
     netlist = []
     for i in range(8):
         o = Lambda(lambda y: y[:,:,:, i:i+1])(x)
-        o = concatenate([sss_model.input[1], o], axis=-1)       
-        o = deeplab([o, sss_model.input[1]])
+        #o = concatenate([sss_model.input[1], o], axis=-1)       
+        #o = deeplab([o, sss_model.input[1]])
+        o = deeplab(o)
+        #o = multiply([sss_model.input[1], o])
         netlist.append(o)
 
     out = add(netlist)
