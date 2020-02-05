@@ -954,7 +954,7 @@ if __name__ == '__main__':
         for Model in [#"CNN8", "CRNN8", "BiCRNN8", 
                       "WUNet", 
                       "WDeeplab", 
-                      "CR_UNet", 
+                      #"CR_UNet", 
                       #"aux_Mask_UNet", "aux_Mask_Deeplab", 
                       #"aux_enc_UNet", 
                       #"aux_enc_Deeplab", 
