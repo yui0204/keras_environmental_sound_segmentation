@@ -170,7 +170,7 @@ def WNet(n_classes, input_height=256, input_width=512, nChannels=1,
                      mask=mask, RNN=RNN, freq_pool=freq_pool)
     
     # pretrained SSS U-Net
-#    sss_model.load_weights(os.getcwd()+"/model_results/iros2020/UNet_1class_8direction_8ch_cinTrue_ipdTrue_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/UNet_1class_8direction_8ch_cinTrue_ipdTrue_vonMisesFalse_weights.hdf5")
+    sss_model.load_weights(os.getcwd()+"/model_results/iros2020/UNet_1class_8direction_8ch_cinTrue_ipdTrue_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/UNet_1class_8direction_8ch_cinTrue_ipdTrue_vonMisesFalse_weights.hdf5")
     
     for i in range(0, len(sss_model.layers)):
         sss_model.layers[i].trainable = trainable # fixed weight
