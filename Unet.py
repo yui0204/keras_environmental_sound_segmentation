@@ -22,7 +22,7 @@ import os
 
 def UNet(n_classes, input_height=256, input_width=512, nChannels=1,
          trainable=False, sed_model=None, num_layer=None, aux=False,
-         mask=False, RNN=0, freq_pool=False, enc=False):
+         mask=False, RNN=0, freq_pool=False, enc=False, mul=True):
 
     if freq_pool == True:
         stride = (2, 1)
@@ -140,6 +140,11 @@ def UNet(n_classes, input_height=256, input_width=512, nChannels=1,
                          activation='sigmoid',
                          kernel_initializer='he_uniform', padding='same')(d1)
         
+    if mul == False:
+        model = Model(input=inputs, output=d0)
+        
+        return model
+
     if nChannels > 1:
         d0 = multiply([inputs2, d0])
         if aux == True:
@@ -182,11 +187,14 @@ def WNet(n_classes, input_height=256, input_width=512, nChannels=1,
                               input_width=input_width, nChannels=1,
                               trainable=True, 
                               sed_model=None, num_layer=None, aux=False,
-                              mask=False, RNN=0, freq_pool=False)
+                              mask=False, RNN=0, freq_pool=False, mul=True)
+    unet.load_weights(os.getcwd()+"/model_results/iros2020/UNet_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/UNet_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_weights.hdf5")
+        
     netlist = []
     for i in range(8):
-        o = Lambda(lambda y: y[:,:,:, i:i+1])(x)
-        #o = concatenate([sss_model.input[1], o], axis=-1)       
+        o = Lambda(lambda y: y[:,:,:, i:i+1])(x)                # select 1ch
+        #o = add([sss_model.input[1], o])                       # attention
+        #o = concatenate([sss_model.input[1], o], axis=-1)      # concatenation       
         #o = unet([o, sss_model.input[1]])
         o = unet(o)
         #o = multiply([sss_model.input[1], o])
@@ -198,7 +206,7 @@ def WNet(n_classes, input_height=256, input_width=512, nChannels=1,
 
     model = Model(inputs=[sss_model.input[0], sss_model.input[1]], outputs=out)    
                         
-    return model    
+    return model
 
 
 
@@ -227,6 +235,7 @@ def UNet_Deeplab(n_classes, input_height=256, input_width=512, nChannels=1,
                                 classes=n_classes,                            # number of classes
                                 OS=16, RNN=0, mask=mask, trainable=trainable, 
                                 sed_model=sed_model, num_layer=num_layer, aux=aux)
+    deeplab.load_weights(os.getcwd()+"/model_results/iros2020/Deeplab_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/Deeplab_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_weights.hdf5")
 
     netlist = []
     for i in range(8):
