@@ -290,8 +290,7 @@ def read_model(Model):
     else:
         device = '/cpu:0'
     
-    with tf.device(device):
-            
+    with tf.device(device):            
         if Model == "aux_Mask_UNet":
             model = Unet.UNet(n_classes=classes, input_height=256, 
                               input_width=image_size, nChannels=channel, 
@@ -429,21 +428,13 @@ def read_model(Model):
 def train(X_train, Y_train, Model):
     model, multi_model = read_model(Model)
     
-    if gpu_count == 1:
-        if aux == False:
-            model.compile(loss=loss, optimizer=Adam(lr=lr),metrics=["accuracy"])
-        else:
-            model.compile(loss=["binary_crossentropy", "mean_squared_error"],
-                          loss_weights=[0.4, 1.0], 
-                          optimizer=Adam(lr=lr),metrics=["accuracy"])
-    else:
-        if aux == False:
-            multi_model.compile(loss=loss, optimizer=Adam(lr=lr),metrics=["accuracy"])     
+    if aux == False:
+        multi_model.compile(loss=loss, optimizer=Adam(lr=lr),metrics=["accuracy"])     
 
-        elif aux == True:
-            multi_model.compile(loss=["binary_crossentropy", "mean_squared_error"],
-                                loss_weights=[0.4, 1.0],
-                                optimizer=Adam(lr=lr),metrics=["accuracy"])              
+    elif aux == True:
+        multi_model.compile(loss=["binary_crossentropy", "mean_squared_error"],
+                            loss_weights=[0.4, 1.0],
+                            optimizer=Adam(lr=lr),metrics=["accuracy"])              
 
     plot_model(model, to_file = results_dir + model_name + '.png')
     model.summary()
@@ -461,12 +452,7 @@ def train(X_train, Y_train, Model):
             Y_train = [((Y_train.transpose(3,0,1,2).max(2)[:,:,np.newaxis,:] > 0.1) * 1).transpose(1,2,3,0), 
                        Y_train]
     
-    if gpu_count == 1:            
-        history = model.fit(X_train, Y_train, batch_size=BATCH_SIZE, 
-                            epochs=NUM_EPOCH, verbose=1, validation_split=0.1,
-                            callbacks=[early_stopping])        
-    else:       
-        history = multi_model.fit(X_train, Y_train, batch_size=BATCH_SIZE, 
+    history = multi_model.fit(X_train, Y_train, batch_size=BATCH_SIZE, 
                             epochs=NUM_EPOCH, verbose=1, validation_split=0.1,
                             callbacks=[early_stopping])
 
