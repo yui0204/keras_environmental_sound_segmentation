@@ -285,7 +285,12 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
 
 
 def read_model(Model):
-    with tf.device('/cpu:0'):
+    if gpu_count == 1:
+        device = '/cpu:0'
+    else:
+        device = '/gpu:0'
+    
+    with tf.device(device):
             
         if Model == "aux_Mask_UNet":
             model = Unet.UNet(n_classes=classes, input_height=256, 

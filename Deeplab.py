@@ -193,7 +193,7 @@ def xception_block(inputs, depth_list, prefix, skip_connection_type, stride,
 
 def Deeplabv3(weights='None', input_tensor=None, input_shape=(256, 256, 1), 
               classes=75, OS=16, mask=False, trainable=False, RNN=0,
-              sed_model=None, num_layer=None, aux=False, enc=False):    
+              sed_model=None, num_layer=None, aux=False, enc=False, mul=True):    
     """ Instantiates the Deeplabv3+ architecture
 
     Optionally loads weights pre-trained on PASCAL VOC. 
@@ -375,6 +375,12 @@ def Deeplabv3(weights='None', input_tensor=None, input_shape=(256, 256, 1),
     else:
         inputs = img_input
 
+
+    if mul == False:
+        model = Model(input=inputs, output=x)
+        
+        return model
+    
     if input_shape[2] == 1:
         x = multiply([inputs, x])
         if aux == True:

@@ -200,8 +200,8 @@ def WNet(n_classes, input_height=256, input_width=512, nChannels=1,
         o = multiply([sss_model.input[1], o])
         netlist.append(o)
 
-    #out = add(netlist)
-    out = maximum(netlist)
+    out = add(netlist)
+    #out = maximum(netlist)
     #out = concatenate(netlist, axis=-1)
     #out = Conv2D(n_classes, (1, 1), padding='same')(out)
 
@@ -235,7 +235,7 @@ def UNet_Deeplab(n_classes, input_height=256, input_width=512, nChannels=1,
                                 input_shape=(256, input_width, 1), # + 1), # number of direction resoluton
                                 classes=n_classes,                            # number of classes
                                 OS=16, RNN=0, mask=mask, trainable=trainable, 
-                                sed_model=sed_model, num_layer=num_layer, aux=aux)
+                                sed_model=sed_model, num_layer=num_layer, aux=aux, mul=False)
     deeplab.load_weights(os.getcwd()+"/model_results/iros2020/Deeplab_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/Deeplab_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_weights.hdf5")
 
     netlist = []
@@ -244,7 +244,7 @@ def UNet_Deeplab(n_classes, input_height=256, input_width=512, nChannels=1,
         #o = concatenate([sss_model.input[1], o], axis=-1)       
         #o = deeplab([o, sss_model.input[1]])
         o = deeplab(o)
-        #o = multiply([sss_model.input[1], o])
+        o = multiply([sss_model.input[1], o])
         netlist.append(o)
 
     out = add(netlist)
