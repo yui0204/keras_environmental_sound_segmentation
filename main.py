@@ -286,9 +286,9 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
 
 def read_model(Model):
     if gpu_count == 1:
-        device = '/cpu:0'
-    else:
         device = '/gpu:0'
+    else:
+        device = '/cpu:0'
     
     with tf.device(device):
             
