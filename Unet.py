@@ -6,7 +6,7 @@ from keras.layers import Input
 from keras.layers.convolutional import Conv2D
 from keras.layers import Dropout, RepeatVector, Flatten, Reshape
 from keras.layers.merge import concatenate
-from keras.layers.merge import multiply, add, average, subtract
+from keras.layers.merge import multiply, add, average, subtract, maximum
 
 from keras.layers.convolutional import ZeroPadding2D, Conv2DTranspose
 from keras.layers import BatchNormalization, Activation
@@ -187,9 +187,9 @@ def WNet(n_classes, input_height=256, input_width=512, nChannels=1,
                               input_width=input_width, nChannels=1,
                               trainable=True, 
                               sed_model=None, num_layer=None, aux=False,
-                              mask=False, RNN=0, freq_pool=False, mul=True)
+                              mask=False, RNN=0, freq_pool=False, mul=False)
     unet.load_weights(os.getcwd()+"/model_results/iros2020/UNet_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/UNet_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_weights.hdf5")
-        
+
     netlist = []
     for i in range(8):
         o = Lambda(lambda y: y[:,:,:, i:i+1])(x)                # select 1ch
@@ -197,10 +197,11 @@ def WNet(n_classes, input_height=256, input_width=512, nChannels=1,
         #o = concatenate([sss_model.input[1], o], axis=-1)      # concatenation       
         #o = unet([o, sss_model.input[1]])
         o = unet(o)
-        #o = multiply([sss_model.input[1], o])
+        o = multiply([sss_model.input[1], o])
         netlist.append(o)
 
-    out = add(netlist)
+    #out = add(netlist)
+    out = maximum(netlist)
     #out = concatenate(netlist, axis=-1)
     #out = Conv2D(n_classes, (1, 1), padding='same')(out)
 

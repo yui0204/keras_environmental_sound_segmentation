@@ -989,6 +989,7 @@ if __name__ == '__main__':
                                         channel = 24
                                     else:
                                         continue
+
                                 elif complex_input == False and ipd == False and vonMises == False and tdoa == False:
                                     channel = 8
                             
