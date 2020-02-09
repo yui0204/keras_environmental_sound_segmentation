@@ -316,7 +316,7 @@ def read_model(Model):
                               sed_model=sed_model, num_layer=num_layer, aux=aux,
                               mask=True, RNN=0, freq_pool=False) 
         elif Model == "UNet":
-            model = Unet.UNet(n_classes=classes, input_height=256, 
+            model = Unet.UNet(n_classes=classes*ang_reso, input_height=256, 
                               input_width=image_size, nChannels=channel,
                               trainable=False, 
                               sed_model=None, num_layer=None, aux=False,
@@ -328,7 +328,7 @@ def read_model(Model):
                               sed_model=None, num_layer=None, aux=False,
                               mask=False, RNN=2, freq_pool=False)                  
         elif Model == "CR_UNet":
-            model = Unet.UNet(n_classes=classes, input_height=256, 
+            model = Unet.UNet(n_classes=classes*ang_reso, input_height=256, 
                               input_width=image_size, nChannels=channel,
                               trainable=False, 
                               sed_model=None, num_layer=None, aux=False,
