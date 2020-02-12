@@ -17,7 +17,7 @@ from keras.layers.advanced_activations import LeakyReLU
 from keras.layers.core import Lambda
 
 import CNN, Deeplab
-import os    
+import os
     
 
 def UNet(n_classes, input_height=256, input_width=512, nChannels=1,
@@ -181,7 +181,6 @@ def WNet(n_classes, input_height=256, input_width=512, nChannels=1,
         sss_model.layers[i].trainable = trainable # fixed weight
     
     x = sss_model.output
-#    x = concatenate([sss_model.input[1], x], axis=-1) # concatenate mixes spectrogram
 
     unet = UNet(n_classes=n_classes, input_height=256, 
                               input_width=input_width, nChannels=1,
@@ -193,17 +192,11 @@ def WNet(n_classes, input_height=256, input_width=512, nChannels=1,
     netlist = []
     for i in range(8):
         o = Lambda(lambda y: y[:,:,:, i:i+1])(x)                # select 1ch
-        #o = add([sss_model.input[1], o])                       # attention
-        #o = concatenate([sss_model.input[1], o], axis=-1)      # concatenation       
-        #o = unet([o, sss_model.input[1]])
         o = unet(o)
         o = multiply([sss_model.input[1], o])
         netlist.append(o)
 
     out = add(netlist)
-    #out = maximum(netlist)
-    #out = concatenate(netlist, axis=-1)
-    #out = Conv2D(n_classes, (1, 1), padding='same')(out)
 
     model = Model(inputs=[sss_model.input[0], sss_model.input[1]], outputs=out)    
                         
@@ -229,7 +222,6 @@ def UNet_Deeplab(n_classes, input_height=256, input_width=512, nChannels=1,
         sss_model.layers[i].trainable = trainable # fixed weight
     
     x = sss_model.output
-    #x = concatenate([sss_model.input[1], x], axis=-1)    # concatenate mixes spectrogram
     
     deeplab = Deeplab.Deeplabv3(weights=None, input_tensor=None, 
                                 input_shape=(256, input_width, 1), # + 1), # number of direction resoluton
@@ -241,15 +233,52 @@ def UNet_Deeplab(n_classes, input_height=256, input_width=512, nChannels=1,
     netlist = []
     for i in range(8):
         o = Lambda(lambda y: y[:,:,:, i:i+1])(x)
-        #o = concatenate([sss_model.input[1], o], axis=-1)       
-        #o = deeplab([o, sss_model.input[1]])
         o = deeplab(o)
         o = multiply([sss_model.input[1], o])
         netlist.append(o)
 
     out = add(netlist)
-    #out = concatenate(netlist, axis=-1)
-    #out = Conv2D(n_classes, (1, 1), padding='same')(out)
+
+    model = Model(inputs=[sss_model.input[0], sss_model.input[1]], outputs=out)    
+                        
+    return model
+
+
+
+def UNet_CNN(n_classes, input_height=256, input_width=512, nChannels=1,
+         trainable=False, sed_model=None, num_layer=None, aux=False,
+         mask=False, RNN=0, freq_pool=False, enc=False, ang_reso=8):
+
+    sss_model = UNet(n_classes = ang_reso, # direction resolution
+                     input_height=256, input_width=input_width, 
+                     nChannels=nChannels,  # input feature channels
+                     trainable=trainable, 
+                     sed_model=sed_model, num_layer=num_layer, aux=aux,
+                     mask=mask, RNN=RNN, freq_pool=freq_pool)
+    
+    # pretrained SSS U-Net
+    sss_model.load_weights(os.getcwd()+"/model_results/iros2020/UNet_1class_8direction_8ch_cinTrue_ipdTrue_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/UNet_1class_8direction_8ch_cinTrue_ipdTrue_vonMisesFalse_weights.hdf5")
+    
+    for i in range(0, len(sss_model.layers)):
+        sss_model.layers[i].trainable = trainable # fixed weight
+    
+    x = sss_model.output
+#    x = concatenate([sss_model.input[1], x], axis=-1) # concatenate mixes spectrogram
+
+    cnn = CNN.CNNtag(n_classes, input_height=256, input_width=input_width, nChannels=1, 
+                       filter_list=[64, 64, 128, 128, 256, 256, 512, 512])
+    cnn.load_weights(os.getcwd()+"/model_results/iros2020/Cascade_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/Cascade_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_weights.hdf5")
+    for i in range(0, len(cnn.layers)):
+        cnn.layers[i].trainable = False # fixed weight
+        
+    netlist = []
+    for i in range(8):
+        s = Lambda(lambda y: y[:,:,:, i:i+1])(x)                # select 1ch
+        o = cnn(s)        
+        o = multiply([s, o])
+        netlist.append(o)
+
+    out = add(netlist)
 
     model = Model(inputs=[sss_model.input[0], sss_model.input[1]], outputs=out)    
                         
