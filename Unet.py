@@ -279,6 +279,20 @@ def UNet_CNN(n_classes, input_height=256, input_width=512, nChannels=1,
         netlist.append(o)
 
     out = add(netlist)
+    
+    unet = UNet(n_classes=n_classes, input_height=256, 
+                              input_width=input_width, nChannels=n_classes,
+                              trainable=True, 
+                              sed_model=None, num_layer=None, aux=False,
+                              mask=False, RNN=0, freq_pool=False, mul=False)
+    #unet = Deeplab.Deeplabv3(weights=None, input_tensor=None, 
+    #                            input_shape=(256, input_width, n_classes),
+    #                            classes=n_classes,                            # number of classes
+    #                            OS=16, RNN=0, mask=mask, trainable=trainable, 
+    #                            sed_model=sed_model, num_layer=num_layer, aux=aux, mul=False)
+
+    out = unet(out)
+    out = multiply([sss_model.input[1], out])
 
     model = Model(inputs=[sss_model.input[0], sss_model.input[1]], outputs=out)    
                         
