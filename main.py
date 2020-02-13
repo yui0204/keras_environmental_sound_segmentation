@@ -1187,12 +1187,14 @@ if __name__ == '__main__':
                                         f1 = f1_score(Y_sedt.ravel(), Y_sedp.ravel())
                                         Y_sedp = np.argmax(Y_sedp, axis=3)
                                         print("aux_F_score", f1)
-                                        with open(results_dir + "f1_" + str(f1) + ".txt","w") as f:
-                                            f.write(str(f1))   
+                                        with open(results_dir + "aux_f1_" + str(f1) + ".txt","w") as f:
+                                            f.write(str(f1)) 
                                     
                                     f1 = f1_score(((Y_test.max(1) > 0.1) * 1).ravel(),
                                                   ((Y_pred.max(1) > 0.1) * 1).ravel())
                                     print("segmentation F-score =", f1)
+                                    with open(results_dir + "segmentation_f1_" + str(f1) + ".txt","w") as f:
+                                        f.write(str(f1))  
                                     
                                 if not os.getcwd() == '/home/yui-sudo/document/segmentation/sound_segtest':
                                     shutil.copy("main.py", results_dir)
