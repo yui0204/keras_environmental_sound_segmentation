@@ -9,7 +9,7 @@ from keras.layers.merge import concatenate
 from keras.layers.merge import multiply, add, average, subtract, maximum
 
 from keras.layers.convolutional import ZeroPadding2D, Conv2DTranspose
-from keras.layers import BatchNormalization, Activation
+from keras.layers import BatchNormalization, Activation, Dense, GlobalAveragePooling2D
 
 from keras.applications.vgg16 import VGG16
 
@@ -22,7 +22,7 @@ import os
 
 def UNet(n_classes, input_height=256, input_width=512, nChannels=1,
          trainable=False, sed_model=None, num_layer=None, aux=False,
-         mask=False, RNN=0, freq_pool=False, enc=False, mul=True):
+         mask=False, RNN=0, freq_pool=False, enc=False, mul=True, doa=False, sad=False):
 
     if freq_pool == True:
         stride = (2, 1)
@@ -102,7 +102,20 @@ def UNet(n_classes, input_height=256, input_width=512, nChannels=1,
         sed = MaxPooling2D((4, 1), strides=(4, 1))(enc)
         sed = UpSampling2D(size=(1, 64))(sed)
         e6 = concatenate([enc, e6], axis=-1)
-    
+        
+    if sad == True:
+        sad_out = GlobalAveragePooling2D()(e6) # 1 x 512
+        sad_out = Dense(512, activation='relu')(sad_out)
+        sad_out = Dropout(0.3)(sad_out)
+        sad_out = Dense(n_classes, activation='sigmoid')(sad_out)
+               
+    if doa == True:
+        doa_out = GlobalAveragePooling2D()(e6) # 1 x 512
+        doa_out = Dense(512, activation='relu')(doa_out)
+        doa_out = Dropout(0.3)(doa_out)
+        doa_out = Dense(8, activation='sigmoid')(doa_out)
+        
+        
     d5 = Conv2DTranspose(512, (3, 3), strides=stride, use_bias=False, 
                          kernel_initializer='he_uniform', padding='same')(e6)
     d5 = BatchNormalization()(d5)
@@ -149,6 +162,10 @@ def UNet(n_classes, input_height=256, input_width=512, nChannels=1,
         d0 = multiply([inputs2, d0])
         if aux == True:
             model = Model(input=[inputs, inputs2], output=[sed, d0])
+        elif doa == True and sad == False:
+            model = Model(input=[inputs, inputs2], output=[doa_out, d0])
+        elif doa == True and sad == True:
+            model = Model(input=[inputs, inputs2], output=[doa_out, d0, sad_out])
         else:
             model = Model(input=[inputs, inputs2], output=d0)
     else:

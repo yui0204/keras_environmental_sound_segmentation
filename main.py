@@ -130,6 +130,9 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
         labels = np.zeros((load_number, n_classes, 256, image_size), dtype=np.float16)
     else:
         labels = np.zeros((load_number, n_classes, ang_reso, 256, image_size), dtype=np.float16)
+        
+    doa_labels = np.zeros((load_number, 8), dtype=np.int16)
+    sad_labels = np.zeros((load_number, n_classes), dtype=np.int16)
 
     
     for i in range(load_number):
@@ -215,6 +218,10 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
                         labels[i][label.T[filelist[n][:-4]][cat]][angle] += abs(stft[:256])
                         #labels[i][0][angle] += abs(stft[:256]) # when only SSS
                         dn += 1
+
+                    doa_labels[i][int(re.sub("\\D", "", direction[dn].split("_")[1])) // (360 // 8)] = 1
+                    dn += 1
+                    sad_labels[i][label.T[filelist[n][:-4]][cat]] = 1
     
     if complex_input == True and ipd == False and vonMises == False:
         sign = (inputs > 0) * 2 - 1
@@ -281,7 +288,7 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
             inputs[2] = inputs[0] # Grayscale to RGB
         inputs = inputs.transpose(1,2,3,0)
     
-    return inputs, labels, max, inputs_phase
+    return inputs, labels, max, inputs_phase, doa_labels, sad_labels
 
 
 def read_model(Model):
@@ -321,6 +328,18 @@ def read_model(Model):
                               trainable=False, 
                               sed_model=None, num_layer=None, aux=False,
                               mask=False, RNN=0, freq_pool=False)
+        elif Model == "doa_UNet":
+            model = Unet.UNet(n_classes=classes*ang_reso, input_height=256, 
+                              input_width=image_size, nChannels=channel,
+                              trainable=False, 
+                              sed_model=None, num_layer=None, aux=False,
+                              mask=False, RNN=0, freq_pool=False, doa=True, sad=False)
+        elif Model == "sad_UNet":
+            model = Unet.UNet(n_classes=classes*ang_reso, input_height=256, 
+                              input_width=image_size, nChannels=channel,
+                              trainable=False, 
+                              sed_model=None, num_layer=None, aux=False,
+                              mask=False, RNN=0, freq_pool=False, doa=True, sad=True)
         elif Model == "RNN_UNet":
             model = Unet.UNet(n_classes=classes, input_height=256, 
                               input_width=image_size, nChannels=channel,
@@ -440,7 +459,16 @@ def train(X_train, Y_train, Model):
     elif aux == True:
         multi_model.compile(loss=["binary_crossentropy", "mean_squared_error"],
                             loss_weights=[0.4, 1.0],
-                            optimizer=Adam(lr=lr),metrics=["accuracy"])              
+                            optimizer=Adam(lr=lr),metrics=["accuracy"])
+
+    elif doa == True and sad == False:
+        multi_model.compile(loss=["binary_crossentropy", "mean_squared_error"],
+                            loss_weights=[0.4, 1.0],
+                            optimizer=Adam(lr=lr),metrics=["accuracy"])
+    elif doa == True and sad == True:
+        multi_model.compile(loss=["binary_crossentropy", "mean_squared_error", "binary_crossentropy"],
+                            loss_weights=[0.4, 1.0, 0.4],
+                            optimizer=Adam(lr=lr),metrics=["accuracy"])           
 
     plot_model(model, to_file = results_dir + model_name + '.png')
     model.summary()
@@ -457,6 +485,10 @@ def train(X_train, Y_train, Model):
         if Model == "aux_Mask_UNet" or Model == "aux_Mask_RNN_UNet" or Model == "aux_Mask_Deeplab" or Model == "aux_enc_UNet" or Model == "aux_enc_Deeplab":
             Y_train = [((Y_train.transpose(3,0,1,2).max(2)[:,:,np.newaxis,:] > 0.1) * 1).transpose(1,2,3,0), 
                        Y_train]
+        elif doa == True and sad == False:
+            Y_train = [doa_labels, Y_train]
+        elif doa == True and sad == True:
+            Y_train = [doa_labels, Y_train, sad_labels]
     
     history = multi_model.fit(X_train, Y_train, batch_size=BATCH_SIZE, 
                             epochs=NUM_EPOCH, verbose=1, validation_split=0.1,
@@ -927,6 +959,7 @@ if __name__ == '__main__':
     plot = True
     graph_num = 10
 
+
     if os.getcwd() == '/home/yui-sudo/document/segmentation/sound_segtest':
         datasets_dir = "/home/yui-sudo/document/dataset/sound_segmentation/datasets/"
     elif os.getcwd() == '/home/sudou/python/sound_segtest':
@@ -949,7 +982,8 @@ if __name__ == '__main__':
         label = pd.read_csv(filepath_or_buffer=labelfile, sep=",", index_col=0)            
         
         for Model in [#"CNN8", "CRNN8", "BiCRNN8", 
-                      "UNet_CNN", 
+                      "doa_UNet", 
+                      #"sad_UNet", 
                       #"WUNet", 
                       #"WDeeplab", 
                       #"CR_UNet", 
@@ -961,7 +995,13 @@ if __name__ == '__main__':
             
             if Model == "Cascade":
                 loss = "categorical_crossentropy"
-
+            elif Model == "doa_UNet":                
+                doa = True
+            elif Model == "sad_UNet":
+                doa = True
+                sad = True
+            else:
+                doa, sad == False, False
 
             for vonMises in [False]:
                 for ipd in [True]:
@@ -1031,7 +1071,7 @@ if __name__ == '__main__':
 #                                    npy_name = "train_" + task + "_" +str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_cin"+str(complex_input) + "_ipd"+str(ipd)  + "_vonMises"+str(vonMises) + "_tdoa"+str(tdoa) + "_"+str(load_number)
                                     npy_name = "train_" + task + "_" +str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_cin"+str(complex_input) + "_ipd"+str(ipd)  + "_vonMises"+str(vonMises) + "_"+str(load_number)
                                     if not os.path.exists(dataset+"X_"+npy_name+".npy"):
-                                        X_train, Y_train, max, phase = load(segdata_dir, 
+                                        X_train, Y_train, max, phase, doa_labels, sad_labels = load(segdata_dir, 
                                                                               n_classes=classes, 
                                                                               load_number=load_number,
                                                                               complex_input=complex_input)
@@ -1100,7 +1140,7 @@ if __name__ == '__main__':
 #                                npy_name = "test_" + task+ "_" +str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_cin"+str(complex_input) + "_ipd"+str(ipd)  + "_vonMises"+str(vonMises) + "_tdoa"+str(tdoa)+ "_"+str(load_number)
                                 npy_name = "test_" + task+ "_" +str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_cin"+str(complex_input) + "_ipd"+str(ipd)  + "_vonMises"+str(vonMises) + "_"+str(load_number)
                                 if not os.path.exists(dataset+"X_"+npy_name+".npy"):
-                                    X_test, Y_test, max, phase = load(valdata_dir, 
+                                    X_test, Y_test, max, phase, doa_labels, sad_labels = load(valdata_dir, 
                                                                       n_classes=classes, 
                                                                       load_number=load_number, 
                                                                       complex_input=complex_input)
@@ -1132,7 +1172,8 @@ if __name__ == '__main__':
                                             datanum += 1
                                     Y_pred = Y_pred.transpose(0,2,3,1)
                                     X_test = X_origin
-
+                                elif Model == "doa_UNet" or Model == "sad_UNet":
+                                    Y_pred = Y_pred[1]
                                     
                                 if plot == True:
                                     sdr_array = np.zeros((classes, 1))
