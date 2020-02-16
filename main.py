@@ -219,9 +219,9 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
                         #labels[i][0][angle] += abs(stft[:256]) # when only SSS
                         dn += 1
 
-                    doa_labels[i][int(re.sub("\\D", "", direction[dn].split("_")[1])) // (360 // 8)] = 1
-                    dn += 1
-                    sad_labels[i][label.T[filelist[n][:-4]][cat]] = 1
+                    #doa_labels[i][int(re.sub("\\D", "", direction[dn].split("_")[1])) // (360 // 8)] = 1
+                    #dn += 1
+                    #sad_labels[i][label.T[filelist[n][:-4]][cat]] = 1
     
     if complex_input == True and ipd == False and vonMises == False:
         sign = (inputs > 0) * 2 - 1
@@ -441,6 +441,17 @@ def read_model(Model):
                             input_width=image_size, nChannels=channel,
                             filter_list=[64, 64, 128, 128, 256, 256, 512, 512], 
                             RNN=2, Bidir=True)
+            
+        elif Model == "SELD_CNN8":
+            model = CNN.CNN(n_classes=classes, input_height=256, 
+                            input_width=image_size, nChannels=channel,
+                            filter_list=[64, 64, 128, 128, 256, 256, 512, 512], 
+                            RNN=0, Bidir=False, ang_reso=ang_reso)
+        elif Model == "SELD_BiCRNN8":
+            model = CNN.CNN(n_classes=classes, input_height=256, 
+                            input_width=image_size, nChannels=channel,
+                            filter_list=[64, 64, 128, 128, 256, 256, 512, 512], 
+                            RNN=2, Bidir=True, ang_reso=ang_reso)
             
         elif Model == "Cascade":
             model = CNN.CNNtag(n_classes=classes, input_height=256, 
@@ -948,8 +959,8 @@ if __name__ == '__main__':
     train_mode = "class"
     classes = 75
     image_size = 256
-    task = "segmentation"
-    ang_reso = 1
+    task = "event"
+    ang_reso = 8
     
     if os.getcwd() == '/home/yui-sudo/document/segmentation/sound_segtest':
         gpu_count = 1
@@ -994,7 +1005,8 @@ if __name__ == '__main__':
         label = pd.read_csv(filepath_or_buffer=labelfile, sep=",", index_col=0)            
         
         for Model in [#"CNN8", "CRNN8", "BiCRNN8", 
-                      "UNet_CNN_Deeplab", 
+                      "SELD_CNN8", 
+                      "SELD_BiCRNN8", 
                       #"sad_UNet", 
                       #"WUNet", 
                       #"WDeeplab", 
