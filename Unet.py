@@ -192,7 +192,7 @@ def WNet(n_classes, input_height=256, input_width=512, nChannels=1,
                      mask=mask, RNN=RNN, freq_pool=freq_pool)
     
     # pretrained SSS U-Net
-    sss_model.load_weights(os.getcwd()+"/model_results/iros2020/UNet_1class_8direction_8ch_cinTrue_ipdTrue_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/UNet_1class_8direction_8ch_cinTrue_ipdTrue_vonMisesFalse_weights.hdf5")
+    sss_model.load_weights(os.getcwd()+"/model_results/iros2020/UNet_1class_8direction_"+str(ang_reso)+"ch_cinTrue_ipdTrue_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/UNet_1class_"+str(ang_reso)+"direction_8ch_cinTrue_ipdTrue_vonMisesFalse_weights.hdf5")
     
     for i in range(0, len(sss_model.layers)):
         sss_model.layers[i].trainable = trainable # fixed weight
@@ -207,7 +207,7 @@ def WNet(n_classes, input_height=256, input_width=512, nChannels=1,
     unet.load_weights(os.getcwd()+"/model_results/iros2020/UNet_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/UNet_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_weights.hdf5")
 
     netlist = []
-    for i in range(8):
+    for i in range(ang_reso):
         o = Lambda(lambda y: y[:,:,:, i:i+1])(x)                # select 1ch
         o = unet(o)
         o = multiply([sss_model.input[1], o])
@@ -233,7 +233,7 @@ def UNet_Deeplab(n_classes, input_height=256, input_width=512, nChannels=1,
                      mask=mask, RNN=RNN, freq_pool=freq_pool)
 
     # pretrained SSS U-Net
-    sss_model.load_weights(os.getcwd()+"/model_results/iros2020/UNet_1class_8direction_8ch_cinTrue_ipdTrue_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/UNet_1class_8direction_8ch_cinTrue_ipdTrue_vonMisesFalse_weights.hdf5")
+    sss_model.load_weights(os.getcwd()+"/model_results/iros2020/UNet_1class_"+str(ang_reso)+"direction_8ch_cinTrue_ipdTrue_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/UNet_1class_"+str(ang_reso)+"direction_8ch_cinTrue_ipdTrue_vonMisesFalse_weights.hdf5")
     
     for i in range(0, len(sss_model.layers)):
         sss_model.layers[i].trainable = trainable # fixed weight
@@ -248,7 +248,7 @@ def UNet_Deeplab(n_classes, input_height=256, input_width=512, nChannels=1,
     deeplab.load_weights(os.getcwd()+"/model_results/iros2020/Deeplab_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/Deeplab_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_weights.hdf5")
 
     netlist = []
-    for i in range(8):
+    for i in range(ang_reso):
         o = Lambda(lambda y: y[:,:,:, i:i+1])(x)
         o = deeplab(o)
         o = multiply([sss_model.input[1], o])
@@ -289,7 +289,7 @@ def UNet_CNN(n_classes, input_height=256, input_width=512, nChannels=1,
         cnn.layers[i].trainable = False # fixed weight
         
     netlist = []
-    for i in range(8):
+    for i in range(ang_reso):
         s = Lambda(lambda y: y[:,:,:, i:i+1])(x)                # select 1ch
         o = cnn(s)        
         o = multiply([s, o])
