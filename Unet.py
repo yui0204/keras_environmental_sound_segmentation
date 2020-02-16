@@ -264,7 +264,7 @@ def UNet_Deeplab(n_classes, input_height=256, input_width=512, nChannels=1,
 
 def UNet_CNN(n_classes, input_height=256, input_width=512, nChannels=1,
          trainable=False, sed_model=None, num_layer=None, aux=False,
-         mask=False, RNN=0, freq_pool=False, enc=False, ang_reso=8):
+         mask=False, RNN=0, freq_pool=False, enc=False, ang_reso=8, seg=False):
 
     sss_model = UNet(n_classes = ang_reso, # direction resolution
                      input_height=256, input_width=input_width, 
@@ -274,7 +274,7 @@ def UNet_CNN(n_classes, input_height=256, input_width=512, nChannels=1,
                      mask=mask, RNN=RNN, freq_pool=freq_pool)
     
     # pretrained SSS U-Net
-    sss_model.load_weights(os.getcwd()+"/model_results/iros2020/UNet_1class_8direction_8ch_cinTrue_ipdTrue_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/UNet_1class_8direction_8ch_cinTrue_ipdTrue_vonMisesFalse_weights.hdf5")
+    sss_model.load_weights(os.getcwd()+"/model_results/iros2020/UNet_1class_"+str(ang_reso)+"direction_8ch_cinTrue_ipdTrue_vonMisesFalse_multi_segdata75_256_no_sound_random_sep_72/UNet_1class_"+str(ang_reso)+"direction_8ch_cinTrue_ipdTrue_vonMisesFalse_weights.hdf5")
     
     for i in range(0, len(sss_model.layers)):
         sss_model.layers[i].trainable = trainable # fixed weight
@@ -297,19 +297,20 @@ def UNet_CNN(n_classes, input_height=256, input_width=512, nChannels=1,
 
     out = add(netlist)
     
-    unet = UNet(n_classes=n_classes, input_height=256, 
-                              input_width=input_width, nChannels=n_classes,
-                              trainable=True, 
-                              sed_model=None, num_layer=None, aux=False,
-                              mask=False, RNN=0, freq_pool=False, mul=False)
-    #unet = Deeplab.Deeplabv3(weights=None, input_tensor=None, 
-    #                            input_shape=(256, input_width, n_classes),
-    #                            classes=n_classes,                            # number of classes
-    #                            OS=16, RNN=0, mask=mask, trainable=trainable, 
-    #                            sed_model=sed_model, num_layer=num_layer, aux=aux, mul=False)
-
-    out = unet(out)
-    out = multiply([sss_model.input[1], out])
+    if seg == True:
+        #unet = UNet(n_classes=n_classes, input_height=256, 
+        #                          input_width=input_width, nChannels=n_classes,
+        #                          trainable=True, 
+        #                          sed_model=None, num_layer=None, aux=False,
+        #                          mask=False, RNN=0, freq_pool=False, mul=False)
+        unet = Deeplab.Deeplabv3(weights=None, input_tensor=None, 
+                                    input_shape=(256, input_width, n_classes),
+                                    classes=n_classes,                            # number of classes
+                                    OS=16, RNN=0, mask=mask, trainable=trainable, 
+                                    sed_model=sed_model, num_layer=num_layer, aux=aux, mul=False)
+    
+        out = unet(out)
+        out = multiply([sss_model.input[1], out])
 
     model = Model(inputs=[sss_model.input[0], sss_model.input[1]], outputs=out)    
                         
