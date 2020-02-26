@@ -757,7 +757,7 @@ def restore(Y_true, Y_pred, max, phase, no=0, class_n=1, save=False):
             if save == True:
                 Y_pred_wave.write_wav_sf(dir=pred_dir, filename=None, bit=16)
 
-            if task == "segmentation":
+            if task == "segmentation" and ang_reso == 1:
                 Y_pred_wave = Y_pred_wave.norm_sound
                 Y_true_wave = WavfileOperate(data_dir + "/" + label.index[class_n] + ".wav").wavedata.norm_sound            
                 Y_true_wave = Y_true_wave[:len(Y_pred_wave)]    
@@ -959,8 +959,8 @@ if __name__ == '__main__':
     train_mode = "class"
     classes = 75
     image_size = 256
-    task = "event"
-    ang_reso = 8
+    task = "segmentation"
+    ang_reso = 1
     
     if os.getcwd() == '/home/yui-sudo/document/segmentation/sound_segtest':
         gpu_count = 1
@@ -990,7 +990,7 @@ if __name__ == '__main__':
     else:
         datasets_dir = "/misc/export2/sudou/sound_data/datasets/"
     
-    for datadir in ["multi_segdata"+str(classes) + "_"+str(image_size)+"_no_sound_random_sep/", 
+    for datadir in ["multi_segdata"+str(classes) + "_"+str(image_size)+"_no_sound_random_sep_72/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_no_sound/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-30dB/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-20dB_random/", 
@@ -1005,11 +1005,11 @@ if __name__ == '__main__':
         label = pd.read_csv(filepath_or_buffer=labelfile, sep=",", index_col=0)            
         
         for Model in [#"CNN8", "CRNN8", "BiCRNN8", 
-                      "SELD_CNN8", 
-                      "SELD_BiCRNN8", 
+                      #"SELD_CNN8", 
+                      #"SELD_BiCRNN8", 
                       #"sad_UNet", 
                       #"WUNet", 
-                      #"WDeeplab", 
+                      "Deeplab", 
                       #"CR_UNet", 
                       #"aux_Mask_UNet", "aux_Mask_Deeplab", 
                       #"aux_enc_UNet", 
@@ -1162,7 +1162,7 @@ if __name__ == '__main__':
                                     with open(results_dir + 'train_condition.txt','r') as f:
                                         train_condition = f.read() 
                                         print(train_condition)
-                                    
+                             if task == "segmentation" and ang_reso == 1:       
                                 if load_number >= 1000:
                                     load_number = 1000
     
@@ -1230,12 +1230,13 @@ if __name__ == '__main__':
                                                     event_plot(Y_sedt, Y_sedp, no=i)
                                                 plot_stft(Y_test, Y_pred, no=i)
                                             sdr, sir, sar = restore(Y_test, Y_pred, max, phase, no=i, save=save)
-                                            sdr_array += sdr
-                                            sir_array += sir
-                                            sar_array += sar
-                                            sdr_num += (sdr != 0.000) * 1
+                                            if task == "segmentation" and ang_reso == 1:
+                                                sdr_array += sdr
+                                                sir_array += sir
+                                                sar_array += sar
+                                                sdr_num += (sdr != 0.000) * 1
                                                                         
-                                    if task == "segmentation":
+                                    if task == "segmentation" and ang_reso == 1:
                                         sdr_array = sdr_array / sdr_num
                                         sir_array = sir_array / sdr_num
                                         sar_array = sar_array / sdr_num
