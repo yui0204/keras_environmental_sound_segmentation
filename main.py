@@ -1162,7 +1162,7 @@ if __name__ == '__main__':
                                     with open(results_dir + 'train_condition.txt','r') as f:
                                         train_condition = f.read() 
                                         print(train_condition)
-                             if task == "segmentation" and ang_reso == 1:       
+
                                 if load_number >= 1000:
                                     load_number = 1000
     
