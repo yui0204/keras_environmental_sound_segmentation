@@ -998,7 +998,7 @@ if __name__ == '__main__':
     elif os.getcwd() == '/home/sudou/python/sound_segtest':
         datasets_dir = '/media/sudou/d0e7ca7c-34a8-4983-945f-a0783e5a55c5/dataset/dataset/datasets/'
     else:
-        datasets_dir = "/misc/export2/sudou/sound_data/datasets/"
+        datasets_dir = "/misc/export3/sudou/sound_data/datasets/"
     
     for datadir in ["multi_segdata"+str(classes) + "_"+str(image_size)+"_no_sound_random_sep_72/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-20dB_random_sep_72/", 
