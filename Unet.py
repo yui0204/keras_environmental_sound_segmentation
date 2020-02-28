@@ -280,7 +280,6 @@ def UNet_CNN(n_classes, input_height=256, input_width=512, nChannels=1,
         sss_model.layers[i].trainable = trainable # fixed weight
     
     x = sss_model.output
-#    x = concatenate([sss_model.input[1], x], axis=-1) # concatenate mixes spectrogram
 
     cnn = CNN.CNNtag(n_classes, input_height=256, input_width=input_width, nChannels=1, 
                        filter_list=[64, 64, 128, 128, 256, 256, 512, 512])
@@ -298,11 +297,6 @@ def UNet_CNN(n_classes, input_height=256, input_width=512, nChannels=1,
     out = add(netlist)
     
     if seg == True:
-        #unet = UNet(n_classes=n_classes, input_height=256, 
-        #                          input_width=input_width, nChannels=n_classes,
-        #                          trainable=True, 
-        #                          sed_model=None, num_layer=None, aux=False,
-        #                          mask=False, RNN=0, freq_pool=False, mul=False)
         unet = Deeplab.Deeplabv3(weights=None, input_tensor=None, 
                                     input_shape=(256, input_width, n_classes),
                                     classes=n_classes,                            # number of classes
@@ -326,7 +320,7 @@ def Deeplab_CNN(n_classes, input_height=256, input_width=512, nChannels=1,
                                     input_shape=(256, input_width, nChannels),
                                     classes=ang_reso,                            # number of classes
                                     OS=16, RNN=0, mask=mask, trainable=trainable, 
-                                    sed_model=sed_model, num_layer=num_layer, aux=aux, mul=False)
+                                    sed_model=sed_model, num_layer=num_layer, aux=aux, mul=True)
     
     # pretrained SSS U-Net
     sss_model.load_weights(os.getcwd()+"/model_results/iros2020/Deeplab_1class_"+str(ang_reso)+"direction_8ch_cinTrue_ipdTrue_vonMisesFalse_multi_segdata75_256_no_sound_random_sep_72/Deeplab_1class_"+str(ang_reso)+"direction_8ch_cinTrue_ipdTrue_vonMisesFalse_weights.hdf5")
@@ -335,7 +329,6 @@ def Deeplab_CNN(n_classes, input_height=256, input_width=512, nChannels=1,
         sss_model.layers[i].trainable = trainable # fixed weight
     
     x = sss_model.output
-#    x = concatenate([sss_model.input[1], x], axis=-1) # concatenate mixes spectrogram
 
     cnn = CNN.CNNtag(n_classes, input_height=256, input_width=input_width, nChannels=1, 
                        filter_list=[64, 64, 128, 128, 256, 256, 512, 512])
@@ -353,11 +346,6 @@ def Deeplab_CNN(n_classes, input_height=256, input_width=512, nChannels=1,
     out = add(netlist)
     
     if seg == True:
-        #unet = UNet(n_classes=n_classes, input_height=256, 
-        #                          input_width=input_width, nChannels=n_classes,
-        #                          trainable=True, 
-        #                          sed_model=None, num_layer=None, aux=False,
-        #                          mask=False, RNN=0, freq_pool=False, mul=False)
         unet = Deeplab.Deeplabv3(weights=None, input_tensor=None, 
                                     input_shape=(256, input_width, n_classes),
                                     classes=n_classes,                            # number of classes

@@ -195,7 +195,6 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
                                     if not diff.std() == 0:
                                         diff = diff / diff.std()
                                     diff = np.clip(diff, -1.0, 1.0)
-                                    #diff = abs(diff) * (20 * np.log10(inputs[i][0]) + 120) / 120
                                     inputs[i][nchan] = diff
                                     
                             elif complex_input == True:
@@ -1092,7 +1091,7 @@ if __name__ == '__main__':
                                 load_number = 10000
             
                                 
-                                model_name = Model+"_"+str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_cin"+str(complex_input) + "_ipd"+str(ipd) + "_vonMises"+str(vonMises)# + "_tdoa"+str(tdoa)
+                                model_name = Model+"_"+str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_cin"+str(complex_input) + "_ipd"+str(ipd) + "_vonMises"+str(vonMises)
                                 if mask == True:
                                     model_name = model_name + "_"+Sed_Model + "_aux" + str(aux)
                                 dir_name = model_name + "_"+datadir
