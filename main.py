@@ -101,16 +101,14 @@ def log(inputs, labels):
 def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):   
     print("data loading\n")
     if mic_num == 1:
-        if complex_input == True or VGG > 0 or vonMises == True:
+        if complex_input == True or vonMises == True:
             input_dim = 3
         else:
             input_dim = 1
     else:
         if ipd == True:
             input_dim = 15   
-        elif tdoa == True:
-            input_dim = 8
-        elif complex_input == True or VGG > 0 or vonMises == True:
+        elif complex_input == True or vonMises == True:
             input_dim = 24
         else:
             input_dim = 8        
@@ -126,15 +124,19 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
     else:    
         inputs_phase = np.zeros((load_number, 512, image_size), dtype=np.float16)
         
-    if ang_reso ==1:
-        labels = np.zeros((load_number, n_classes, 256, image_size), dtype=np.float16)
+    if n_classes > 1 and ang_reso == 1:
+        if task == "event":
+            labels = np.zeros((load_number, n_classes, image_size), dtype=np.float16)
+        elif task == "segmentation":
+            labels = np.zeros((load_number, n_classes, 256, image_size), dtype=np.float16)
+    elif ang_reso > 1 and n_classes == 1:
+        labels = np.zeros((load_number, ang_reso, 256, image_size), dtype=np.float16)
     else:
         if task == "event":
-            labels = np.zeros((load_number, n_classes, ang_reso, image_size), dtype=np.float16)#################################
+            labels = np.zeros((load_number, n_classes, ang_reso, image_size), dtype=np.float16)
+        elif task == "cube":
+            labels = np.zeros((load_number, n_classes, ang_reso, 256, image_size), dtype=np.float16)            
         
-    doa_labels = np.zeros((load_number, 8), dtype=np.int16)
-    sad_labels = np.zeros((load_number, n_classes), dtype=np.int16)
-
     
     for i in range(load_number):
         data_dir = segdata_dir + str(i) + "/"
@@ -180,22 +182,7 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
                             elif vonMises == True:
                                 inputs[i][nchan] = abs(stft[nchan][:256])
                                 inputs[i][nchan*3+1] = np.cos(np.angle(stft[nchan][:256]))
-                                inputs[i][nchan*3+2] = np.sin(np.angle(stft[nchan][:256]))
-                            
-                            elif tdoa == True:
-                                if nchan == 0:
-                                    inputs[i][nchan] = abs(stft[nchan][:256])
-                                else:
-                                    diff = np.angle(stft[0][:256]) - np.angle(stft[nchan][:256])
-                                    diff = np.where(diff > np.pi, diff-2*np.pi, diff)
-                                    diff = np.where(diff < -np.pi, diff+2*np.pi, diff)
-                                    for freq in range(256):
-                                        for t in range(image_size):
-                                            diff[freq][t] = diff[freq][t] / 2*np.pi / (freq * 31.25 + 31.25)
-                                    if not diff.std() == 0:
-                                        diff = diff / diff.std()
-                                    diff = np.clip(diff, -1.0, 1.0)
-                                    inputs[i][nchan] = diff
+                                inputs[i][nchan*3+2] = np.sin(np.angle(stft[nchan][:256]))                          
                                     
                             elif complex_input == True:
                                 inputs[i][nchan * 3] = abs(stft[nchan][:256])
@@ -211,34 +198,29 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
                                                  return_onesided=False)
                     stft = stft[:, 1:len(stft.T) - 1]
 
-                    if ang_reso == 1:
-                        labels[i][label.T[filelist[n][:-4]][cat]] += abs(stft[:256])
-                    else:
+                    if n_classes > 1 and ang_reso == 1:
+                        if task == "event": # SED
+                            labels[i][label.T[filelist[n][:-4]][cat]] += abs(stft[:256]).max(0)
+                        elif task == "segmentation": # Segmentation
+                            labels[i][label.T[filelist[n][:-4]][cat]] += abs(stft[:256])                        
+                    elif ang_reso > 1:
                         angle = int(re.sub("\\D", "", direction[dn].split("_")[1])) // (360 // ang_reso)
-                        if task == "event":
-                            labels[i][label.T[filelist[n][:-4]][cat]][angle] += abs(stft[:256]).max(0)###########################
-                        else:
+                        if n_classes == 1: # SSLS
+                            labels[i][angle] += abs(stft[:256])          
+                        elif task == "event": # SELD
+                            labels[i][label.T[filelist[n][:-4]][cat]][angle] += abs(stft[:256]).max(0)
+                        elif task == "cube": #CUBE
                             labels[i][label.T[filelist[n][:-4]][cat]][angle] += abs(stft[:256])
-                            #labels[i][0][angle] += abs(stft[:256]) # when only SSS
                         dn += 1
 
-                    #doa_labels[i][int(re.sub("\\D", "", direction[dn].split("_")[1])) // (360 // 8)] = 1
-                    #dn += 1
-                    #sad_labels[i][label.T[filelist[n][:-4]][cat]] = 1
     
     if complex_input == True and ipd == False and vonMises == False:
         sign = (inputs > 0) * 2 - 1
         sign = sign.astype(np.float16)
         inputs = abs(inputs) ############################# bug fix
             
-            
-    if task == "event":    
-        if ang_reso == 1:
-            labels = labels.max(2)[:,:,np.newaxis,:]
-        else:
-            labels = labels#########################################################.max(3)#[:,:,:,np.newaxis,:]
         
-    if ipd == True or vonMises == True or tdoa == True:
+    if ipd == True or vonMises == True:
         inputs = inputs.transpose(1,0,2,3)
         inputs[0], labels = log(inputs[0], labels)   
         inputs[0] = np.nan_to_num(inputs[0])
@@ -263,35 +245,30 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
         inputs, labels, max = normalize(inputs, labels)
 
 
-    if complex_input == True and ipd == False and vonMises == False and tdoa == False:
+    if complex_input == True and ipd == False and vonMises == False:
         inputs = inputs * sign
-
     
     if task == "event":
         labels = ((labels > 0.1) * 1)
-        """
-        labels = labels.transpose(1,0,2,3)
-        labels[classes - 1] = labels.max(0) * -1 + 1
-        labels = labels.transpose(1,0,2,3)
-        """
-        
+
     inputs = inputs.transpose(0, 2, 3, 1)
-    if ang_reso == 1 or task == "event":
+    if n_classes > 1 and ang_reso == 1:
+        if task == "event":
+            labels = labels.transpose(0, 2, 1)  
+        elif task == "segmentation":
+            labels = labels.transpose(0, 2, 3, 1)  
+    elif ang_reso > 1 and n_classes == 1:
         labels = labels.transpose(0, 2, 3, 1)  
     else:
-        labels = labels.transpose(0, 3, 4, 1, 2)
-        labels = labels.reshape((load_number, 256, image_size, n_classes * ang_reso))
+        if task == "event":
+            labels = labels.transpose(0, 2, 3, 1)  
+        elif task == "cube":
+            labels = labels.transpose(0, 3, 4, 1, 2)
+            labels = labels.reshape((load_number, 256, image_size, n_classes * ang_reso))
+        
+        
     
-    if VGG > 0:
-        inputs = inputs.transpose(3,0,1,2)
-        if VGG == 1:
-            inputs[1:3] = 0       # R only
-        elif VGG == 3:
-            inputs[1] = inputs[0]
-            inputs[2] = inputs[0] # Grayscale to RGB
-        inputs = inputs.transpose(1,2,3,0)
-    
-    return inputs, labels, max, inputs_phase, doa_labels, sad_labels
+    return inputs, labels, max, inputs_phase
 
 
 def read_model(Model):
@@ -491,15 +468,11 @@ def train(X_train, Y_train, Model):
     if aux == False:
         multi_model.compile(loss=loss, optimizer=Adam(lr=lr),metrics=["accuracy"])     
 
-    elif aux == True or Model == "SSL_Deeplab" or (doa == True and sad == False):
+    elif aux == True or Model == "SSL_Deeplab":
         multi_model.compile(loss=["binary_crossentropy", "mean_squared_error"],
                             loss_weights=[0.01, 1.0],
                             optimizer=Adam(lr=lr),metrics=["accuracy"])
-
-    elif doa == True and sad == True:
-        multi_model.compile(loss=["binary_crossentropy", "mean_squared_error", "binary_crossentropy"],
-                            loss_weights=[0.4, 1.0, 0.4],
-                            optimizer=Adam(lr=lr),metrics=["accuracy"])           
+        
 
     plot_model(model, to_file = results_dir + model_name + '.png')
     model.summary()
@@ -518,10 +491,6 @@ def train(X_train, Y_train, Model):
                        Y_train]
         elif Model == "SSL_Deeplab":
             Y_train = [((Y_train.max(1).max(1) > 0.1) * 1), Y_train]
-        elif doa == True and sad == False:
-            Y_train = [doa_labels, Y_train]
-        elif doa == True and sad == True:
-            Y_train = [doa_labels, Y_train, sad_labels]
     
     history = multi_model.fit(X_train, Y_train, batch_size=BATCH_SIZE, 
                             epochs=NUM_EPOCH, verbose=1, validation_split=0.1,
@@ -884,13 +853,7 @@ def load_npy(name):
     max = np.load(dataset+"max_"+name+".npy")
     phase = np.load(dataset+"phase_"+name+".npy")
     Y = np.load(dataset+"Y_"+name+".npy")
-    
-    if doa == True:
-        doa_labels = np.load(dataset+"doa_labels_"+name+".npy")
-        sad_labels = np.load(dataset+"sad_labels_"+name+".npy")
-        
-        return X, Y, max, phase, doa_labels, sad_labels
-        
+
     print("npy files were loaded\n")
     
     return X, Y, max, phase
@@ -1022,55 +985,42 @@ if __name__ == '__main__':
         label = pd.read_csv(filepath_or_buffer=labelfile, sep=",", index_col=0)            
         
         for Model in [#"CNN8", "CRNN8", "BiCRNN8", 
-                      #"SELD_CNN8", 
-                      #"SELD_BiCRNN8", 
-                      #"sad_UNet", 
+                      #"SELD_CNN8", "SELD_BiCRNN8", 
                       #"WUNet", 
                       "SSL_Deeplab", 
                       #"CR_UNet", 
                       #"aux_Mask_UNet", "aux_Mask_Deeplab", 
-                      #"aux_enc_UNet", 
-                      #"aux_enc_Deeplab", 
+                      #"aux_enc_UNet", "aux_enc_Deeplab", 
                       #"Cascade"
                       ]:
             
             if Model == "Cascade":
                 loss = "categorical_crossentropy"
-            elif Model == "doa_UNet":                
-                doa = True
-                sad = False
-            elif Model == "sad_UNet":
-                doa = True
-                sad = True
-            else:
-                doa, sad = False, False
 
             for vonMises in [False]:
                 for ipd in [True]:
                     for mic_num in [8]: # 1 or 8                        
                         for complex_input in [True]:
-                            VGG = 0                     #0: False, 1: Red 3: White                          
-                            tdoa = False
                             channel = 0
                             if mic_num == 1:
-                                if complex_input == True and ipd == False and tdoa == False:
+                                if complex_input == True and ipd == False:
                                     channel = 3
-                                elif complex_input == False and ipd == False and vonMises == False and tdoa == False:
+                                elif complex_input == False and ipd == False and vonMises == False:
                                     channel = 1
                             else:                                
                                 if complex_input == True:
-                                    if ipd == True and vonMises == False and tdoa == False:
+                                    if ipd == True and vonMises == False:
                                         channel = 15
-                                    elif vonMises == True and ipd == False and tdoa == False:
+                                    elif vonMises == True and ipd == False:
                                         channel = 24
-                                    elif vonMises == False and ipd == False and tdoa == True:
+                                    elif vonMises == False and ipd == False:
                                         channel = 8
-                                    elif vonMises == False and ipd == False and tdoa == False:
+                                    elif vonMises == False and ipd == False:
                                         channel = 24
                                     else:
                                         continue
 
-                                elif complex_input == False and ipd == False and vonMises == False and tdoa == False:
+                                elif complex_input == False and ipd == False and vonMises == False:
                                     channel = 8
                             
                             if channel == 0:
@@ -1111,7 +1061,7 @@ if __name__ == '__main__':
                                         os.makedirs(results_dir + "checkpoint/")
     
                                     npy_name = "train_" + task + "_" +str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_cin"+str(complex_input) + "_ipd"+str(ipd)  + "_vonMises"+str(vonMises) + "_"+str(load_number)
-                                    if not os.path.exists(dataset+"X_"+npy_name+".npy") or (doa == True and not os.path.exists(dataset+"doa_labels_"+npy_name+".npy")):
+                                    if not os.path.exists(dataset+"X_"+npy_name+".npy"):
                                         X_train, Y_train, max, phase, doa_labels, sad_labels = load(segdata_dir, 
                                                                               n_classes=classes, 
                                                                               load_number=load_number,
@@ -1121,10 +1071,7 @@ if __name__ == '__main__':
                                         np.save(dataset+"sad_labels_"+npy_name+".npy", sad_labels)
     
                                     else:
-                                        if doa == True:
-                                            X_train, Y_train, max, phase, doa_labels, sad_labels = load_npy(npy_name)
-                                        else:
-                                            X_train, Y_train, max, phase = load_npy(npy_name)
+                                        X_train, Y_train, max, phase = load_npy(npy_name)
                                     
                                     if Model == "Cascade":
                                         X_train, Y_train = Segtoclsdata(Y_train)
@@ -1145,7 +1092,6 @@ if __name__ == '__main__':
                                                       "\t\t Complex_input,  " + str(complex_input)  + "\n" + \
                                                       "\t\t IPD input,      " + str(ipd) + "\n" + \
                                                       "\t\t von Mises input," + str(vonMises) + "\n" + \
-                                                      "\t\t TDOA input,     " + str(tdoa) + "\n" + \
                                                       "\t\t task     ,      " + task + "\n" + \
                                                       "\t\t Angle reso,     " + str(360 // ang_reso) + "\n" + \
                                                       "\t\t Model,          " + Model               + "\n" + \
@@ -1184,7 +1130,7 @@ if __name__ == '__main__':
     
                                     
                                 npy_name = "test_" + task+ "_" +str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_cin"+str(complex_input) + "_ipd"+str(ipd)  + "_vonMises"+str(vonMises) + "_"+str(load_number)
-                                if not os.path.exists(dataset+"X_"+npy_name+".npy") or (doa == True and not os.path.exists(dataset+"doa_labels_"+npy_name+".npy")):
+                                if not os.path.exists(dataset+"X_"+npy_name+".npy"):
                                     X_test, Y_test, max, phase, doa_labels, sad_labels = load(valdata_dir, 
                                                                       n_classes=classes, 
                                                                       load_number=load_number, 
@@ -1194,10 +1140,7 @@ if __name__ == '__main__':
                                     np.save(dataset+"sad_labels_"+npy_name+".npy", sad_labels)
     
                                 else:
-                                    if doa == True:
-                                        X_test, Y_test, max, phase, doa_labels, sad_labels = load_npy(npy_name)
-                                    else:
-                                        X_test, Y_test, max, phase  = load_npy(npy_name)
+                                    X_test, Y_test, max, phase  = load_npy(npy_name)
                                 
                                 if Model == "Cascade":
                                     X_origin = X_test
