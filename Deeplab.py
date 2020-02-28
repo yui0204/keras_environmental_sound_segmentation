@@ -13,7 +13,7 @@ from keras.layers import Activation
 from keras.layers import Concatenate
 from keras.layers import Dropout
 from keras.layers import BatchNormalization
-from keras.layers import Conv2D
+from keras.layers import Conv2D, Dense
 from keras.layers import SeparableConv2D
 from keras.layers import MaxPooling2D
 from keras.layers import DepthwiseConv2D
@@ -193,7 +193,7 @@ def xception_block(inputs, depth_list, prefix, skip_connection_type, stride,
 
 def Deeplabv3(weights='None', input_tensor=None, input_shape=(256, 256, 1), 
               classes=75, OS=16, mask=False, trainable=False, RNN=0,
-              sed_model=None, num_layer=None, aux=False, enc=False, mul=True):    
+              sed_model=None, num_layer=None, aux=False, enc=False, mul=True, ssl=False):    
     """ Instantiates the Deeplabv3+ architecture
 
     Optionally loads weights pre-trained on PASCAL VOC. 
@@ -392,6 +392,10 @@ def Deeplabv3(weights='None', input_tensor=None, input_shape=(256, 256, 1),
         x = multiply([inputs2, x])
         if aux == True:
             model = Model(input=[inputs, inputs2], output=[sed, x])
+        elif ssl == True:
+            ssl = GlobalMaxPooling2D()(x)
+            ssl = Dense(classes, activation='sigmoid')(ssl)
+            model = Model(input=[inputs, inputs2], output=[ssl, x])
         else:
             model = Model([inputs, inputs2], x, name='deeplabv3_plus')
 

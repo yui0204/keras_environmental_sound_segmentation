@@ -362,7 +362,15 @@ def read_model(Model):
                                       classes=classes * ang_reso, OS=16, 
                                       RNN=0,
                                       mask=False, trainable=False, sed_model=None, 
-                                      num_layer=None, aux=False)           
+                                      num_layer=None, aux=False)
+        elif Model == "SSL_Deeplab":
+            model = Deeplab.Deeplabv3(weights=None, input_tensor=None, 
+                                      input_shape=(256, image_size, channel), 
+                                      classes=classes * ang_reso, OS=16, 
+                                      RNN=0,
+                                      mask=False, trainable=False, sed_model=None, 
+                                      num_layer=None, aux=False, ssl=True)       
+            
         elif Model == "RNN_Deeplab":
             model = Deeplab.Deeplabv3(weights=None, input_tensor=None, 
                                       input_shape=(256, image_size, channel), 
@@ -483,15 +491,11 @@ def train(X_train, Y_train, Model):
     if aux == False:
         multi_model.compile(loss=loss, optimizer=Adam(lr=lr),metrics=["accuracy"])     
 
-    elif aux == True:
+    elif aux == True or Model == "SSL_Deeplab" or (doa == True and sad == False):
         multi_model.compile(loss=["binary_crossentropy", "mean_squared_error"],
-                            loss_weights=[0.4, 1.0],
+                            loss_weights=[0.01, 1.0],
                             optimizer=Adam(lr=lr),metrics=["accuracy"])
 
-    elif doa == True and sad == False:
-        multi_model.compile(loss=["binary_crossentropy", "mean_squared_error"],
-                            loss_weights=[0.4, 1.0],
-                            optimizer=Adam(lr=lr),metrics=["accuracy"])
     elif doa == True and sad == True:
         multi_model.compile(loss=["binary_crossentropy", "mean_squared_error", "binary_crossentropy"],
                             loss_weights=[0.4, 1.0, 0.4],
@@ -510,8 +514,10 @@ def train(X_train, Y_train, Model):
                        X_train.transpose(3,0,1,2)[0][np.newaxis,:,:,:].transpose(1,2,3,0)]
         
         if Model == "aux_Mask_UNet" or Model == "aux_Mask_RNN_UNet" or Model == "aux_Mask_Deeplab" or Model == "aux_enc_UNet" or Model == "aux_enc_Deeplab":
-            Y_train = [((Y_train.transpose(3,0,1,2).max(2)[:,:,np.newaxis,:] > 0.1) * 1).transpose(1,2,3,0), 
+            Y_train = [((Y_train.transpose(3,0,1,2).max(2)[:,:,np.newaxis,:] > 0.0) * 1).transpose(1,2,3,0), 
                        Y_train]
+        elif Model == "SSL_Deeplab":
+            Y_train = [((Y_train.max(1).max(1) > 0.1) * 1), Y_train]
         elif doa == True and sad == False:
             Y_train = [doa_labels, Y_train]
         elif doa == True and sad == True:
@@ -1020,7 +1026,7 @@ if __name__ == '__main__':
                       #"SELD_BiCRNN8", 
                       #"sad_UNet", 
                       #"WUNet", 
-                      "Deeplab_CNN", 
+                      "SSL_Deeplab", 
                       #"CR_UNet", 
                       #"aux_Mask_UNet", "aux_Mask_Deeplab", 
                       #"aux_enc_UNet", 
@@ -1216,7 +1222,7 @@ if __name__ == '__main__':
                                             datanum += 1
                                     Y_pred = Y_pred.transpose(0,2,3,1)
                                     X_test = X_origin
-                                elif Model == "doa_UNet" or Model == "sad_UNet":
+                                elif Model == "doa_UNet" or Model == "sad_UNet" or Model == "SSL_Deeplab":
                                     Y_pred = Y_pred[1]
                                     
                                 if plot == True:
