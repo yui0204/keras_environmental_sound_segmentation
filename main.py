@@ -129,7 +129,8 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
     if ang_reso ==1:
         labels = np.zeros((load_number, n_classes, 256, image_size), dtype=np.float16)
     else:
-        labels = np.zeros((load_number, n_classes, ang_reso, 256, image_size), dtype=np.float16)
+        if task == "event":
+            labels = np.zeros((load_number, n_classes, ang_reso, image_size), dtype=np.float16)#################################
         
     doa_labels = np.zeros((load_number, 8), dtype=np.int16)
     sad_labels = np.zeros((load_number, n_classes), dtype=np.int16)
@@ -215,8 +216,11 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
                         labels[i][label.T[filelist[n][:-4]][cat]] += abs(stft[:256])
                     else:
                         angle = int(re.sub("\\D", "", direction[dn].split("_")[1])) // (360 // ang_reso)
-                        labels[i][label.T[filelist[n][:-4]][cat]][angle] += abs(stft[:256])
-                        #labels[i][0][angle] += abs(stft[:256]) # when only SSS
+                        if task == "event":
+                            labels[i][label.T[filelist[n][:-4]][cat]][angle] += abs(stft[:256]).max(0)###########################
+                        else:
+                            labels[i][label.T[filelist[n][:-4]][cat]][angle] += abs(stft[:256])
+                            #labels[i][0][angle] += abs(stft[:256]) # when only SSS
                         dn += 1
 
                     #doa_labels[i][int(re.sub("\\D", "", direction[dn].split("_")[1])) // (360 // 8)] = 1
@@ -233,7 +237,7 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
         if ang_reso == 1:
             labels = labels.max(2)[:,:,np.newaxis,:]
         else:
-            labels = labels.max(3)#[:,:,:,np.newaxis,:]
+            labels = labels#########################################################.max(3)#[:,:,:,np.newaxis,:]
         
     if ipd == True or vonMises == True or tdoa == True:
         inputs = inputs.transpose(1,0,2,3)
@@ -991,6 +995,7 @@ if __name__ == '__main__':
         datasets_dir = "/misc/export2/sudou/sound_data/datasets/"
     
     for datadir in ["multi_segdata"+str(classes) + "_"+str(image_size)+"_no_sound_random_sep_72/", 
+                    #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-20dB_random_sep_72/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_no_sound/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-30dB/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-20dB_random/", 
@@ -1009,7 +1014,7 @@ if __name__ == '__main__':
                       #"SELD_BiCRNN8", 
                       #"sad_UNet", 
                       #"WUNet", 
-                      "Deeplab", 
+                      "Deeplab_CNN", 
                       #"CR_UNet", 
                       #"aux_Mask_UNet", "aux_Mask_Deeplab", 
                       #"aux_enc_UNet", 

@@ -65,12 +65,12 @@ def CNN(n_classes, input_height=256, input_width=512, nChannels=3,
         #x = BatchNormalization()(x)
         #x = Activation('relu')(x)
         
-        #x = Conv2DTranspose(128, kernel_size=(3, 3), strides=(3, 1), padding="same")(x)    
-        #x = BatchNormalization()(x)
-        #x = Activation('relu')(x)    
-        #x = Conv2DTranspose(64, kernel_size=(3, 3), strides=(3, 1), padding="same")(x) # 72dir   
-        #x = BatchNormalization()(x)
-        #x = Activation('relu')(x)
+        x = Conv2DTranspose(128, kernel_size=(3, 3), strides=(3, 1), padding="same")(x)    
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)    
+        x = Conv2DTranspose(64, kernel_size=(3, 3), strides=(3, 1), padding="same")(x) # 72dir   
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)
         
         x = Conv2D(n_classes, (1, 1), activation='sigmoid')(x)
     
