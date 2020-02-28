@@ -1062,13 +1062,11 @@ if __name__ == '__main__':
     
                                     npy_name = "train_" + task + "_" +str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_cin"+str(complex_input) + "_ipd"+str(ipd)  + "_vonMises"+str(vonMises) + "_"+str(load_number)
                                     if not os.path.exists(dataset+"X_"+npy_name+".npy"):
-                                        X_train, Y_train, max, phase, doa_labels, sad_labels = load(segdata_dir, 
+                                        X_train, Y_train, max, phase = load(segdata_dir, 
                                                                               n_classes=classes, 
                                                                               load_number=load_number,
                                                                               complex_input=complex_input)
                                         save_npy(X_train, Y_train, max, phase, npy_name)
-                                        np.save(dataset+"doa_labels_"+npy_name+".npy", doa_labels)
-                                        np.save(dataset+"sad_labels_"+npy_name+".npy", sad_labels)
     
                                     else:
                                         X_train, Y_train, max, phase = load_npy(npy_name)
@@ -1131,13 +1129,11 @@ if __name__ == '__main__':
                                     
                                 npy_name = "test_" + task+ "_" +str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_cin"+str(complex_input) + "_ipd"+str(ipd)  + "_vonMises"+str(vonMises) + "_"+str(load_number)
                                 if not os.path.exists(dataset+"X_"+npy_name+".npy"):
-                                    X_test, Y_test, max, phase, doa_labels, sad_labels = load(valdata_dir, 
+                                    X_test, Y_test, max, phase = load(valdata_dir, 
                                                                       n_classes=classes, 
                                                                       load_number=load_number, 
                                                                       complex_input=complex_input)
                                     save_npy(X_test, Y_test, max, phase, npy_name)
-                                    np.save(dataset+"doa_labels_"+npy_name+".npy", doa_labels)
-                                    np.save(dataset+"sad_labels_"+npy_name+".npy", sad_labels)
     
                                 else:
                                     X_test, Y_test, max, phase  = load_npy(npy_name)
