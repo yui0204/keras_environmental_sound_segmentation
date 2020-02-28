@@ -412,9 +412,16 @@ def read_model(Model):
                               input_width=image_size, nChannels=channel,
                               trainable=False, 
                               sed_model=None, num_layer=None, aux=False,
-                              mask=False, RNN=0, freq_pool=False, ang_reso=8) 
-        elif Model == "UNet_CNN_Deeplab":
+                              mask=False, RNN=0, freq_pool=False, ang_reso=72) 
+        elif Model == "Deeplab_CNN":
             model = Unet.UNet_CNN(n_classes=classes, input_height=256, 
+                              input_width=image_size, nChannels=channel,
+                              trainable=False, 
+                              sed_model=None, num_layer=None, aux=False,
+                              mask=False, RNN=0, freq_pool=False, ang_reso=72) 
+
+        elif Model == "UNet_CNN_Deeplab":
+            model = Unet.Deeplab_CNN(n_classes=classes, input_height=256, 
                               input_width=image_size, nChannels=channel,
                               trainable=False, 
                               sed_model=None, num_layer=None, aux=False,
