@@ -29,7 +29,6 @@ import cmath
 import shutil
 from mir_eval.separation import bss_eval_sources
 
-
 import tensorflow as tf
 from keras.utils import multi_gpu_model
 
@@ -217,7 +216,7 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
     if complex_input == True and ipd == False and vonMises == False:
         sign = (inputs > 0) * 2 - 1
         sign = sign.astype(np.float16)
-        inputs = abs(inputs) ############################# bug fix
+        inputs = abs(inputs) 
             
         
     if ipd == True or vonMises == True:
@@ -290,12 +289,7 @@ def read_model(Model):
                               trainable=False, 
                               sed_model=None, num_layer=None, aux=aux,
                               mask=False, RNN=0, freq_pool=False, enc=True)   
-        elif Model == "aux_Mask_RNN_UNet":
-            model = Unet.UNet(n_classes=classes, input_height=256, 
-                              input_width=image_size, nChannels=channel, 
-                              trainable=trainable, 
-                              sed_model=sed_model, num_layer=num_layer, aux=aux,
-                              mask=True, RNN=2, freq_pool=False) 
+
         elif Model == "Mask_UNet":
             model = Unet.UNet(n_classes=classes, input_height=256, 
                               input_width=image_size, nChannels=channel, 
@@ -314,12 +308,7 @@ def read_model(Model):
                               trainable=False, 
                               sed_model=None, num_layer=None, aux=False,
                               mask=False, RNN=0, freq_pool=False, doa=True, sad=False)
-        elif Model == "sad_UNet":
-            model = Unet.UNet(n_classes=classes*ang_reso, input_height=256, 
-                              input_width=image_size, nChannels=channel,
-                              trainable=False, 
-                              sed_model=None, num_layer=None, aux=False,
-                              mask=False, RNN=0, freq_pool=False, doa=True, sad=True)
+
         elif Model == "RNN_UNet":
             model = Unet.UNet(n_classes=classes, input_height=256, 
                               input_width=image_size, nChannels=channel,
@@ -403,29 +392,13 @@ def read_model(Model):
                               trainable=False, 
                               sed_model=None, num_layer=None, aux=False,
                               mask=False, RNN=0, freq_pool=False, ang_reso=72) 
-
-        elif Model == "UNet_CNN_Deeplab":
-            model = Unet.UNet_CNN(n_classes=classes, input_height=256, 
-                              input_width=image_size, nChannels=channel,
-                              trainable=False, 
-                              sed_model=None, num_layer=None, aux=False,
-                              mask=False, RNN=0, freq_pool=False, ang_reso=8, seg=True) 
             
-        elif Model == "CNN4":
-            model = CNN.CNN(n_classes=classes, input_height=256, 
-                            input_width=image_size, nChannels=channel,
-                            filter_list=[64, 128, 256, 512], 
-                            RNN=0, Bidir=False)
+
         elif Model == "CNN8":
             model = CNN.CNN(n_classes=classes, input_height=256, 
                             input_width=image_size, nChannels=channel,
                             filter_list=[64, 64, 128, 128, 256, 256, 512, 512], 
                             RNN=0, Bidir=False)
-        elif Model == "CRNN":
-            model = CNN.CNN(n_classes=classes, input_height=256, 
-                            input_width=image_size, nChannels=channel,
-                            filter_list=[64, 128, 256, 512], 
-                            RNN=2, Bidir=False)
         elif Model == "CRNN8":
             model = CNN.CNN(n_classes=classes, input_height=256, 
                             input_width=image_size, nChannels=channel,
@@ -971,11 +944,6 @@ if __name__ == '__main__':
     
     for datadir in ["multi_segdata"+str(classes) + "_"+str(image_size)+"_no_sound_random_sep_72/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-20dB_random_sep_72/", 
-                    #"multi_segdata"+str(classes) + "_"+str(image_size)+"_no_sound/", 
-                    #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-30dB/", 
-                    #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-20dB_random/", 
-                    #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-10dB/", 
-                    #"multi_segdata"+str(classes) + "_"+str(image_size)+"_0dB/"
                     ]:
         dataset = datasets_dir + datadir    
         segdata_dir = dataset + "train/"
@@ -1103,7 +1071,6 @@ if __name__ == '__main__':
                                     
                                     #msg = create_message("Training start\n" + train_condition)
                                     #send_mail(msg)
-
                                     
                                     history = train(X_train, Y_train, Model)
                                     plot_history(history, model_name)
@@ -1111,8 +1078,8 @@ if __name__ == '__main__':
                                     with open('research_log.txt','a') as f:
                                         f.write(train_condition)    
                         
-                                    #del X_train, Y_train, max, phase
-                                    #gc.collect()
+                                    del X_train, Y_train, max, phase
+                                    gc.collect()
                         
                                 # prediction            
                                 elif not mode == "train":
@@ -1227,26 +1194,19 @@ if __name__ == '__main__':
                                     with open(results_dir + "segmentation_f1_" + str(f1) + ".txt","w") as f:
                                         f.write(str(f1))  
                                     
-                                if not os.getcwd() == '/home/yui-sudo/document/segmentation/sound_segtest':
-                                    shutil.copy("main.py", results_dir)
-                                    if not task == "event":
-                                        shutil.copy("Unet.py", results_dir)
-                                        shutil.copy("PSPNet.py", results_dir)
-                                        shutil.copy("Deeplab.py", results_dir)
-                                    elif task == "event":
-                                        shutil.copy("CNN.py", results_dir)
-                                    #shutil.move("nohup.out", results_dir)
-                
-                                    # copy to export2
-                                    shutil.copytree(results_dir, "/misc/export3/sudou/model_results/" + date + "/" + dir_name)
-
-                                    #msg = create_message("Evaluation finished\n" + train_condition)
-                                    #send_mail(msg)
-                                                    
-
-    os.remove("Unet.pyc")
-    os.remove("PSPNet.pyc")
-    os.remove("Deeplab.pyc")
-    #os.remove("DC.pyc")
-    os.remove("CNN.pyc")
-    os.remove("sound.pyc")
+                                shutil.copy("main.py", results_dir)
+                                shutil.copy("Unet.py", results_dir)
+                                shutil.copy("Deeplab.py", results_dir)
+                                shutil.copy("CNN.py", results_dir)
+                                
+                                if os.path.exists(os.getcwd() + "/nohup.out"):
+                                    shutil.copy("nohup.out", results_dir)
+            
+                                if os.getcwd() == "/home/sudou/sound_segtest":
+                                    if not os.path.exists("/misc/export3/sudou/model_results/" + date + "/" + dir_name):
+                                        shutil.copytree(results_dir, "/misc/export3/sudou/model_results/" + date + "/" + dir_name)
+                                    else:
+                                        print("Directory already exists. Files were not copied!!!!!!!!!!!!!!!!!!!!!!!!!")
+                                        
+                                #msg = create_message("Evaluation finished\n" + train_condition)
+                                #send_mail(msg)
