@@ -128,12 +128,12 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
             labels = np.zeros((load_number, n_classes, image_size), dtype=np.float16)
         elif task == "segmentation":
             labels = np.zeros((load_number, n_classes, 256, image_size), dtype=np.float16)
-    elif ang_reso > 1 and n_classes == 1:
-        labels = np.zeros((load_number, ang_reso, 256, image_size), dtype=np.float16)
+    elif ang_reso > 1 and n_classes == 1 and task == "segmentation":
+        labels = np.zeros((load_number, ang_reso, 256, image_size), dtype=np.float16)    
     else:
         if task == "event":
             labels = np.zeros((load_number, n_classes, ang_reso, image_size), dtype=np.float16)
-        elif task == "cube":
+        elif task == "segmentation":
             labels = np.zeros((load_number, n_classes, ang_reso, 256, image_size), dtype=np.float16)            
         
     
@@ -204,11 +204,11 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
                             labels[i][label.T[filelist[n][:-4]][cat]] += abs(stft[:256])                        
                     elif ang_reso > 1:
                         angle = int(re.sub("\\D", "", direction[dn].split("_")[1])) // (360 // ang_reso)
-                        if n_classes == 1: # SSLS
+                        if n_classes == 1 and task == "segmentation": # SSLS
                             labels[i][angle] += abs(stft[:256])          
                         elif task == "event": # SELD
                             labels[i][label.T[filelist[n][:-4]][cat]][angle] += abs(stft[:256]).max(0)
-                        elif task == "cube": #CUBE
+                        elif n_classes > 1 and task == "segmentation" : #CUBE
                             labels[i][label.T[filelist[n][:-4]][cat]][angle] += abs(stft[:256])
                         dn += 1
 
@@ -252,22 +252,21 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
 
     inputs = inputs.transpose(0, 2, 3, 1)
     if n_classes > 1 and ang_reso == 1:
-        if task == "event":
+        if task == "event":                                  # SED
             labels = labels.transpose(0, 2, 1)  
-        elif task == "segmentation":
+        elif task == "segmentation":                         # segmentation
             labels = labels.transpose(0, 2, 3, 1)  
-    elif ang_reso > 1 and n_classes == 1:
+    elif ang_reso > 1 and n_classes == 1 and task == "segmentation": #SSLS
         labels = labels.transpose(0, 2, 3, 1)  
     else:
-        if task == "event":
+        if task == "event":                                 # SELD
             labels = labels.transpose(0, 2, 3, 1)  
-        elif task == "cube":
+        elif task == "segmentation":                        # CUBE
             labels = labels.transpose(0, 3, 4, 1, 2)
             labels = labels.reshape((load_number, 256, image_size, n_classes * ang_reso))
         
-        
-    
     return inputs, labels, max, inputs_phase
+
 
 
 def read_model(Model):
@@ -906,13 +905,13 @@ def Segtoclsdata(Y_in):
 
 
 
-
 if __name__ == '__main__':
     train_mode = "class"
     classes = 75
     image_size = 256
     task = "segmentation"
     ang_reso = 1
+
     
     if os.getcwd() == '/home/yui-sudo/document/segmentation/sound_segtest':
         gpu_count = 1
