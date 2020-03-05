@@ -1004,8 +1004,6 @@ if __name__ == '__main__':
                                     elif vonMises == True and ipd == False:
                                         channel = 24
                                     elif vonMises == False and ipd == False:
-                                        channel = 8
-                                    elif vonMises == False and ipd == False:
                                         channel = 24
                                     else:
                                         continue
