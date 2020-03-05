@@ -261,12 +261,12 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
     inputs = inputs.transpose(0, 2, 3, 1)
     if n_classes > 1 and ang_reso == 1:
         if task == "event":                                 # SED
-            labels = labels.transpose(0, 2, 1)  
+            labels = labels.transpose(0, 2, 1)[:,np.newaxis,:,:]
         elif task == "segmentation":                        # segmentation
             labels = labels.transpose(0, 2, 3, 1)  
     elif ang_reso > 1 and n_classes == 1:
         if task == "event":                                 # SSL
-            labels = labels.transpose(0, 2, 1)  
+            labels = labels.transpose(0, 2, 1)[:,np.newaxis,:,:]
         elif task == "segmentation":                        # SSLS
             labels = labels.transpose(0, 2, 3, 1)  
     else:
@@ -430,6 +430,18 @@ def read_model(Model):
                             input_width=image_size, nChannels=channel,
                             filter_list=[64, 64, 128, 128, 256, 256, 512, 512], 
                             RNN=2, Bidir=True, ang_reso=ang_reso)
+        
+        elif Model == "SSL_CNN8":
+            model = CNN.CNN(n_classes=ang_reso, input_height=256, 
+                            input_width=image_size, nChannels=channel,
+                            filter_list=[64, 64, 128, 128, 256, 256, 512, 512], 
+                            RNN=0, Bidir=False, ang_reso=1)
+        elif Model == "SSL_BiCRNN8":
+            model = CNN.CNN(n_classes=ang_reso, input_height=256, 
+                            input_width=image_size, nChannels=channel,
+                            filter_list=[64, 64, 128, 128, 256, 256, 512, 512], 
+                            RNN=2, Bidir=True, ang_reso=1)
+
             
         elif Model == "Cascade":
             model = CNN.CNNtag(n_classes=classes, input_height=256, 
@@ -963,9 +975,9 @@ if __name__ == '__main__':
         label = pd.read_csv(filepath_or_buffer=labelfile, sep=",", index_col=0)            
         
         for Model in [#"CNN8", "CRNN8", "BiCRNN8", 
-                      #"SELD_CNN8", "SELD_BiCRNN8", 
+                      "SSL_CNN8", "SSL_BiCRNN8", 
                       #"WUNet", 
-                      "SSL_Deeplab", 
+                      #"SSL_Deeplab", 
                       #"CR_UNet", 
                       #"aux_Mask_UNet", "aux_Mask_Deeplab", 
                       #"aux_enc_UNet", "aux_enc_Deeplab", 
