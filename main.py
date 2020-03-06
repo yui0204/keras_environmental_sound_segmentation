@@ -568,7 +568,7 @@ def origin_stft(X, no=0):
 def event_plot(Y_true, Y_pred, no=0):
     pred_dir = pred_dir_make(no)
 
-    if ang_reso == 1:
+    if ang_reso == 1 or classes == 1:
         plt.pcolormesh((Y_true[no][0].T))
         plt.title("truth")
         plt.xlabel("time")
