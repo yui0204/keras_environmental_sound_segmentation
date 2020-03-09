@@ -305,7 +305,14 @@ def read_model(Model):
                               input_width=image_size, nChannels=channel, 
                               trainable=trainable, 
                               sed_model=sed_model, num_layer=num_layer, aux=aux,
-                              mask=True, RNN=0, freq_pool=False) 
+                              mask=True, RNN=0, freq_pool=False)
+        elif Model == "SSL_Mask_UNet":
+            model = Unet.UNet(n_classes=classes, input_height=256, 
+                              input_width=image_size, nChannels=channel, 
+                              trainable=trainable, 
+                              sed_model=sed_model, ssl_model=ssl_model, num_layer=num_layer, aux=aux,
+                              mask=False, RNN=0, freq_pool=False, ssl_mask=True)
+            
         elif Model == "UNet":
             model = Unet.UNet(n_classes=classes*ang_reso, input_height=256, 
                               input_width=image_size, nChannels=channel,
@@ -861,12 +868,6 @@ def load_sed_model(Model):
                             filter_list=[64, 64, 128, 128, 256, 256, 512, 512], 
                             RNN=0, Bidir=False)
         sed_model.load_weights(os.getcwd()+"/model_results/advanced_robotics/CNN8_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/CNN8_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_weights.hdf5")
-    elif Model == "CRNN8":
-        sed_model = CNN.CNN(n_classes=classes, input_height=256, 
-                            input_width=image_size, nChannels=channel,
-                            filter_list=[64, 64, 128, 128, 256, 256, 512, 512], 
-                            RNN=2, Bidir=False)
-        sed_model.load_weights(os.getcwd()+"/model_results/advanced_robotics/CRNN8_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/CRNN8_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_weights.hdf5")
     elif Model == "BiCRNN8":
         sed_model = CNN.CNN(n_classes=classes, input_height=256, 
                             input_width=image_size, nChannels=channel,
@@ -877,6 +878,25 @@ def load_sed_model(Model):
     num_layer = len(sed_model.layers)
 
     return sed_model, num_layer
+
+
+def load_ssl_model(Model):
+    if Model == "CNN8":
+        ssl_model = CNN.CNN(n_classes=ang_reso, input_height=256, 
+                            input_width=image_size, nChannels=channel,
+                            filter_list=[64, 64, 128, 128, 256, 256, 512, 512], 
+                            RNN=0, Bidir=False)
+        ssl_model.load_weights(os.getcwd()+"/model_results/nextjournal/SSL_CNN8_1class_72direction_8ch_cinTrue_ipdTrue_vonMisesFalse_multi_segdata75_256_no_sound_random_sep_72/SSL_CNN8_1class_72direction_8ch_cinTrue_ipdTrue_vonMisesFalse_weights.hdf5")
+    elif Model == "BiCRNN8":
+        ssl_model = CNN.CNN(n_classes=ang_reso, input_height=256, 
+                            input_width=image_size, nChannels=channel,
+                            filter_list=[64, 64, 128, 128, 256, 256, 512, 512], 
+                            RNN=2, Bidir=True)
+        ssl_model.load_weights(os.getcwd()+"/model_results/nextjournal/SSL_BiCRNN8_1class_72direction_8ch_cinTrue_ipdTrue_vonMisesFalse_multi_segdata75_256_no_sound_random_sep_72/SSL_BiCRNN8_1class_72direction_8ch_cinTrue_ipdTrue_vonMisesFalse_weights.hdf5")
+    
+    num_layer = len(ssl_model.layers)
+
+    return ssl_model, num_layer
 
 
 def load_cascade(segdata_dir, load_number=9999999):
@@ -930,10 +950,10 @@ def Segtoclsdata(Y_in):
 
 if __name__ == '__main__':
     train_mode = "class"
-    classes = 75
+    classes = 1
     image_size = 256
     task = "segmentation"
-    ang_reso = 1
+    ang_reso = 72
 
     
     if os.getcwd() == '/home/yui-sudo/document/segmentation/sound_segtest':
@@ -964,7 +984,7 @@ if __name__ == '__main__':
     else:
         datasets_dir = "/misc/export3/sudou/sound_data/datasets/"
     
-    for datadir in ["multi_segdata"+str(classes) + "_"+str(image_size)+"_no_sound_random_sep_72/", 
+    for datadir in ["multi_segdata"+str(classes+74) + "_"+str(image_size)+"_no_sound_random_sep_72/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-20dB_random_sep_72/", 
                     ]:
         dataset = datasets_dir + datadir    
@@ -975,7 +995,7 @@ if __name__ == '__main__':
         label = pd.read_csv(filepath_or_buffer=labelfile, sep=",", index_col=0)            
         
         for Model in [#"CNN8", "CRNN8", "BiCRNN8", 
-                      "SSL_CNN8", "SSL_BiCRNN8", 
+                      "SSL_Mask_UNet", 
                       #"WUNet", 
                       #"SSL_Deeplab", 
                       #"CR_UNet", 
@@ -1014,7 +1034,7 @@ if __name__ == '__main__':
                             if channel == 0:
                                 continue
                             
-                            for Sed_Model in ["BiCRNN8"]:
+                            for Sed_Model in ["CNN8", "BiCRNN8"]:
                                 if Model == "Mask_UNet" or Model == "Mask_Deeplab":
                                     sed_model, num_layer = load_sed_model(Sed_Model)
                                     mask=True
@@ -1028,6 +1048,12 @@ if __name__ == '__main__':
                                 elif Model == "aux_enc_UNet" or Model == "aux_enc_Deeplab":
                                     mask = False
                                     aux = True
+                                elif Model == "SSL_Mask_UNet":
+                                    ssl_model, num_layer = load_ssl_model(Sed_Model)
+                                    mask = False
+                                    ssl_mask = True
+                                    aux = False
+                                    trainable = False # SED mask
                                 else:
                                     mask = False
                                     aux = False

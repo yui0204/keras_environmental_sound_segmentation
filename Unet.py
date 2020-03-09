@@ -21,8 +21,8 @@ import os
     
 
 def UNet(n_classes, input_height=256, input_width=512, nChannels=1,
-         trainable=False, sed_model=None, num_layer=None, aux=False,
-         mask=False, RNN=0, freq_pool=False, enc=False, mul=True, doa=False, sad=False):
+         trainable=False, sed_model=None, ssl_model=None, num_layer=None, aux=False,
+         mask=False, RNN=0, freq_pool=False, enc=False, mul=True, doa=False, sad=False, ssl_mask=False):
 
     if freq_pool == True:
         stride = (2, 1)
@@ -57,6 +57,30 @@ def UNet(n_classes, input_height=256, input_width=512, nChannels=1,
         e1 = Conv2D(64, (3, 3), strides=(1, 1), padding='same')(e1)
         e1 = BatchNormalization()(e1)
         e1 = LeakyReLU(0.2)(e1)
+        
+    elif ssl_mask == True:
+        x = ssl_model.layers[1](inputs)
+        ssl_model.layers[1].trainable = trainable # fixed weight
+        
+        for i in range(2, num_layer):
+            x = sed_model.layers[i](x)
+            ssl_model.layers[i].trainable = trainable # fixed weight or fine-tuning           
+        sed = x
+        
+        x = Flatten()(x)
+        x = RepeatVector(256)(x)
+        x = Reshape((256, input_width, n_classes))(x)
+        
+        e1 = concatenate([x, inputs], axis=-1)
+        
+        e1 = Conv2D(64, (3, 3), strides=(1, 1), padding='same')(e1)
+        e1 = BatchNormalization()(e1)
+        e1 = LeakyReLU(0.2)(e1)
+
+        e1 = Conv2D(64, (3, 3), strides=(1, 1), padding='same')(e1)
+        e1 = BatchNormalization()(e1)
+        e1 = LeakyReLU(0.2)(e1)
+
 
     else:
         e1 = inputs
