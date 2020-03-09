@@ -307,10 +307,10 @@ def read_model(Model):
                               sed_model=sed_model, num_layer=num_layer, aux=aux,
                               mask=True, RNN=0, freq_pool=False)
         elif Model == "SSL_Mask_UNet":
-            model = Unet.UNet(n_classes=classes, input_height=256, 
+            model = Unet.UNet(n_classes=classes*ang_reso, input_height=256, 
                               input_width=image_size, nChannels=channel, 
                               trainable=trainable, 
-                              sed_model=sed_model, ssl_model=ssl_model, num_layer=num_layer, aux=aux,
+                              sed_model=None, ssl_model=ssl_model, num_layer=num_layer, aux=aux,
                               mask=False, RNN=0, freq_pool=False, ssl_mask=True)
             
         elif Model == "UNet":

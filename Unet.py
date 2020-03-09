@@ -63,7 +63,7 @@ def UNet(n_classes, input_height=256, input_width=512, nChannels=1,
         ssl_model.layers[1].trainable = trainable # fixed weight
         
         for i in range(2, num_layer):
-            x = sed_model.layers[i](x)
+            x = ssl_model.layers[i](x)
             ssl_model.layers[i].trainable = trainable # fixed weight or fine-tuning           
         sed = x
         
