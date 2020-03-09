@@ -1062,7 +1062,7 @@ if __name__ == '__main__':
             
                                 
                                 model_name = Model+"_"+str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_cin"+str(complex_input) + "_ipd"+str(ipd) + "_vonMises"+str(vonMises)
-                                if mask == True:
+                                if mask == True or ssl_mask == True:
                                     model_name = model_name + "_"+Sed_Model + "_aux" + str(aux)
                                 dir_name = model_name + "_"+datadir
                                 date = datetime.datetime.today().strftime("%Y_%m%d")
