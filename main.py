@@ -1012,8 +1012,9 @@ if __name__ == '__main__':
         label = pd.read_csv(filepath_or_buffer=labelfile, sep=",", index_col=0)            
         
         for Model in [#"CNN8", "CRNN8", "BiCRNN8", 
-                      "SELD_Mask_CNN8", "SELD_Mask_BiCRNN8", 
-                      "SELD_CNN8", "SELD_BiCRNN8", 
+                      "SELD_CNN8", 
+                      "SELD_BiCRNN8", 
+                      "SELD_Mask_BiCRNN8", 
                       #"SSL_Mask_Deeplab", 
                       #"WUNet", 
                       #"SSL_Deeplab", 
@@ -1053,7 +1054,7 @@ if __name__ == '__main__':
                             if channel == 0:
                                 continue
                             
-                            for Sed_Model in ["CNN8", "BiCRNN8"]:
+                            for Sed_Model in ["BiCRNN8"]:
                                 if Model == "Mask_UNet" or Model == "Mask_Deeplab":
                                     sed_model, num_layer = load_sed_model(Sed_Model)
                                     mask=True
@@ -1075,6 +1076,7 @@ if __name__ == '__main__':
                                     trainable = False # SED mask
                                 else:
                                     mask = False
+                                    ssl_mask = False
                                     aux = False
                                                 
                                 load_number = 10000
