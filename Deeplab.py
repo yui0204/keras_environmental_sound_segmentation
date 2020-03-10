@@ -193,7 +193,7 @@ def xception_block(inputs, depth_list, prefix, skip_connection_type, stride,
 
 def Deeplabv3(weights='None', input_tensor=None, input_shape=(256, 256, 1), 
               classes=75, OS=16, mask=False, trainable=False, RNN=0,
-              sed_model=None, num_layer=None, aux=False, enc=False, mul=True, ssl=False):    
+              sed_model=None, ssl_model=None, num_layer=None, aux=False, enc=False, mul=True, ssl=False, ssl_mask=False):    
     """ Instantiates the Deeplabv3+ architecture
 
     Optionally loads weights pre-trained on PASCAL VOC. 
@@ -251,6 +251,21 @@ def Deeplabv3(weights='None', input_tensor=None, input_shape=(256, 256, 1),
             x = sed_model.layers[i](x)
             sed_model.layers[i].trainable = trainable # fixed weight or fine-tuning    
         sed = x
+        x = Flatten()(x)
+        x = RepeatVector(256)(x)
+        x = Reshape((256, 256, classes))(x)
+        
+        x = concatenate([x, img_input], axis=-1)
+        
+    elif ssl_mask == True:
+        x = ssl_model.layers[1](img_input)
+        ssl_model.layers[1].trainable = trainable # fixed weight
+        
+        for i in range(2, num_layer):
+            x = ssl_model.layers[i](x)
+            ssl_model.layers[i].trainable = trainable # fixed weight or fine-tuning           
+        sed = x
+        
         x = Flatten()(x)
         x = RepeatVector(256)(x)
         x = Reshape((256, 256, classes))(x)

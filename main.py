@@ -368,7 +368,13 @@ def read_model(Model):
                                       classes=classes * ang_reso, OS=16, 
                                       RNN=0,
                                       mask=True, trainable=trainable, sed_model=sed_model, 
-                                      num_layer=num_layer, aux=False)    
+                                      num_layer=num_layer, aux=False)
+        elif Model == "SSL_Mask_Deeplab":
+            model = Deeplab.Deeplabv3(weights=None, input_tensor=None, 
+                                      input_shape=(256, image_size, channel), 
+                                      classes=classes*ang_reso, OS=16, RNN=0,
+                                      mask=False, trainable=trainable, sed_model=None, ssl_model=ssl_model,
+                                      num_layer=num_layer, aux=False, ssl_mask=True)  
         elif Model == "aux_Mask_Deeplab":
             model = Deeplab.Deeplabv3(weights=None, input_tensor=None, 
                                       input_shape=(256, image_size, channel), 
@@ -996,6 +1002,7 @@ if __name__ == '__main__':
         
         for Model in [#"CNN8", "CRNN8", "BiCRNN8", 
                       "SSL_Mask_UNet", 
+                      "SSL_Mask_Deeplab", 
                       #"WUNet", 
                       #"SSL_Deeplab", 
                       #"CR_UNet", 
@@ -1048,7 +1055,7 @@ if __name__ == '__main__':
                                 elif Model == "aux_enc_UNet" or Model == "aux_enc_Deeplab":
                                     mask = False
                                     aux = True
-                                elif Model == "SSL_Mask_UNet":
+                                elif Model == "SSL_Mask_UNet" or Model == "SSL_Mask_Deeplab":
                                     ssl_model, num_layer = load_ssl_model(Sed_Model)
                                     mask = False
                                     ssl_mask = True
