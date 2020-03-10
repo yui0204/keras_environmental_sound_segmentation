@@ -3,7 +3,7 @@ from keras.layers import Input
 from keras.layers.convolutional import Conv1D, Conv2D, ZeroPadding2D, Conv2DTranspose
 from keras.layers.merge import concatenate
 from keras.layers import LeakyReLU, BatchNormalization, Activation, Dropout, Dense
-from keras.layers import Activation, RepeatVector, Flatten, Reshape
+from keras.layers import Activation, RepeatVector, Flatten, Reshape, Permute
 from keras.layers import merge, MaxPooling2D, UpSampling2D, core, GRU, LSTM, GlobalAveragePooling2D
 from keras.layers.wrappers import Bidirectional
 
@@ -17,25 +17,7 @@ def CNN(n_classes, input_height=256, input_width=512, nChannels=3,
     inputs = Input((input_height, input_width, nChannels))
     
     x = inputs
-    
-    if ssl_mask == True:
-        x = ssl_model.layers[1](x)
-        ssl_model.layers[1].trainable = False # fixed weight
-        
-        for i in range(2, len(ssl_model.layers)):
-            x = ssl_model.layers[i](x)
-            ssl_model.layers[i].trainable = False # fixed weight or fine-tuning           
-        
-        x = Flatten()(x)
-        x = RepeatVector(256)(x)
-        x = Reshape((256, input_width, n_classes))(x)
-        
-        x = concatenate([x, inputs], axis=-1)
-
-    else:
-        x = inputs
-        
-        
+                
     for filters in filter_list:
         if len(filter_list) == 8:
             freq_pool = (2, 1)
@@ -59,10 +41,15 @@ def CNN(n_classes, input_height=256, input_width=512, nChannels=3,
                                       return_sequences=True, stateful=False))(x) 
             
             #x = BatchNormalization()(x)
-        x = Conv1D(n_classes, 1, activation='sigmoid')(x)
-        x = Reshape((1, -1, n_classes))(x)
+        if ang_reso == 1:
+            x = Conv1D(n_classes, 1, activation='sigmoid')(x)
+            x = Reshape((1, -1, n_classes))(x)
+        else:
+            x = Reshape((1, -1, 512))(x)
+
     else:
-        x = Conv2D(n_classes, (1, 1), activation='sigmoid')(x)
+        if ang_reso == 1:
+            x = Conv2D(n_classes, (1, 1), activation='sigmoid')(x)
         
     
     if ang_reso > 1: 
@@ -92,7 +79,18 @@ def CNN(n_classes, input_height=256, input_width=512, nChannels=3,
         x = Activation('relu')(x)
         
         x = Conv2D(n_classes, (1, 1), activation='sigmoid')(x)
-    
+
+        if ssl_mask == True:
+            ssl = ssl_model.layers[1](inputs)
+            ssl_model.layers[1].trainable = False # fixed weight
+            
+            for i in range(2, len(ssl_model.layers)):
+                ssl = ssl_model.layers[i](ssl)
+                ssl_model.layers[i].trainable = False # fixed weight or fine-tuning
+            ssl = Permute((3, 2, 1))(ssl)
+
+            x = multiply([x, ssl])
+            #x = Conv2D(n_classes, (1, 1), activation='sigmoid')(x)
     
     model = Model(inputs=inputs, outputs=x)
     

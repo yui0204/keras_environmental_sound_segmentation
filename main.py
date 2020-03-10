@@ -448,12 +448,12 @@ def read_model(Model):
             model = CNN.CNN(n_classes=classes, input_height=256, 
                             input_width=image_size, nChannels=channel,
                             filter_list=[64, 64, 128, 128, 256, 256, 512, 512], 
-                            RNN=0, Bidir=False, ang_reso=ang_reso)
+                            RNN=0, Bidir=False, ang_reso=ang_reso, ssl_model=ssl_model, ssl_mask=ssl_mask)
         elif Model == "SELD_Mask_BiCRNN8":
             model = CNN.CNN(n_classes=classes, input_height=256, 
                             input_width=image_size, nChannels=channel,
                             filter_list=[64, 64, 128, 128, 256, 256, 512, 512], 
-                            RNN=2, Bidir=True, ang_reso=ang_reso)
+                            RNN=2, Bidir=True, ang_reso=ang_reso, ssl_model=ssl_model, ssl_mask=ssl_mask)
         
         elif Model == "SSL_CNN8":
             model = CNN.CNN(n_classes=ang_reso, input_height=256, 
@@ -1013,6 +1013,7 @@ if __name__ == '__main__':
         
         for Model in [#"CNN8", "CRNN8", "BiCRNN8", 
                       "SELD_Mask_CNN8", "SELD_Mask_BiCRNN8", 
+                      "SELD_CNN8", "SELD_BiCRNN8", 
                       #"SSL_Mask_Deeplab", 
                       #"WUNet", 
                       #"SSL_Deeplab", 
