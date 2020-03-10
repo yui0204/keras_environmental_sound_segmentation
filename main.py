@@ -443,6 +443,17 @@ def read_model(Model):
                             input_width=image_size, nChannels=channel,
                             filter_list=[64, 64, 128, 128, 256, 256, 512, 512], 
                             RNN=2, Bidir=True, ang_reso=ang_reso)
+            
+        elif Model == "SELD_Mask_CNN8":
+            model = CNN.CNN(n_classes=classes, input_height=256, 
+                            input_width=image_size, nChannels=channel,
+                            filter_list=[64, 64, 128, 128, 256, 256, 512, 512], 
+                            RNN=0, Bidir=False, ang_reso=ang_reso)
+        elif Model == "SELD_Mask_BiCRNN8":
+            model = CNN.CNN(n_classes=classes, input_height=256, 
+                            input_width=image_size, nChannels=channel,
+                            filter_list=[64, 64, 128, 128, 256, 256, 512, 512], 
+                            RNN=2, Bidir=True, ang_reso=ang_reso)
         
         elif Model == "SSL_CNN8":
             model = CNN.CNN(n_classes=ang_reso, input_height=256, 
@@ -956,9 +967,9 @@ def Segtoclsdata(Y_in):
 
 if __name__ == '__main__':
     train_mode = "class"
-    classes = 1
+    classes = 75
     image_size = 256
-    task = "segmentation"
+    task = "event"
     ang_reso = 72
 
     
@@ -990,7 +1001,7 @@ if __name__ == '__main__':
     else:
         datasets_dir = "/misc/export3/sudou/sound_data/datasets/"
     
-    for datadir in ["multi_segdata"+str(classes+74) + "_"+str(image_size)+"_no_sound_random_sep_72/", 
+    for datadir in ["multi_segdata"+str(classes) + "_"+str(image_size)+"_no_sound_random_sep_72/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-20dB_random_sep_72/", 
                     ]:
         dataset = datasets_dir + datadir    
@@ -1001,8 +1012,8 @@ if __name__ == '__main__':
         label = pd.read_csv(filepath_or_buffer=labelfile, sep=",", index_col=0)            
         
         for Model in [#"CNN8", "CRNN8", "BiCRNN8", 
-                      "SSL_Mask_UNet", 
-                      "SSL_Mask_Deeplab", 
+                      "SELD_Mask_CNN8", "SELD_Mask_BiCRNN8", 
+                      #"SSL_Mask_Deeplab", 
                       #"WUNet", 
                       #"SSL_Deeplab", 
                       #"CR_UNet", 
@@ -1055,7 +1066,7 @@ if __name__ == '__main__':
                                 elif Model == "aux_enc_UNet" or Model == "aux_enc_Deeplab":
                                     mask = False
                                     aux = True
-                                elif Model == "SSL_Mask_UNet" or Model == "SSL_Mask_Deeplab":
+                                elif Model == "SSL_Mask_UNet" or Model == "SSL_Mask_Deeplab" or Model == "SELD_Mask_CNN8" or Model == "SELD_Mask_BiCRNN8":
                                     ssl_model, num_layer = load_ssl_model(Sed_Model)
                                     mask = False
                                     ssl_mask = True

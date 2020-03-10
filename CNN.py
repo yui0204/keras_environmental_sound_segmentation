@@ -13,10 +13,29 @@ from keras.layers.merge import multiply, dot
 
 def CNN(n_classes, input_height=256, input_width=512, nChannels=3, 
         filter_list=[64, 64, 128, 128, 256, 256, 512, 512], RNN=2, Bidir=False,
-        ang_reso=1):
+        ang_reso=1, ssl_model=None, ssl_mask=False):
     inputs = Input((input_height, input_width, nChannels))
     
     x = inputs
+    
+    if ssl_mask == True:
+        x = ssl_model.layers[1](x)
+        ssl_model.layers[1].trainable = False # fixed weight
+        
+        for i in range(2, len(ssl_model.layers)):
+            x = ssl_model.layers[i](x)
+            ssl_model.layers[i].trainable = False # fixed weight or fine-tuning           
+        
+        x = Flatten()(x)
+        x = RepeatVector(256)(x)
+        x = Reshape((256, input_width, n_classes))(x)
+        
+        x = concatenate([x, inputs], axis=-1)
+
+    else:
+        x = inputs
+        
+        
     for filters in filter_list:
         if len(filter_list) == 8:
             freq_pool = (2, 1)
