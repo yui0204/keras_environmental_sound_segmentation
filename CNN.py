@@ -45,8 +45,7 @@ def CNN(n_classes, input_height=256, input_width=512, nChannels=3,
             x = Conv1D(n_classes, 1, activation='sigmoid')(x)
             x = Reshape((1, -1, n_classes))(x)
         else:
-            x = Conv1D(512, 1, activation='relu')(x)
-            x = Reshape((1, -1, 512))(x)
+            x = Reshape((1, -1, 1024))(x)
 
     else:
         if ang_reso == 1:
