@@ -319,6 +319,12 @@ def read_model(Model):
                               trainable=False, 
                               sed_model=None, num_layer=None, aux=False,
                               mask=False, RNN=0, freq_pool=False)
+        elif Model == "UNet9":
+            model = Unet.UNet9(n_classes=classes*ang_reso, input_height=256, 
+                              input_width=image_size, nChannels=channel,
+                              trainable=False, 
+                              sed_model=None, num_layer=None, aux=False,
+                              mask=False, RNN=0, freq_pool=False)
         elif Model == "doa_UNet":
             model = Unet.UNet(n_classes=classes*ang_reso, input_height=256, 
                               input_width=image_size, nChannels=channel,
@@ -510,6 +516,8 @@ def train(X_train, Y_train, Model):
                        Y_train]
         elif Model == "SSL_Deeplab":
             Y_train = [((Y_train.max(1).max(1) > 0.1) * 1), Y_train]
+        elif Model == "UNet9":
+            Y_train = [Y_train, Y_train[:,:,:,0:8], Y_train[:,:,:,8:16], Y_train[:,:,:,16:24], Y_train[:,:,:,24:32], Y_train[:,:,:,32:40], Y_train[:,:,:,40:48], Y_train[:,:,:,48:56], Y_train[:,:,:,56:64], Y_train[:,:,:,64:72]]
     
     history = multi_model.fit(X_train, Y_train, batch_size=BATCH_SIZE, 
                             epochs=NUM_EPOCH, verbose=1, validation_split=0.1,
@@ -967,9 +975,9 @@ def Segtoclsdata(Y_in):
 
 if __name__ == '__main__':
     train_mode = "class"
-    classes = 75
+    classes = 1
     image_size = 256
-    task = "event"
+    task = "segmentation"
     ang_reso = 72
 
     
@@ -1001,7 +1009,7 @@ if __name__ == '__main__':
     else:
         datasets_dir = "/misc/export3/sudou/sound_data/datasets/"
     
-    for datadir in ["multi_segdata"+str(classes) + "_"+str(image_size)+"_no_sound_random_sep_72/", 
+    for datadir in ["multi_segdata"+str(classes+74) + "_"+str(image_size)+"_no_sound_random_sep_72/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-20dB_random_sep_72/", 
                     ]:
         dataset = datasets_dir + datadir    
@@ -1012,11 +1020,11 @@ if __name__ == '__main__':
         label = pd.read_csv(filepath_or_buffer=labelfile, sep=",", index_col=0)            
         
         for Model in [#"CNN8", "CRNN8", "BiCRNN8", 
-                      "SELD_CNN8", 
-                      "SELD_BiCRNN8", 
-                      "SELD_Mask_BiCRNN8", 
+                      #"SELD_CNN8", 
+                      #"SELD_BiCRNN8", 
+                      #"SELD_Mask_BiCRNN8", 
                       #"SSL_Mask_Deeplab", 
-                      #"WUNet", 
+                      "UNet9", 
                       #"SSL_Deeplab", 
                       #"CR_UNet", 
                       #"aux_Mask_UNet", "aux_Mask_Deeplab", 
