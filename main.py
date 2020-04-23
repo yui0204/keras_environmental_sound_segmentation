@@ -486,6 +486,10 @@ def read_model(Model):
     return model, multi_model
 
 
+def masked_mse(y_true, y_pred):
+    mask = y_true >= 0.01
+    mask = K.cast(mask, 'float32')
+    return K.sum(K.square(y_true - y_pred) * mask) / K.sum(mask)
 
 def train(X_train, Y_train, Model):
     model, multi_model = read_model(Model)
@@ -975,10 +979,10 @@ def Segtoclsdata(Y_in):
 
 if __name__ == '__main__':
     train_mode = "class"
-    classes = 1
+    classes = 75
     image_size = 256
     task = "segmentation"
-    ang_reso = 72
+    ang_reso = 1
 
     
     if os.getcwd() == '/home/yui-sudo/document/segmentation/sound_segtest':
@@ -992,7 +996,8 @@ if __name__ == '__main__':
     
     lr = 0.001
     
-    loss = "mean_squared_error"
+    #loss = "mean_squared_error"
+    loss = masked_mse
     if task == "event":
         loss = "binary_crossentropy"
 
@@ -1024,9 +1029,9 @@ if __name__ == '__main__':
                       #"SELD_BiCRNN8", 
                       #"SELD_Mask_BiCRNN8", 
                       #"SSL_Mask_Deeplab", 
-                      "UNet9", 
-                      #"SSL_Deeplab", 
-                      #"CR_UNet", 
+                      "UNet", 
+                      "Deeplab", 
+                      "CR_UNet", 
                       #"aux_Mask_UNet", "aux_Mask_Deeplab", 
                       #"aux_enc_UNet", "aux_enc_Deeplab", 
                       #"Cascade"
@@ -1036,9 +1041,9 @@ if __name__ == '__main__':
                 loss = "categorical_crossentropy"
 
             for vonMises in [False]:
-                for ipd in [True]:
-                    for mic_num in [8]: # 1 or 8                        
-                        for complex_input in [True]:
+                for ipd in [False, True]:
+                    for mic_num in [1, 8]: # 1 or 8                        
+                        for complex_input in [False, True]:
                             channel = 0
                             if mic_num == 1:
                                 if complex_input == True and ipd == False:
