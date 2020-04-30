@@ -491,6 +491,13 @@ def masked_mse(y_true, y_pred):
     mask = K.cast(mask, 'float32')
     return K.sum(K.square(y_true - y_pred) * mask) / K.sum(mask)
 
+def categorical_focal_loss(y_true, y_pred, alpha=0.5, gamma=0.5):
+    #cross_entropy = -y_true * K.log(y_pred)
+    mse = K.mean(K.square(y_true - y_pred))
+    loss = alpha * K.pow(1 - y_pred, gamma) * mse
+    return K.mean(loss, axis=-1)
+    
+
 def train(X_train, Y_train, Model):
     model, multi_model = read_model(Model)
     
