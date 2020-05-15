@@ -1003,8 +1003,8 @@ if __name__ == '__main__':
     
     lr = 0.001
     
-    #loss = "mean_squared_error"
-    loss = masked_mse
+    loss = "mean_squared_error"
+    #loss = masked_mse
     if task == "event":
         loss = "binary_crossentropy"
 
@@ -1021,7 +1021,7 @@ if __name__ == '__main__':
     else:
         datasets_dir = "/misc/export3/sudou/sound_data/datasets/"
     
-    for datadir in ["multi_segdata"+str(classes+74) + "_"+str(image_size)+"_no_sound_random_sep_72/", 
+    for datadir in ["multi_segdata"+str(classes) + "_"+str(image_size)+"_no_sound_random_sep_72/", 
                     #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-20dB_random_sep_72/", 
                     ]:
         dataset = datasets_dir + datadir    
@@ -1036,9 +1036,9 @@ if __name__ == '__main__':
                       #"SELD_BiCRNN8", 
                       #"SELD_Mask_BiCRNN8", 
                       #"SSL_Mask_Deeplab", 
-                      "UNet", 
+                      #"UNet", 
                       "Deeplab", 
-                      "CR_UNet", 
+                      #"CR_UNet", 
                       #"aux_Mask_UNet", "aux_Mask_Deeplab", 
                       #"aux_enc_UNet", "aux_enc_Deeplab", 
                       #"Cascade"
@@ -1048,9 +1048,9 @@ if __name__ == '__main__':
                 loss = "categorical_crossentropy"
 
             for vonMises in [False]:
-                for ipd in [False, True]:
-                    for mic_num in [1, 8]: # 1 or 8                        
-                        for complex_input in [False, True]:
+                for ipd in [True]:
+                    for mic_num in [8]: # 1 or 8                        
+                        for complex_input in [True]:
                             channel = 0
                             if mic_num == 1:
                                 if complex_input == True and ipd == False:
