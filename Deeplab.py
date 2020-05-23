@@ -335,6 +335,29 @@ def Deeplabv3(weights='None', input_tensor=None, input_shape=(256, 256, 1),
     b4 = Activation('relu')(b4)
     b4 = BilinearUpsampling((out_shape, out_shape))(b4)
 
+    """
+    # Dual Attention module     
+    pam = PAM()(x)
+    pam = Conv2D(512, 3, padding='same', use_bias=False, kernel_initializer='he_normal')(pam)
+    pam = BatchNormalization(axis=3)(pam)
+    pam = Activation('relu')(pam)
+    pam = Dropout(0.5)(pam)
+    pam = Conv2D(512, 3, padding='same', use_bias=False, kernel_initializer='he_normal')(pam)
+
+    cam = CAM()(x)
+    cam = Conv2D(512, 3, padding='same', use_bias=False, kernel_initializer='he_normal')(cam)
+    cam = BatchNormalization(axis=3)(cam)
+    cam = Activation('relu')(cam)
+    cam = Dropout(0.5)(cam)
+    cam = Conv2D(512, 3, padding='same', use_bias=False, kernel_initializer='he_normal')(cam)
+
+    feature_sum = add([pam, cam])
+    feature_sum = Dropout(0.5)(feature_sum)
+    da = Conv2D(512, 1, padding="same", strides=1, kernel_initializer='he_normal')(feature_sum)
+    da = BatchNormalization(axis=3)(da)
+    da = Activation('relu')(da)
+    """
+
     # concatenate ASPP branches & project
     x = Concatenate()([b4, b0, b1, b2, b3])
     x = Conv2D(256, (1, 1), padding='same',
@@ -360,29 +383,7 @@ def Deeplabv3(weights='None', input_tensor=None, input_shape=(256, 256, 1),
         #sed = UpSampling2D(size=(1, 16))(sed)
         sed = BilinearUpsampling(output_size=(1, input_shape[1]))(sed)
         x = concatenate([enc, x], axis=-1)
-#################################### 
-        
-    # Dual Attention module     
-    pam = PAM()(x)
-    pam = Conv2D(512, 3, padding='same', use_bias=False, kernel_initializer='he_normal')(pam)
-    pam = BatchNormalization(axis=3)(pam)
-    pam = Activation('relu')(pam)
-    pam = Dropout(0.5)(pam)
-    pam = Conv2D(512, 3, padding='same', use_bias=False, kernel_initializer='he_normal')(pam)
-
-    cam = CAM()(x)
-    cam = Conv2D(512, 3, padding='same', use_bias=False, kernel_initializer='he_normal')(cam)
-    cam = BatchNormalization(axis=3)(cam)
-    cam = Activation('relu')(cam)
-    cam = Dropout(0.5)(cam)
-    cam = Conv2D(512, 3, padding='same', use_bias=False, kernel_initializer='he_normal')(cam)
-
-    feature_sum = add([pam, cam])
-    feature_sum = Dropout(0.5)(feature_sum)
-    x = Conv2D(512, 1, padding="same", strides=1, kernel_initializer='he_normal')(feature_sum)
-    x = BatchNormalization(axis=3)(x)
-    x = Activation('relu')(x)
-    
+####################################     
         
     # DeepLab v.3+ decoder
 

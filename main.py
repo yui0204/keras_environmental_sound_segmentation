@@ -325,6 +325,12 @@ def read_model(Model):
                               trainable=False, 
                               sed_model=None, num_layer=None, aux=False,
                               mask=False, RNN=0, freq_pool=False)
+        elif Model == "PIT_UNet":
+            model = Unet.UNet(n_classes=3, input_height=256, 
+                              input_width=image_size, nChannels=channel,
+                              trainable=False, 
+                              sed_model=None, num_layer=None, aux=False,
+                              mask=False, RNN=0, freq_pool=False)
         elif Model == "doa_UNet":
             model = Unet.UNet(n_classes=classes*ang_reso, input_height=256, 
                               input_width=image_size, nChannels=channel,
@@ -496,7 +502,32 @@ def categorical_focal_loss(y_true, y_pred, alpha=0.5, gamma=0.5):
     mse = K.mean(K.square(y_true - y_pred))
     loss = alpha * K.pow(1 - y_pred, gamma) * mse
     return K.mean(loss, axis=-1)
-    
+
+def pit_mse(y_true, y_pred):
+    loss001122 = K.mean(K.square(y_true[:,:,:,:] - y_pred[:,:,:,:]))
+    loss001221 = K.mean(K.square(y_true[:,:,:,0] - y_pred[:,:,:,0]) \
+                      + K.square(y_true[:,:,:,1] - y_pred[:,:,:,2]) \
+                      + K.square(y_true[:,:,:,2] - y_pred[:,:,:,1]))
+    loss011022 = K.mean(K.square(y_true[:,:,:,0] - y_pred[:,:,:,1]) \
+                      + K.square(y_true[:,:,:,1] - y_pred[:,:,:,0]) \
+                      + K.square(y_true[:,:,:,2] - y_pred[:,:,:,2]))
+    loss011220 = K.mean(K.square(y_true[:,:,:,0] - y_pred[:,:,:,1]) \
+                      + K.square(y_true[:,:,:,1] - y_pred[:,:,:,2]) \
+                      + K.square(y_true[:,:,:,2] - y_pred[:,:,:,0]))
+    loss021120 = K.mean(K.square(y_true[:,:,:,0] - y_pred[:,:,:,2]) \
+                      + K.square(y_true[:,:,:,1] - y_pred[:,:,:,1]) \
+                      + K.square(y_true[:,:,:,2] - y_pred[:,:,:,0]))
+    loss021021 = K.mean(K.square(y_true[:,:,:,0] - y_pred[:,:,:,2]) \
+                      + K.square(y_true[:,:,:,1] - y_pred[:,:,:,0]) \
+                      + K.square(y_true[:,:,:,2] - y_pred[:,:,:,1]))
+    loss = loss001122
+    loss = loss if K.less(loss, loss001221) == True else loss001221
+    loss = loss if K.less(loss, loss011022) == True else loss011022
+    loss = loss if K.less(loss, loss011220) == True else loss011220
+    loss = loss if K.less(loss, loss021120) == True else loss021120 
+    loss = loss if K.less(loss, loss021021) == True else loss021021 
+
+    return loss
 
 def train(X_train, Y_train, Model):
     model, multi_model = read_model(Model)
@@ -529,7 +560,16 @@ def train(X_train, Y_train, Model):
             Y_train = [((Y_train.max(1).max(1) > 0.1) * 1), Y_train]
         elif Model == "UNet9":
             Y_train = [Y_train, Y_train[:,:,:,0:8], Y_train[:,:,:,8:16], Y_train[:,:,:,16:24], Y_train[:,:,:,24:32], Y_train[:,:,:,32:40], Y_train[:,:,:,40:48], Y_train[:,:,:,48:56], Y_train[:,:,:,56:64], Y_train[:,:,:,64:72]]
-    
+        elif Model == "PIT_UNet":
+            Y_train2 = np.zeros((load_number, 256, image_size, 3))
+            for n in range(len(Y_train)):
+                ch = 0
+                for i in range(len(Y_train[0][0][0])):
+                    if Y_train[n].transpose(2,0,1)[i].max() > 0:
+                        Y_train2[n, :, :, ch] = Y_train[n, :, :, i]
+                        ch += 1
+            Y_train = Y_train2
+            
     history = multi_model.fit(X_train, Y_train, batch_size=BATCH_SIZE, 
                             epochs=NUM_EPOCH, verbose=1, validation_split=0.1,
                             callbacks=[early_stopping])
@@ -1004,7 +1044,7 @@ if __name__ == '__main__':
     lr = 0.001
     
     loss = "mean_squared_error"
-    #loss = masked_mse
+    #loss = pit_mse
     if task == "event":
         loss = "binary_crossentropy"
 
@@ -1177,8 +1217,7 @@ if __name__ == '__main__':
                                         train_condition = f.read() 
                                         print(train_condition)
 
-                                if load_number >= 1000:
-                                    load_number = 1000
+                                load_number = 1000
     
                                     
                                 npy_name = "test_" + task+ "_" +str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_cin"+str(complex_input) + "_ipd"+str(ipd)  + "_vonMises"+str(vonMises) + "_"+str(load_number)
@@ -1217,6 +1256,15 @@ if __name__ == '__main__':
                                     X_test = X_origin
                                 elif Model == "doa_UNet" or Model == "sad_UNet" or Model == "SSL_Deeplab":
                                     Y_pred = Y_pred[1]
+                                elif Model == "PIT_UNet":
+                                    Y_test2 = np.zeros((load_number, 256, image_size, 3))
+                                    for n in range(load_number):
+                                        ch = 0
+                                        for i in range(len(Y_test[0][0][0])):
+                                            if Y_test[n].transpose(2,0,1)[i].max() > 0:
+                                                Y_test2[n, :, :, ch] = Y_test[n, :, :, i]
+                                                ch += 1
+                                    Y_test = Y_test2
                                     
                                 if plot == True:
                                     sdr_array = np.zeros((classes, 1))

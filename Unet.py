@@ -355,7 +355,7 @@ def Deeplab_CNN(n_classes, input_height=256, input_width=512, nChannels=1,
                                     sed_model=sed_model, num_layer=num_layer, aux=aux, mul=True)
     
     # pretrained SSS U-Net
-    sss_model.load_weights(os.getcwd()+"/model_results/iros2020/Deeplab_1class_"+str(ang_reso)+"direction_8ch_cinTrue_ipdTrue_vonMisesFalse_multi_segdata75_256_no_sound_random_sep_72/Deeplab_1class_"+str(ang_reso)+"direction_8ch_cinTrue_ipdTrue_vonMisesFalse_weights.hdf5")
+    sss_model.load_weights("/misc/export3/sudou/model_results/iros2020/Deeplab_1class_"+str(ang_reso)+"direction_8ch_cinTrue_ipdTrue_vonMisesFalse_multi_segdata75_256_no_sound_random_sep_72/Deeplab_1class_"+str(ang_reso)+"direction_8ch_cinTrue_ipdTrue_vonMisesFalse_weights.hdf5")
     
     for i in range(0, len(sss_model.layers)):
         sss_model.layers[i].trainable = trainable # fixed weight
@@ -364,7 +364,7 @@ def Deeplab_CNN(n_classes, input_height=256, input_width=512, nChannels=1,
 
     cnn = CNN.CNNtag(n_classes, input_height=256, input_width=input_width, nChannels=1, 
                        filter_list=[64, 64, 128, 128, 256, 256, 512, 512])
-    cnn.load_weights(os.getcwd()+"/model_results/iros2020/Cascade_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/Cascade_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_weights.hdf5")
+    cnn.load_weights("/misc/export3/sudou/model_results/iros2020/Cascade_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/Cascade_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_weights.hdf5")
     for i in range(0, len(cnn.layers)):
         cnn.layers[i].trainable = False # fixed weight
         
