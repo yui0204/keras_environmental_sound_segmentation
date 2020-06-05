@@ -279,6 +279,78 @@ def load(segdata_dir, n_classes=8, load_number=9999999, complex_input=False):
     return inputs, labels, max, inputs_phase
 
 
+def load_desed(segdata_dir):
+    folderlist = os.listdir(segdata_dir)
+    folderlist.sort()
+    datanum = len(folderlist)
+    print(datanum, "data loading\n")  
+    inputs = np.zeros((datanum, 1, 256, image_size), dtype=np.float16)
+    if task == "event":
+        inputs_phase = 1
+    else:    
+        inputs_phase = np.zeros((datanum, 512, image_size), dtype=np.float16)
+        
+    if task == "event":
+        labels = np.zeros((datanum, 10, image_size), dtype=np.float16)
+    elif task == "segmentation":
+        labels = np.zeros((datanum, 10, 256, image_size), dtype=np.float16)
+    
+    for i, folder in enumerate(folderlist):
+        if not folder[-4:] == ".wav" and not folder[-5:] == ".jams":
+            data_dir = segdata_dir + folder + "/"
+            filelist = os.listdir(data_dir) 
+            for n in range(len(filelist)):
+                if filelist[n][-4:] == ".wav":
+                    waveform, fs = sf.read(data_dir + filelist[n]) 
+                    freqs, t, stft = signal.stft(x=waveform, fs=fs, nperseg=512, return_onesided=False)
+                    #stft = stft[:, 1:len(stft.T) - 1]
+                    stft = stft[:, 1:image_size + 1]   #### 624 to 512
+                    
+                    if not eval_dir == "ls_0dB" and filelist[n][:10] == "background":
+                        continue
+
+                    elif  filelist[n][:10] == "foreground" or (eval_dir == "ls_0dB" and filelist[n][:10] == "background"):
+                        if filelist[n][11] == "_":
+                            cls_name = filelist[n][12:]
+                        elif filelist[n][12] == "_":
+                            cls_name = filelist[n][13:]
+                        cls_name = cls_name[:-4]
+
+                        if cls_name == "Frying_nOn_nOff" or cls_name == "Frying_nOff":
+                            cls_name ="Frying"
+                        elif cls_name == "Vacuum_cleaner_nOff" or cls_name == "Vacuum_cleaner_nOn" or cls_name == "Vacuum_cleaner_nOn_nOff":
+                            cls_name ="Vacuum_cleaner"
+                        elif cls_name == "Blender_nOff":
+                            cls_name ="Blender"
+                        elif cls_name == "Running_water_nOn_nOff" or cls_name == "Running_water_nOn":
+                            cls_name ="Running_water"
+
+                        if task == "event":                             # SED
+                            labels[i][label.T[cls_name][0]] += abs(stft[:256]).max(0)
+                        elif task == "segmentation":                    # segmentation
+                            labels[i][label.T[cls_name][0]] += abs(stft[:256]) 
+
+                    elif len(filelist[n]) < 9:
+                        if not task == "event":
+                            inputs_phase[i] = np.angle(stft)                   
+                        inputs[i][0] = abs(stft[:256])         
+
+    inputs, labels = log(inputs, labels)   
+    inputs = np.nan_to_num(inputs)
+    labels = np.nan_to_num(labels) 
+    inputs += 120
+    labels += 120
+    inputs, labels, max = normalize(inputs, labels)
+    
+    if task == "event":
+        labels = ((labels > 0.1) * 1)
+    inputs = inputs.transpose(0, 2, 3, 1)
+    if task == "event":                                 # SED
+        labels = labels.transpose(0, 2, 1)[:,np.newaxis,:,:]
+    elif task == "segmentation":                        # segmentation
+        labels = labels.transpose(0, 2, 3, 1) 
+        
+    return inputs, labels, max, inputs_phase
 
 def read_model(Model):
     if gpu_count == 1:
@@ -569,7 +641,7 @@ def train(X_train, Y_train, Model):
                         Y_train2[n, :, :, ch] = Y_train[n, :, :, i]
                         ch += 1
             Y_train = Y_train2
-            
+
     history = multi_model.fit(X_train, Y_train, batch_size=BATCH_SIZE, 
                             epochs=NUM_EPOCH, verbose=1, validation_split=0.1,
                             callbacks=[early_stopping])
@@ -701,7 +773,7 @@ def event_plot(Y_true, Y_pred, no=0):
             Y_pred_total += (Y_pred[no][i] > 0.45) * (i + 4)
         
         filename = get_filename(no)
-        
+        #filename = "color"
         plt.pcolormesh((Y_true_total), cmap="gist_ncar")
         plt.title(str(no) + "__" + filename + "_truth")
         plt.xlabel("time")
@@ -768,7 +840,7 @@ def plot_stft(Y_true, Y_pred, no=0):
         Y_pred_total += (Y_pred[no][i] > 0.45) * (i + 4)
     
     filename = get_filename(no)
-    
+    #filename = "color"
     plt.pcolormesh((Y_true_total), cmap="gist_ncar")
     plt.title(str(no) + "__" + filename + "_truth")
     plt.xlabel("time")
@@ -848,11 +920,13 @@ def RMS(Y_true, Y_pred):
     num_array = np.zeros(classes + 1) # the number of data of each class
 
     area_array = np.zeros(classes + 1) # area size of each class
+    duration_array = np.zeros(classes + 1) # duration size of each class
+    freq_array = np.zeros(classes + 1) # frequency conponents size of each class
     
     spl_array =  np.zeros(classes + 1) #average SPL of each class 
     percent_array =  np.zeros(classes + 1) 
 
-    for no in range(load_number):
+    for no in range(len(Y_test)):
         for class_n in range(classes):
             if Y_true[no][class_n].max() > 0: # calculate RMS of active event class               
                 num_array[classes] += 1 # total number of all classes
@@ -866,6 +940,8 @@ def RMS(Y_true, Y_pred):
                 spl_array[class_n] += per_spl.sum() / on_detect.sum() # mean spl of one data
                 
                 area_array[class_n] += ((Y_true[no][class_n] > 0.0) * 1).sum() # number of active bins = area size
+                duration_array[class_n] += ((Y_true[no][class_n].max(0) > 0.0) * 1).sum() # duration bins
+                freq_array[class_n] += ((Y_true[no][class_n].max(1) > 0.0) * 1).sum() # duration bins
                 
     rms_array[classes] = rms_array.sum()
     rms_array = np.sqrt(rms_array / num_array) # Squared error is divided by the number of data = MSE then root = RMSE
@@ -875,46 +951,17 @@ def RMS(Y_true, Y_pred):
 
     area_array[classes] = area_array.sum()
     area_array = area_array // num_array # average area size of each class
-    
+
+    duration_array[classes] = duration_array.sum()
+    duration_array = duration_array // num_array # average duration size of each class
+    duration_array = duration_array * 16.0
+
     percent_array = rms_array / spl_array * 100 
 
 
-    #print(area_array)
     print("rms\n", rms_array, "\n")     
-    print("num\n", num_array, "\n")
-    print("percent\n", percent_array, "\n")
-
-    np.savetxt(results_dir+"prediction/datanum_"+str(load_number)+".csv", num_array)
-    np.savetxt(results_dir+"prediction/rmse_"+str(load_number)+".csv", rms_array, fmt ='%.3f')
-    np.savetxt(results_dir+"prediction/area_"+str(load_number)+".csv", area_array)
-    np.savetxt(results_dir+"prediction/spl_"+str(load_number)+".csv", spl_array, fmt ='%.3f')
-    np.savetxt(results_dir+"prediction/percent_"+str(load_number)+".csv", percent_array, fmt ='%.3f')
-    
-
-    plt.plot(rms_array, marker='o', linestyle="None")
-    plt.title("rms")
-    plt.xlabel("")
-    plt.ylabel('rms')
-    plt.savefig(results_dir + "rms_result.png")
-    plt.ylim(0, 50)
-    plt.close()
-
-    plt.plot(area_array, rms_array, marker='o', linestyle="None")
-    plt.title("area-rms")
-    plt.xlabel("area")
-    plt.ylabel('rms')
-    plt.savefig(results_dir + "area-rms_result.png")
-    plt.ylim(0, 50)
-    plt.close()
-    
-    plt.plot(spl_array, rms_array, marker='o', linestyle="None")
-    plt.title("spl-rms")
-    plt.xlabel("spl")
-    plt.ylabel('rms')
-    plt.savefig(results_dir + "spl-rms_result.png")
-    plt.ylim(0, 50)
-    plt.close()
-
+    all_array = np.vstack([num_array, area_array, duration_array, rms_array, percent_array, spl_array])
+    np.savetxt(results_dir+"prediction/" + "total_score"+str(load_number)+".csv", all_array.T, fmt ='%.3f')
 
 
 def save_npy(X, Y, max, phase, name):    
@@ -943,13 +990,13 @@ def load_sed_model(Model):
                             input_width=image_size, nChannels=channel,
                             filter_list=[64, 64, 128, 128, 256, 256, 512, 512], 
                             RNN=0, Bidir=False)
-        sed_model.load_weights(os.getcwd()+"/model_results/advanced_robotics/CNN8_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/CNN8_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_weights.hdf5")
+        sed_model.load_weights(os.getcwd()+"/model_results/2020_0530/CNN8_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_"+datadir+"/CNN8_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_weights.hdf5")
     elif Model == "BiCRNN8":
         sed_model = CNN.CNN(n_classes=classes, input_height=256, 
                             input_width=image_size, nChannels=channel,
                             filter_list=[64, 64, 128, 128, 256, 256, 512, 512], 
                             RNN=2, Bidir=True)
-        sed_model.load_weights(os.getcwd()+"/model_results/advanced_robotics/BiCRNN8_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/BiCRNN8_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_weights.hdf5")
+        sed_model.load_weights(os.getcwd()+"/model_results/2020_0530/BiCRNN8_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_"+datadir+"/BiCRNN8_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_weights.hdf5")
     
     num_layer = len(sed_model.layers)
 
@@ -990,8 +1037,8 @@ def load_cascade(segdata_dir, load_number=9999999):
                 waveform, fs = sf.read(data_dir + filelist[n]) 
                 freqs, t, stft = signal.stft(x=waveform, fs=fs, nperseg=512, 
                                                        return_onesided=False)
-                stft = stft[:, 1:len(stft.T) - 1]
-                
+                stft = stft[:, 1:len(stft.T) - 0]
+
                 inputs = np.concatenate((inputs, abs(stft[:256])[np.newaxis, :, :]), axis=0)
                 sep_num[i] += 1
                 
@@ -1026,8 +1073,8 @@ def Segtoclsdata(Y_in):
 
 if __name__ == '__main__':
     train_mode = "class"
-    classes = 75
-    image_size = 256
+    classes = 75#10
+    image_size = 256#512#624
     task = "segmentation"
     ang_reso = 1
 
@@ -1061,24 +1108,27 @@ if __name__ == '__main__':
     else:
         datasets_dir = "/misc/export3/sudou/sound_data/datasets/"
     
-    for datadir in ["multi_segdata"+str(classes) + "_"+str(image_size)+"_no_sound_random_sep_72/", 
-                    #"multi_segdata"+str(classes) + "_"+str(image_size)+"_-20dB_random_sep_72/", 
+    for datadir in [#"multi_segdata"+str(classes) + "_"+str(image_size)+"_no_sound_random_sep_72/", 
+                    "multi_segdata"+str(classes) + "_"+str(image_size)+"_-20dB_random_sep_72/", 
+                    #"dcase2019/dataset/audio/"
                     ]:
         dataset = datasets_dir + datadir    
         segdata_dir = dataset + "train/"
         valdata_dir = dataset + "val/"
+        #segdata_dir = dataset + "train/synthetic/"
         
         labelfile = dataset + "label.csv"
         label = pd.read_csv(filepath_or_buffer=labelfile, sep=",", index_col=0)            
         
-        for Model in [#"CNN8", "CRNN8", "BiCRNN8", 
+        for Model in [#"CNN8", "BiCRNN8", 
                       #"SELD_CNN8", 
                       #"SELD_BiCRNN8", 
                       #"SELD_Mask_BiCRNN8", 
                       #"SSL_Mask_Deeplab", 
-                      #"UNet", 
-                      "Deeplab", 
+                      "Mask_UNet", 
+                      #"UNet",
                       #"CR_UNet", 
+                      #"Deeplab", 
                       #"aux_Mask_UNet", "aux_Mask_Deeplab", 
                       #"aux_enc_UNet", "aux_enc_Deeplab", 
                       #"Cascade"
@@ -1088,9 +1138,9 @@ if __name__ == '__main__':
                 loss = "categorical_crossentropy"
 
             for vonMises in [False]:
-                for ipd in [True]:
-                    for mic_num in [8]: # 1 or 8                        
-                        for complex_input in [True]:
+                for ipd in [False]:
+                    for mic_num in [1]: # 1 or 8                        
+                        for complex_input in [False]:
                             channel = 0
                             if mic_num == 1:
                                 if complex_input == True and ipd == False:
@@ -1157,6 +1207,7 @@ if __name__ == '__main__':
     
                                     npy_name = "train_" + task + "_" +str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_cin"+str(complex_input) + "_ipd"+str(ipd)  + "_vonMises"+str(vonMises) + "_"+str(load_number)
                                     if not os.path.exists(dataset+"X_"+npy_name+".npy"):
+                                        #X_train, Y_train, max, phase = load_desed(segdata_dir)
                                         X_train, Y_train, max, phase = load(segdata_dir, 
                                                                               n_classes=classes, 
                                                                               load_number=load_number,
@@ -1172,7 +1223,7 @@ if __name__ == '__main__':
 
                                     # save train condition
                                     train_condition = date + "\t" + results_dir                     + "\n" + \
-                                                      "\t"+"Comapare IPD input and normal complex input and 1ch"                          + "\n" + \
+                                                      "\t"+"DESED dataset"                          + "\n" + \
                                                       "\t\t segdata_dir, " + segdata_dir            + "\n" + \
                                                       "\t\t valdata_dir, " + valdata_dir            + "\n" + \
                                                       "\t\t X"+str(X_train.shape)+" Y"+str(Y_train.shape)+"\n" \
@@ -1217,11 +1268,16 @@ if __name__ == '__main__':
                                         train_condition = f.read() 
                                         print(train_condition)
 
+                                #for eval_dir in ["500ms", "fbsnr_0dB", "ls_0dB"]: 
+#                                for eval_dir in ["500ms", "5500ms", "9500ms", "fbsnr_0dB", "fbsnr_15dB", "fbsnr_24dB", "fbsnr_30dB", "ls_0dB", "ls_15dB", "ls_30dB"]: 
+                                #    valdata_dir = dataset + "eval/" + eval_dir + "/"
+
                                 load_number = 1000
     
                                     
-                                npy_name = "test_" + task+ "_" +str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_cin"+str(complex_input) + "_ipd"+str(ipd)  + "_vonMises"+str(vonMises) + "_"+str(load_number)
+                                npy_name = "test_" + "_" + task+ "_" +str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_cin"+str(complex_input) + "_ipd"+str(ipd)  + "_vonMises"+str(vonMises) + "_"+str(load_number)
                                 if not os.path.exists(dataset+"X_"+npy_name+".npy"):
+                                    #X_test, Y_test, max, phase = load_desed(valdata_dir)
                                     X_test, Y_test, max, phase = load(valdata_dir, 
                                                                       n_classes=classes, 
                                                                       load_number=load_number, 
@@ -1271,8 +1327,10 @@ if __name__ == '__main__':
                                     sir_array = np.zeros((classes, 1))
                                     sar_array = np.zeros((classes, 1))
                                     sdr_num = np.zeros((classes, 1))
-                                        
+                                
                                     for i in range (0, load_number):
+                                    #folderlist = os.listdir(segdata_dir)
+                                    #for i, folder in enumerate(folderlist):
                                         save = False
                                         if i < graph_num:
                                             origin_stft(X_test, no=i)
@@ -1324,7 +1382,7 @@ if __name__ == '__main__':
                                             f.write(str(f1)) 
                                     
                                     f1 = f1_score(((Y_test.max(1) > 0.1) * 1).ravel(),
-                                                  ((Y_pred.max(1) > 0.1) * 1).ravel())
+                                                ((Y_pred.max(1) > 0.1) * 1).ravel())
                                     print("segmentation F-score =", f1)
                                     with open(results_dir + "segmentation_f1_" + str(f1) + ".txt","w") as f:
                                         f.write(str(f1))  
