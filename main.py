@@ -626,7 +626,7 @@ def train(X_train, Y_train, Model):
                        X_train.transpose(3,0,1,2)[0][np.newaxis,:,:,:].transpose(1,2,3,0)]
         
         if Model == "aux_Mask_UNet" or Model == "aux_Mask_RNN_UNet" or Model == "aux_Mask_Deeplab" or Model == "aux_enc_UNet" or Model == "aux_enc_Deeplab":
-            Y_train = [((Y_train.transpose(3,0,1,2).max(2)[:,:,np.newaxis,:] > 0.0) * 1).transpose(1,2,3,0), 
+            Y_train = [((Y_train.transpose(3,0,1,2).max(2)[:,:,np.newaxis,:] > 0.1) * 1).transpose(1,2,3,0), 
                        Y_train]
         elif Model == "SSL_Deeplab":
             Y_train = [((Y_train.max(1).max(1) > 0.1) * 1), Y_train]
@@ -675,6 +675,7 @@ def plot_history(history, model_name):
 def predict(X_test, Model):
     model, multi_model = read_model(Model)
     model.load_weights(results_dir + model_name + '_weights.hdf5')
+    print(get_flops())
 
     print("\npredicting...")
     if task == "segmentation":
@@ -939,9 +940,9 @@ def RMS(Y_true, Y_pred):
                 per_spl = Y_true_db[no][class_n].mean(0) # mean spl about freq axis
                 spl_array[class_n] += per_spl.sum() / on_detect.sum() # mean spl of one data
                 
-                area_array[class_n] += ((Y_true[no][class_n] > 0.0) * 1).sum() # number of active bins = area size
-                duration_array[class_n] += ((Y_true[no][class_n].max(0) > 0.0) * 1).sum() # duration bins
-                freq_array[class_n] += ((Y_true[no][class_n].max(1) > 0.0) * 1).sum() # duration bins
+                area_array[class_n] += ((Y_true[no][class_n] > 0.1) * 1).sum() # number of active bins = area size
+                duration_array[class_n] += ((Y_true[no][class_n].max(0) > 0.1) * 1).sum() # duration bins
+                freq_array[class_n] += ((Y_true[no][class_n].max(1) > 0.1) * 1).sum() # duration bins
                 
     rms_array[classes] = rms_array.sum()
     rms_array = np.sqrt(rms_array / num_array) # Squared error is divided by the number of data = MSE then root = RMSE
@@ -1068,6 +1069,17 @@ def Segtoclsdata(Y_in):
     print(data_num)
 
     return X_cls[:data_num][:, :, :, np.newaxis], Y_cls[:data_num]
+
+
+def get_flops():
+    run_meta = tf.RunMetadata()
+    opts = tf.profiler.ProfileOptionBuilder.float_operation()
+
+    # We use the Keras session graph in the call to the profiler.
+    flops = tf.profiler.profile(graph=K.get_session().graph,
+                                run_meta=run_meta, cmd='op', options=opts)
+
+    return flops.total_float_ops  # Prints the "flops" of the model.
 
 
 
