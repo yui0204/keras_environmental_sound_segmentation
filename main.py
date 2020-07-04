@@ -33,7 +33,7 @@ config.gpu_options.allow_growth = True
 if os.getcwd() == '/home/yui-sudo/document/segmentation/sound_segtest' or os.getcwd() == '/home/sudou/python/sound_segtest':
     config.gpu_options.visible_device_list = "0"
 else:
-    config.gpu_options.visible_device_list = "0,1,2"
+    config.gpu_options.visible_device_list = "2"
 sess = tf.Session(config=config)
 K.set_session(sess)
 
@@ -99,7 +99,7 @@ def load(segdata_dir, n_classes=8, load_number=99999, input_dim=1):
                         stft = stft[:, 1:len(stft.T) - 1]
                         if not task == "event":
                             inputs_phase[i] = np.angle(stft)
-                        if complex_input == True:
+                        if complex_input:
                             inputs[i][1] = stft[:256].real
                             inputs[i][2] = stft[:256].imag                        
                         inputs[i][0] = abs(stft[:256])
@@ -111,13 +111,13 @@ def load(segdata_dir, n_classes=8, load_number=99999, input_dim=1):
                         if not task == "event":
                             inputs_phase[i] = np.angle(stft[0])
                         for nchan in range(mic_num):
-                            if ipd == True:
+                            if ipd:
                                 if nchan == 0:
                                     inputs[i][nchan] = abs(stft[nchan][:256])
                                 else:
                                     inputs[i][nchan*2-1] = np.cos(np.angle(stft[0][:256]) - np.angle(stft[nchan][:256]))
                                     inputs[i][nchan*2] = np.sin(np.angle(stft[0][:256]) - np.angle(stft[nchan][:256]))                         
-                            elif complex_input == True:
+                            elif complex_input:
                                 inputs[i][nchan * 3] = abs(stft[nchan][:256])
                                 inputs[i][nchan*3 + 1] = stft[nchan][:256].real
                                 inputs[i][nchan*3 + 2] = stft[nchan][:256].imag
@@ -152,7 +152,7 @@ def load(segdata_dir, n_classes=8, load_number=99999, input_dim=1):
         sign = sign.astype(np.float16)
         inputs = abs(inputs)        
         
-    if ipd == True:
+    if ipd:
         inputs = inputs.transpose(1,0,2,3)
         inputs[0], labels = log(inputs[0], labels)   
         inputs[0], labels, max = normalize(inputs[0], labels)
@@ -324,9 +324,10 @@ def predict(X_test, Model):
 
 
 
-def restore(Y_true, Y_pred, max, phase, no=0, class_n=1, save=False):
+def restore(Y_true, Y_pred, max, phase, no=0, class_n=1, save=False, calc_sdr=False):
     plot_num = classes * ang_reso
-    pred_dir = utils.pred_dir_make(no, results_dir)
+    if save:
+        pred_dir = utils.pred_dir_make(no, results_dir)
     
     Y_pred = Y_pred.transpose(0, 3, 1, 2)
     Y_true = Y_true.transpose(0, 3, 1, 2)    
@@ -356,30 +357,31 @@ def restore(Y_true, Y_pred, max, phase, no=0, class_n=1, save=False):
                 
             _, Y_pred_wave = signal.istft(Zxx=Y_complex, fs=16000, nperseg=512, input_onesided=False)
             Y_pred_wave = Y_pred_wave.real
-            if save == True:
+            if save:
                 sf.write(pred_dir + "/" + filename, Y_pred_wave.real, 16000, subtype="PCM_16")
 
-            # calculate SDR
-            if classes == 1:
-                with open(os.path.join(data_dir, "sound_direction.txt"), "r") as f:
-                    directions = f.read().split("\n")[:-1]
-                for direction in directions:
-                    if index_num == int(re.sub("\\D", "", direction.split("_")[1])) // (360 // ang_reso):
-                        class_name = direction.split("_")[0]
-                        Y_true_wave, _ = sf.read(data_dir + "/" + class_name + ".wav")
-            else:                
-                Y_true_wave, _ = sf.read(data_dir + "/" + label.index[index_num // ang_reso] + ".wav")
-            
-            Y_true_wave = Y_true_wave[:len(Y_pred_wave)]
-            X_wave = X_wave[:len(Y_pred_wave)]
+            if calc_sdr:
+                # calculate SDR
+                if classes == 1:
+                    with open(os.path.join(data_dir, "sound_direction.txt"), "r") as f:
+                        directions = f.read().split("\n")[:-1]
+                    for direction in directions:
+                        if index_num == int(re.sub("\\D", "", direction.split("_")[1])) // (360 // ang_reso):
+                            class_name = direction.split("_")[0]
+                            Y_true_wave, _ = sf.read(data_dir + "/" + class_name + ".wav")
+                else:                
+                    Y_true_wave, _ = sf.read(data_dir + "/" + label.index[index_num // ang_reso] + ".wav")
+                
+                Y_true_wave = Y_true_wave[:len(Y_pred_wave)]
+                X_wave = X_wave[:len(Y_pred_wave)]
 
-            sdr_base, sir_base, sar_base, _ = bss_eval_sources(Y_true_wave[np.newaxis,:], X_wave[np.newaxis,:], compute_permutation=False)
-            sdr, sir, sar, _ = bss_eval_sources(Y_true_wave[np.newaxis,:], Y_pred_wave[np.newaxis,:], compute_permutation=False)
-            print("No.", no, "Class", index_num // ang_reso, label.index[index_num // ang_reso], "SDR", round(sdr[0], 2), "SDR_Base", round(sdr_base[0], 2), "SDR improvement: ", round(sdr[0] - sdr_base[0], 2))
-            
-            sdr_array[index_num] = sdr
-            sir_array[index_num] = sir
-            sar_array[index_num] = sar
+                sdr_base, sir_base, sar_base, _ = bss_eval_sources(Y_true_wave[np.newaxis,:], X_wave[np.newaxis,:], compute_permutation=False)
+                sdr, sir, sar, _ = bss_eval_sources(Y_true_wave[np.newaxis,:], Y_pred_wave[np.newaxis,:], compute_permutation=False)
+                #print("No.", no, "Class", index_num // ang_reso, label.index[index_num // ang_reso], "SDR", round(sdr[0], 2), "SDR_Base", round(sdr_base[0], 2), "SDR improvement: ", round(sdr[0] - sdr_base[0], 2))
+                
+                sdr_array[index_num] = sdr
+                sir_array[index_num] = sir
+                sar_array[index_num] = sar
             
     return sdr_array, sir_array, sar_array
     
@@ -483,7 +485,7 @@ if __name__ == '__main__':
     if os.getcwd() == '/home/yui-sudo/document/segmentation/sound_segtest' or os.getcwd() == '/home/sudou/python/sound_segtest':
         gpu_count = 1
     else:
-        gpu_count = 3
+        gpu_count = 1
     BATCH_SIZE = 16 * gpu_count
     NUM_EPOCH = 10
     lr = 0.001
@@ -503,7 +505,7 @@ if __name__ == '__main__':
     else:
         datasets_dir = "/misc/export3/sudou/sound_data/datasets/"
     
-    for datadir in ["multi_segdata"+str(classes) + "_"+str(image_size)+"_no_sound_random_sep_72/", 
+    for datadir in ["multi_segdata"+str(classes) + "_"+str(image_size)+"_-20dB_random_sep_72/", 
                     #"dcase2019/dataset/audio/"
                     ]:
         dataset = datasets_dir + datadir    
@@ -533,8 +535,8 @@ if __name__ == '__main__':
                         if mic_num == 1:
                             channel = 1
                         else:                                
-                            if complex_input == True:
-                                if ipd == True:
+                            if complex_input:
+                                if ipd:
                                     channel = 15
                                 elif ipd == False:
                                     channel = 24
@@ -564,7 +566,7 @@ if __name__ == '__main__':
                             load_number = 10000
                             
                             model_name = Model+"_"+str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_cin"+str(complex_input) + "_ipd"+str(ipd) + "_vonMises"+str(vonMises)
-                            if mask == True:
+                            if mask:
                                 model_name = model_name + "_"+Sed_Model + "_aux" + str(aux)
                             dir_name = model_name + "_"+datadir
                             date = datetime.datetime.today().strftime("%Y_%m%d")
@@ -611,9 +613,7 @@ if __name__ == '__main__':
                                 
                                 history = train(X_train, Y_train, Model)
                                 plot_history(history, model_name)
-                            
-                                with open('research_log.txt','a') as f:
-                                    f.write(train_condition)    
+
                     
                             # prediction mode         
                             elif not mode == "train":
@@ -678,22 +678,25 @@ if __name__ == '__main__':
                                         utils.plot_stft(Y_test, Y_pred, no=i, results_dir=results_dir, image_size=image_size, ang_reso=ang_reso, classes=classes, label=label)
                                         if Model == "aux_Mask_UNet" or Model == "aux_enc_UNet" or Model == "aux_enc_Deeplab":
                                             utils.event_plot(Y_sedt, Y_sedp, no=i, results_dir=results_dir, image_size=image_size, ang_reso=ang_reso, classes=classes, label=label)
-                                    
-                                sdr, sir, sar = restore(Y_test, Y_pred, max, phase, no=i, save=save)
-                                sdr_array += sdr
-                                sir_array += sir
-                                sar_array += sar
-                                sdr_num += (sdr != 0.000) * 1                            
+
+                                calc_sdr = False
+                                if save == True or calc_sdr == True:
+                                    sdr, sir, sar = restore(Y_test, Y_pred, max, phase, no=i, save=save, calc_sdr=calc_sdr)
+                                    sdr_array += sdr
+                                    sir_array += sir
+                                    sar_array += sar
+                                    sdr_num += (sdr != 0.000) * 1                            
+
+                            if calc_sdr:    
+                                sdr_array = sdr_array / sdr_num
+                                sir_array = sir_array / sdr_num
+                                sar_array = sar_array / sdr_num
+                                sdr_array = np.append(sdr_array, sdr_array.mean())
+                                sir_array = np.append(sir_array, sir_array.mean())
+                                sar_array = np.append(sar_array, sar_array.mean())
                                 
-                            sdr_array = sdr_array / sdr_num
-                            sir_array = sir_array / sdr_num
-                            sar_array = sar_array / sdr_num
-                            sdr_array = np.append(sdr_array, sdr_array.mean())
-                            sir_array = np.append(sir_array, sir_array.mean())
-                            sar_array = np.append(sar_array, sar_array.mean())
-                                
-                            np.savetxt(results_dir+"prediction/sdr_"+str(load_number)+".csv", sdr_array, fmt ='%.3f')
-                            print("SDR\n", sdr_array, "\n")   
+                                np.savetxt(results_dir+"prediction/sdr_"+str(load_number)+".csv", sdr_array, fmt ='%.3f')
+                                print("SDR\n", sdr_array, "\n")   
 
                             # Metrics
                             if task == "event":

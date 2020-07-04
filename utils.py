@@ -77,7 +77,7 @@ def event_plot(Y_true, Y_pred, no, results_dir, image_size, ang_reso, classes, l
         Y_true_total = np.zeros((ang_reso, image_size))
         Y_pred_total = np.zeros((ang_reso, image_size))
         for i in range(classes):
-            if Y_true[no][i].max() > 0: #含まれているクラスのみグラフ表示
+            if Y_true[no][i].max() > 0:
                 
                 plt.pcolormesh((Y_true[no][i]))
                 plt.title(label.index[i] + "_truth")
@@ -131,7 +131,7 @@ def plot_stft(Y_true, Y_pred, no, results_dir, image_size, ang_reso, classes, la
     Y_true_total = np.zeros((256, image_size))
     Y_pred_total = np.zeros((256, image_size))
     for i in range(plot_num):
-        if Y_true[no][i].max() > 0: #含まれているクラスのみグラフ表示
+        if Y_true[no][i].max() > 0:
             plt.pcolormesh((Y_true[no][i]))
             if ang_reso == 1:
                 plt.title(label.index[i] + "_truth")
