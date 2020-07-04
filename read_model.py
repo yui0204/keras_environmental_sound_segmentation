@@ -4,7 +4,7 @@ from keras.utils import multi_gpu_model
 
 def read_model(Model, gpu_count, classes, image_size, channel, ang_reso, aux, sed_model, trainable):
     if gpu_count == 1:
-        device = '/cpu:0'
+        device = '/gpu:0'
     else:
         device = '/cpu:0'
     
