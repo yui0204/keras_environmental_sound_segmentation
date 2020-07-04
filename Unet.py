@@ -187,31 +187,6 @@ def UNet(n_classes, input_height=256, input_width=512, nChannels=1,
 
 
 
-def UNet9(n_classes, input_height=256, input_width=512, nChannels=1,
-         trainable=False, sed_model=None, num_layer=None, aux=False,
-         mask=False, RNN=0, freq_pool=False, enc=False, ang_reso=8):
-
-    inputs = Input((input_height, input_width, nChannels))
-    inputs2 = Input((input_height, input_width, 1))
-        
-    unetlist = []
-    for i in range(9):
-        unet = UNet(n_classes = 8, # direction resolution
-                     input_height=256, input_width=input_width, 
-                     nChannels=nChannels,  # input feature channels
-                     trainable=trainable, 
-                     sed_model=sed_model, num_layer=num_layer, aux=aux,
-                     mask=mask, RNN=RNN, freq_pool=freq_pool)
-        unetlist.append(unet([inputs, inputs2]))
-        
-    out = concatenate(unetlist)   
-    
-    model = Model(inputs=[inputs, inputs2], 
-                  outputs=[out, unetlist[0], unetlist[1], unetlist[2], unetlist[3], unetlist[4], unetlist[5], unetlist[6], unetlist[7], unetlist[8]])
-                        
-    return model
-
-
 def WNet(n_classes, input_height=256, input_width=512, nChannels=1,
          trainable=False, sed_model=None, num_layer=None, aux=False,
          mask=False, RNN=0, freq_pool=False, enc=False, ang_reso=8):

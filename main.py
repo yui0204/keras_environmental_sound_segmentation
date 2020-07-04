@@ -7,6 +7,7 @@ Created on Mon Apr 30 23:29:14 2018
 """
 
 import os
+import glob
 import datetime
 import numpy as np
 import pandas as pd
@@ -873,9 +874,12 @@ def restore(Y_true, Y_pred, max, phase, no=0, class_n=1, save=False):
     sir_array = np.zeros((plot_num, 1))
     sar_array = np.zeros((plot_num, 1))
     
-    for class_n in range(plot_num):
-        if Y_true[no][class_n].max() > 0:
-            Y_linear = 10 ** ((Y_pred[no][class_n] * max - 120) / 20)
+    wavefile = glob.glob(data_dir + '/0__*.wav')
+    X_wave, _ = sf.read(wavefile[0])
+
+    for index_num in range(plot_num):
+        if Y_true[no][index_num].max() > 0:
+            Y_linear = 10 ** ((Y_pred[no][index_num] * max - 120) / 20)
             Y_linear = np.vstack((Y_linear, Y_linear[::-1]))
 
             Y_complex = np.zeros((512, image_size), dtype=np.complex128)
@@ -884,25 +888,36 @@ def restore(Y_true, Y_pred, max, phase, no=0, class_n=1, save=False):
                     Y_complex[i][j] = cmath.rect(Y_linear[i][j], phase[no][i][j])
 
             if ang_reso == 1:
-                Y_Stft = Stft(Y_complex, 16000, label.index[class_n]+"_prediction")
+                filename = label.index[index_num]+"_prediction.wav"
             else:
-                Y_Stft = Stft(Y_complex, 16000, label.index[i % ang_reso * 0] + "_" + str((360 // ang_reso) * (class_n % ang_reso)) + "deg_prediction")
+                filename = label.index[index_num // ang_reso] + "_" + str((360 // ang_reso) * (index_num % ang_reso)) + "deg_prediction.wav"
                 
-            Y_pred_wave = Y_Stft.scipy_istft()
-            
+            _, Y_pred_wave = signal.istft(Zxx=Y_complex, fs=16000, nperseg=512, input_onesided=False)
+            Y_pred_wave = Y_pred_wave.real
             if save == True:
-                Y_pred_wave.write_wav_sf(dir=pred_dir, filename=None, bit=16)
+                sf.write(pred_dir + "/" + filename, Y_pred_wave.real, 16000, subtype="PCM_16")
 
-            if task == "segmentation" and ang_reso == 1:
-                Y_pred_wave = Y_pred_wave.norm_sound
-                Y_true_wave = WavfileOperate(data_dir + "/" + label.index[class_n] + ".wav").wavedata.norm_sound            
-                Y_true_wave = Y_true_wave[:len(Y_pred_wave)]    
-                sdr, sir, sar, per = bss_eval_sources(Y_true_wave[np.newaxis,:], Y_pred_wave[np.newaxis,:], compute_permutation=True)
-                #print("No.", no, class_n, label.index[class_n], round(sdr[0], 2))
-                
-                sdr_array[class_n] = sdr
-                sir_array[class_n] = sir
-                sar_array[class_n] = sar
+            # calculate SDR
+            if classes == 1:
+                with open(os.path.join(data_dir, "sound_direction.txt"), "r") as f:
+                    directions = f.read().split("\n")[:-1]
+                for direction in directions:
+                    if index_num == int(re.sub("\\D", "", direction.split("_")[1])) // (360 // ang_reso):
+                        class_name = direction.split("_")[0]
+                        Y_true_wave, _ = sf.read(data_dir + "/" + class_name + ".wav")
+            else:                
+                Y_true_wave, _ = sf.read(data_dir + "/" + label.index[index_num // ang_reso] + ".wav")
+            
+            Y_true_wave = Y_true_wave[:len(Y_pred_wave)]
+            X_wave = X_wave[:len(Y_pred_wave)]
+
+            sdr_base, sir_base, sar_base, per_base = bss_eval_sources(Y_true_wave[np.newaxis,:], X_wave[np.newaxis,:], compute_permutation=False)
+            sdr, sir, sar, per = bss_eval_sources(Y_true_wave[np.newaxis,:], Y_pred_wave[np.newaxis,:], compute_permutation=False)
+            print("No.", no, "Class", index_num // ang_reso, label.index[index_num // ang_reso], "SDR", round(sdr[0], 2), "SDR_Base", round(sdr_base[0], 2), "SDR improvement: ", round(sdr[0] - sdr_base[0], 2))
+            
+            sdr_array[index_num] = sdr
+            sir_array[index_num] = sir
+            sar_array[index_num] = sar
             
     return sdr_array, sir_array, sar_array
     
@@ -1356,24 +1371,23 @@ if __name__ == '__main__':
                                                     event_plot(Y_sedt, Y_sedp, no=i)
                                                 plot_stft(Y_test, Y_pred, no=i)
                                             sdr, sir, sar = restore(Y_test, Y_pred, max, phase, no=i, save=save)
-                                            if task == "segmentation" and ang_reso == 1:
-                                                sdr_array += sdr
-                                                sir_array += sir
-                                                sar_array += sar
-                                                sdr_num += (sdr != 0.000) * 1
-                                                                        
-                                    if task == "segmentation" and ang_reso == 1:
-                                        sdr_array = sdr_array / sdr_num
-                                        sir_array = sir_array / sdr_num
-                                        sar_array = sar_array / sdr_num
-                                        
-                                        sdr_array = np.append(sdr_array, sdr_array.mean())
-                                        sir_array = np.append(sir_array, sir_array.mean())
-                                        sar_array = np.append(sar_array, sar_array.mean())
-                                        
-                                        np.savetxt(results_dir+"prediction/sdr_"+str(load_number)+".csv", sdr_array, fmt ='%.3f')
-                                        print("SDR\n", sdr_array, "\n")   
-                                        
+                                            
+                                            sdr_array += sdr
+                                            sir_array += sir
+                                            sar_array += sar
+                                            sdr_num += (sdr != 0.000) * 1
+                                                                    
+                                    sdr_array = sdr_array / sdr_num
+                                    sir_array = sir_array / sdr_num
+                                    sar_array = sar_array / sdr_num
+                                    
+                                    sdr_array = np.append(sdr_array, sdr_array.mean())
+                                    sir_array = np.append(sir_array, sir_array.mean())
+                                    sar_array = np.append(sar_array, sar_array.mean())
+                                    
+                                    np.savetxt(results_dir+"prediction/sdr_"+str(load_number)+".csv", sdr_array, fmt ='%.3f')
+                                    print("SDR\n", sdr_array, "\n")   
+                                    
                                 if task == "event":
                                     Y_pred = (Y_pred > 0.5) * 1
                                     f1 = f1_score(Y_test.ravel(), Y_pred.ravel())
