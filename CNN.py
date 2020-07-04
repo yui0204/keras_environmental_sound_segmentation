@@ -13,7 +13,7 @@ from keras.layers.merge import multiply, dot
 
 def CNN(n_classes, input_height=256, input_width=512, nChannels=3, 
         filter_list=[64, 64, 128, 128, 256, 256, 512, 512], RNN=2, Bidir=False,
-        ang_reso=1, ssl_model=None, ssl_mask=False):
+        ang_reso=1):
     inputs = Input((input_height, input_width, nChannels))
     
     x = inputs
@@ -73,18 +73,6 @@ def CNN(n_classes, input_height=256, input_width=512, nChannels=3,
         x = Activation('relu')(x)
         
         x = Conv2D(n_classes, (1, 1), activation='sigmoid')(x)
-
-        if ssl_mask == True:
-            ssl = ssl_model.layers[1](inputs)
-            ssl_model.layers[1].trainable = False # fixed weight
-            
-            for i in range(2, len(ssl_model.layers)):
-                ssl = ssl_model.layers[i](ssl)
-                ssl_model.layers[i].trainable = False # fixed weight or fine-tuning
-            ssl = Permute((3, 2, 1))(ssl)
-
-            x = multiply([x, ssl])
-            #x = Conv2D(n_classes, (1, 1), activation='sigmoid')(x)
     
     model = Model(inputs=inputs, outputs=x)
     

@@ -195,8 +195,7 @@ def xception_block(inputs, depth_list, prefix, skip_connection_type, stride,
 
 
 def Deeplabv3(weights='None', input_tensor=None, input_shape=(256, 256, 1), 
-              classes=75, OS=16, mask=False, trainable=False, RNN=0,
-              sed_model=None, ssl_model=None, num_layer=None, aux=False, enc=False, mul=True, ssl=False, ssl_mask=False):    
+              classes=75, OS=16, aux=False, enc=False):    
     """ Instantiates the Deeplabv3+ architecture
 
     Optionally loads weights pre-trained on PASCAL VOC. 
@@ -244,39 +243,7 @@ def Deeplabv3(weights='None', input_tensor=None, input_shape=(256, 256, 1),
         else:
             img_input = input_tensor
             
-
-################ event detection concatenation
-    if mask == True:
-        x = sed_model.layers[1](img_input)
-        sed_model.layers[1].trainable = trainable # fixed weight
-        
-        for i in range(2, num_layer):
-            x = sed_model.layers[i](x)
-            sed_model.layers[i].trainable = trainable # fixed weight or fine-tuning    
-        sed = x
-        x = Flatten()(x)
-        x = RepeatVector(256)(x)
-        x = Reshape((256, 256, classes))(x)
-        
-        x = concatenate([x, img_input], axis=-1)
-        
-    elif ssl_mask == True:
-        x = ssl_model.layers[1](img_input)
-        ssl_model.layers[1].trainable = trainable # fixed weight
-        
-        for i in range(2, num_layer):
-            x = ssl_model.layers[i](x)
-            ssl_model.layers[i].trainable = trainable # fixed weight or fine-tuning           
-        sed = x
-        
-        x = Flatten()(x)
-        x = RepeatVector(256)(x)
-        x = Reshape((256, 256, classes))(x)
-        
-        x = concatenate([x, img_input], axis=-1)
-#################
-    else:
-        x = img_input
+    x = img_input
 
     x = Conv2D(32, (3, 3), strides=(2, 2),
                name='entry_flow_conv1_1', use_bias=False, padding='same')(x)
@@ -365,22 +332,11 @@ def Deeplabv3(weights='None', input_tensor=None, input_shape=(256, 256, 1),
     x = BatchNormalization(name='concat_projection_BN', epsilon=1e-5)(x)
     x = Activation('relu')(x)
     x = Dropout(0.1)(x)
-    #print(x)
     
-#################################### added RNN
-    if RNN > 0:
-        r = Reshape((16, 16 * 256))(x)
-        for i in range(RNN):
-            r = GRU(16 * 256, activation='tanh', recurrent_activation='hard_sigmoid', 
-                    return_sequences=True, stateful=False)(r) 
-            #r = BatchNormalization()(r)   
-        r = Reshape((16, 16, 256))(r)
-        x = r
 #################################### 
     if enc == True:
         enc = Conv2D(classes, (1, 1), activation='sigmoid')(x)
         sed = MaxPooling2D((16, 1), strides=(16, 1))(enc)
-        #sed = UpSampling2D(size=(1, 16))(sed)
         sed = BilinearUpsampling(output_size=(1, input_shape[1]))(sed)
         x = concatenate([enc, x], axis=-1)
 ####################################     
@@ -415,12 +371,6 @@ def Deeplabv3(weights='None', input_tensor=None, input_shape=(256, 256, 1),
         inputs = get_source_inputs(input_tensor)
     else:
         inputs = img_input
-
-
-    if mul == False:
-        model = Model(input=inputs, output=x)
-        
-        return model
     
     if input_shape[2] == 1:
         x = multiply([inputs, x])
@@ -433,10 +383,6 @@ def Deeplabv3(weights='None', input_tensor=None, input_shape=(256, 256, 1),
         x = multiply([inputs2, x])
         if aux == True:
             model = Model(input=[inputs, inputs2], output=[sed, x])
-        elif ssl == True:
-            ssl = GlobalMaxPooling2D()(x)
-            ssl = Dense(classes, activation='sigmoid')(ssl)
-            model = Model(input=[inputs, inputs2], output=[ssl, x])
         else:
             model = Model([inputs, inputs2], x, name='deeplabv3_plus')
 

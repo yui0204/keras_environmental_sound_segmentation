@@ -21,8 +21,8 @@ import os
     
 
 def UNet(n_classes, input_height=256, input_width=512, nChannels=1,
-         trainable=False, sed_model=None, ssl_model=None, num_layer=None, aux=False,
-         mask=False, RNN=0, freq_pool=False, enc=False, mul=True, doa=False, sad=False, ssl_mask=False):
+         trainable=False, sed_model=None, ssl_model=None, aux=False,
+         mask=False, RNN=0, freq_pool=False, enc=False, mul=True, ssl_mask=False):
 
     if freq_pool == True:
         stride = (2, 1)
@@ -36,6 +36,7 @@ def UNet(n_classes, input_height=256, input_width=512, nChannels=1,
     
     
     if mask == True:
+        num_layer = len(sed_model.layers)
         x = sed_model.layers[1](inputs)
         sed_model.layers[1].trainable = trainable # fixed weight
         
@@ -51,6 +52,7 @@ def UNet(n_classes, input_height=256, input_width=512, nChannels=1,
         e1 = concatenate([x, inputs], axis=-1)
         
     elif ssl_mask == True:
+        num_layer = len(ssl_model.layers)
         x = ssl_model.layers[1](inputs)
         ssl_model.layers[1].trainable = trainable # fixed weight
         
@@ -109,18 +111,6 @@ def UNet(n_classes, input_height=256, input_width=512, nChannels=1,
         sed = MaxPooling2D((4, 1), strides=(4, 1))(enc)
         sed = UpSampling2D(size=(1, 64))(sed)
         e6 = concatenate([enc, e6], axis=-1)
-        
-    if sad == True:
-        sad_out = GlobalAveragePooling2D()(e6) # 1 x 512
-        sad_out = Dense(512, activation='relu')(sad_out)
-        sad_out = Dropout(0.3)(sad_out)
-        sad_out = Dense(n_classes, activation='sigmoid')(sad_out)
-               
-    if doa == True:
-        doa_out = GlobalAveragePooling2D()(e6) # 1 x 512
-        doa_out = Dense(512, activation='relu')(doa_out)
-        doa_out = Dropout(0.3)(doa_out)
-        doa_out = Dense(8, activation='sigmoid')(doa_out)
         
         
     d5 = Conv2DTranspose(512, (3, 3), strides=stride, use_bias=False, 
