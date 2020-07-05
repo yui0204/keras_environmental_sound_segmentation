@@ -2,7 +2,7 @@ import CNN, Unet, Deeplab
 import tensorflow as tf
 from keras.utils import multi_gpu_model
 
-def read_model(Model, gpu_count, classes, image_size, channel, ang_reso, aux, sed_model, trainable):
+def read_model(Model, gpu_count, classes, image_size, channel, ang_reso, aux, sed_model, trainable, ang_aux):
     if gpu_count == 1:
         device = '/gpu:0'
     else:
@@ -54,6 +54,12 @@ def read_model(Model, gpu_count, classes, image_size, channel, ang_reso, aux, se
                                       input_shape=(256, image_size, channel), 
                                       classes=classes * ang_reso, OS=16, 
                                       aux=aux, enc=True)
+        
+        elif Model == "aux_ssls_enc_Deeplab":
+            model = Deeplab.Deeplabv3(weights=None, input_tensor=None, 
+                                      input_shape=(256, image_size, channel), 
+                                      classes=classes * ang_reso, OS=16, 
+                                      aux=aux, enc=True, ang_aux=ang_aux)
             
         elif Model == "WUNet":
             model = Unet.WNet(n_classes=classes, input_height=256, 

@@ -33,7 +33,7 @@ config.gpu_options.allow_growth = True
 if os.getcwd() == '/home/yui-sudo/document/segmentation/sound_segtest' or os.getcwd() == '/home/sudou/python/sound_segtest':
     config.gpu_options.visible_device_list = "0"
 else:
-    config.gpu_options.visible_device_list = "2"
+    config.gpu_options.visible_device_list = "1"
 sess = tf.Session(config=config)
 K.set_session(sess)
 
@@ -50,6 +50,8 @@ def normalize(inputs, labels):
 
 
 def log(inputs, labels):
+    inputs += 10**-7
+    labels += 10**-7
     inputs = 20 * np.log10(inputs)
     labels = 20 * np.log10(labels)
 
@@ -80,8 +82,8 @@ def load(segdata_dir, n_classes=8, load_number=99999, input_dim=1):
             labels = np.zeros((load_number, ang_reso, 256, image_size), dtype=np.float16)    
     else:
         if task == "event":
-            labels = np.zeros((load_number, n_classes, ang_reso, image_size), dtype=np.float16)      
-    
+            labels = np.zeros((load_number, n_classes, ang_reso, image_size), dtype=np.float16)
+
     for i in range(load_number):
         data_dir = segdata_dir + str(i) + "/"
         filelist = os.listdir(data_dir)  
@@ -140,12 +142,11 @@ def load(segdata_dir, n_classes=8, load_number=99999, input_dim=1):
                             if task == "event":          # SSL
                                 labels[i][angle] += abs(stft[:256]).max(0)     
                             elif task == "segmentation": # SSLS
-                                labels[i][angle] += abs(stft[:256])          
+                                labels[i][angle] += abs(stft[:256])
                         else: # n_classes > 1
                             if task == "event":                           # SELD
                                 labels[i][label.T[filelist[n][:-4]][0]][angle] += abs(stft[:256]).max(0)
-                        direction_index += 1
-
+                        direction_index += 1                   
     
     if complex_input == True and ipd == False:
         sign = (inputs > 0) * 2 - 1
@@ -181,9 +182,55 @@ def load(segdata_dir, n_classes=8, load_number=99999, input_dim=1):
             labels = labels.transpose(0, 2, 3, 1)  
     else:
         if task == "event":                                 # SELD
-            labels = labels.transpose(0, 2, 3, 1)  
+            labels = labels.transpose(0, 2, 3, 1)
         
     return inputs, labels, max, inputs_phase
+
+
+def load_ssld(segdata_dir, load_number, max):   
+    print("ssls label loading\n")   
+    ssls_labels = np.zeros((load_number, ang_aux, image_size), dtype=np.float16)
+    #ssls_labels = np.zeros((load_number, ang_aux, 256, image_size), dtype=np.float16)
+    #seld_labels = np.zeros((load_number, classes, ang_aux, image_size), dtype=np.float16)
+    
+    for i in range(load_number):
+        data_dir = segdata_dir + str(i) + "/"
+        filelist = os.listdir(data_dir)  
+        
+        with open(segdata_dir + str(i) + "/sound_direction.txt", "r") as f:
+            direction = f.read().split("\n")[:-1]
+            
+        direction_index = 0
+        for n in range(len(filelist)):
+            if filelist[n][-4:] == ".wav":
+                if not filelist[n][0:3] == "0__" and not filelist[n][:7] == "0_multi" and not filelist[n][:-4] == "BGM":
+                    waveform, fs = sf.read(data_dir + filelist[n]) 
+                    _, _, stft = signal.stft(x=waveform, fs=fs, nperseg = 512, return_onesided=False)
+                    stft = stft[:, 1:len(stft.T) - 1]
+
+                    angle = int(re.sub("\\D", "", direction[direction_index].split("_")[1])) // (360 // ang_aux)
+                    ssls_labels[i][angle] += abs(stft[:256]).max(0)
+                    #seld_labels[i][label.T[filelist[n][:-4]][0]][angle] += abs(stft[:256]).max(0)
+                    direction_index += 1
+
+    ssls_labels += 10**-7
+    ssls_labels = 20 * np.log10(ssls_labels)
+    ssls_labels = np.nan_to_num(ssls_labels) + 120
+    ssls_labels = ssls_labels / max
+    ssls_labels = np.clip(ssls_labels, 0.0, 1.0)
+    ssls_labels = ((ssls_labels > 0.1) * 1)[:,:,np.newaxis,:]
+    ssls_labels = ssls_labels.transpose(0, 2, 3, 1)
+    """
+    seld_labels += 10**-7
+    seld_labels = 20 * np.log10(seld_labels)
+    seld_labels = np.nan_to_num(seld_labels) + 120
+    seld_labels = seld_labels / max
+    seld_labels = np.clip(seld_labels, 0.0, 1.0)
+    seld_labels = ((seld_labels > 0.1) * 1)
+    seld_labels = seld_labels.transpose(0, 2, 3, 1)  
+    """
+        
+    return ssls_labels#, seld_labels
 
 
 def load_desed(segdata_dir):
@@ -258,7 +305,8 @@ def load_desed(segdata_dir):
 
 def train(X_train, Y_train, Model):
     model, multi_model = read_model.read_model(Model, gpu_count=gpu_count, classes=classes, image_size=image_size, 
-                                               channel=channel, ang_reso=ang_reso, aux=aux, sed_model=sed_model, trainable=trainable)
+                                               channel=channel, ang_reso=ang_reso, aux=aux, sed_model=sed_model, trainable=trainable, 
+                                               ang_aux=ang_aux)
     
     if aux == False:
         multi_model.compile(loss=loss, optimizer=Adam(lr=lr),metrics=["accuracy"])
@@ -280,6 +328,9 @@ def train(X_train, Y_train, Model):
         if Model == "aux_Mask_UNet" or Model == "aux_enc_UNet" or Model == "aux_enc_Deeplab":
             Y_train = [((Y_train.transpose(3,0,1,2).max(2)[:,:,np.newaxis,:] > 0.1) * 1).transpose(1,2,3,0), 
                        Y_train]
+        elif Model == "aux_ssls_enc_Deeplab":
+            Y_train = [ssls_labels, Y_train]
+        
 
     history = multi_model.fit(X_train, Y_train, batch_size=BATCH_SIZE, epochs=NUM_EPOCH, verbose=1, validation_split=0.1, callbacks=[early_stopping])
 
@@ -310,7 +361,8 @@ def plot_history(history, model_name):
 
 def predict(X_test, Model):
     model, _ = read_model.read_model(Model, gpu_count=gpu_count, classes=classes, image_size=image_size, 
-                                               channel=channel, ang_reso=ang_reso, aux=aux, sed_model=sed_model, trainable=trainable)
+                                    channel=channel, ang_reso=ang_reso, aux=aux, sed_model=sed_model, trainable=trainable,
+                                    ang_aux=ang_aux)
     model.load_weights(results_dir + model_name + '_weights.hdf5')
     print(utils.get_flops())
 
@@ -487,7 +539,7 @@ if __name__ == '__main__':
     else:
         gpu_count = 1
     BATCH_SIZE = 16 * gpu_count
-    NUM_EPOCH = 10
+    NUM_EPOCH = 100
     lr = 0.001
     
     loss = "mean_squared_error"
@@ -497,6 +549,10 @@ if __name__ == '__main__':
     mode = "train"
     date = mode       
     graph_num = 10
+
+
+    ang_aux = 72
+    sed_model = None
 
     if os.getcwd() == '/home/yui-sudo/document/segmentation/sound_segtest':
         datasets_dir = "/home/yui-sudo/document/dataset/sound_segmentation/datasets/"
@@ -518,9 +574,10 @@ if __name__ == '__main__':
         
         for Model in [#"CNN8", "BiCRNN8", 
                       #"SELD_CNN8", #"SELD_BiCRNN8", 
-                      "UNet", 
+                      #"UNet", 
                       #"UNet", #"CR_UNet", #"Deeplab", 
-                      #"aux_enc_UNet", "aux_enc_Deeplab", 
+                      #"aux_enc_UNet", 
+                      "aux_ssls_enc_Deeplab", 
                       #"Cascade"
                       ]:
             
@@ -554,9 +611,11 @@ if __name__ == '__main__':
                                 mask = True
                                 aux = True
                                 trainable = True # SED mask
-                            elif Model == "aux_enc_UNet" or Model == "aux_enc_Deeplab":
+                            elif Model == "aux_enc_UNet" or Model == "aux_enc_Deeplab" or ang_aux > 1:
+                                sed_model = None
                                 mask = False
                                 aux = True
+                                trainable = True
                             else:
                                 sed_model = None
                                 mask = False
@@ -584,6 +643,9 @@ if __name__ == '__main__':
                                     save_npy(X_train, Y_train, max, phase, npy_name)
                                 else:
                                     X_train, Y_train, max, phase = load_npy(npy_name)
+
+                                if ang_aux > 1:
+                                    ssls_labels = load_ssld(segdata_dir, load_number=load_number, max=max)
                                 
                                 if Model == "Cascade":
                                     X_train, Y_train = Segtoclsdata(Y_train)
@@ -638,6 +700,9 @@ if __name__ == '__main__':
 
                             else:
                                 X_test, Y_test, max, phase  = load_npy(npy_name)
+
+                            if ang_aux > 1:
+                                ssls_labels = load_ssld(valdata_dir, load_number=load_number, max=max)
                             
                             if Model == "Cascade":
                                 X_origin = X_test
@@ -652,6 +717,11 @@ if __name__ == '__main__':
                                 Y_sedp = Y_pred[0]
                                 Y_pred = Y_pred[1]
                                 Y_sedt = ((Y_test.transpose(3,0,1,2).max(2)[:,:,np.newaxis,:] > 0.1) * 1).transpose(1,2,3,0)
+                            elif Model == "aux_ssls_enc_Deeplab":
+                                Y_sedp = Y_pred[0]
+                                Y_pred = Y_pred[1]
+                                Y_sedt = ssls_labels
+                                
                             elif Model == "Cascade":
                                 Y_argmax = np.argmax(Y_pred, axis=1)
                                 Y_pred = np.zeros((load_number, classes, 256, image_size))
@@ -677,6 +747,8 @@ if __name__ == '__main__':
                                     else:
                                         utils.plot_stft(Y_test, Y_pred, no=i, results_dir=results_dir, image_size=image_size, ang_reso=ang_reso, classes=classes, label=label)
                                         if Model == "aux_Mask_UNet" or Model == "aux_enc_UNet" or Model == "aux_enc_Deeplab":
+                                            utils.event_plot(Y_sedt, Y_sedp, no=i, results_dir=results_dir, image_size=image_size, ang_reso=ang_reso, classes=classes, label=label)
+                                        elif Model == "aux_ssls_enc_Deeplab":
                                             utils.event_plot(Y_sedt, Y_sedp, no=i, results_dir=results_dir, image_size=image_size, ang_reso=ang_reso, classes=classes, label=label)
 
                                 calc_sdr = False
@@ -709,7 +781,7 @@ if __name__ == '__main__':
                                     
                             elif task == "segmentation":
                                 utils.RMS(Y_test, Y_pred, results_dir=results_dir, classes=classes, max=max) 
-                                if Model == "aux_Mask_UNet" or Model == "aux_enc_UNet" or Model == "aux_enc_Deeplab":
+                                if Model == "aux_Mask_UNet" or Model == "aux_enc_UNet" or Model == "aux_enc_Deeplab" or Model == "aux_ssls_enc_Deeplab":
                                     Y_sedp = (Y_sedp > 0.5) * 1
                                     f1 = f1_score(Y_sedt.ravel(), Y_sedp.ravel())
                                     Y_sedp = np.argmax(Y_sedp, axis=3)

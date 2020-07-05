@@ -195,7 +195,7 @@ def xception_block(inputs, depth_list, prefix, skip_connection_type, stride,
 
 
 def Deeplabv3(weights='None', input_tensor=None, input_shape=(256, 256, 1), 
-              classes=75, OS=16, aux=False, enc=False):    
+              classes=75, OS=16, aux=False, enc=False, ang_aux=1):    
     """ Instantiates the Deeplabv3+ architecture
 
     Optionally loads weights pre-trained on PASCAL VOC. 
@@ -335,7 +335,8 @@ def Deeplabv3(weights='None', input_tensor=None, input_shape=(256, 256, 1),
     
 #################################### 
     if enc == True:
-        enc = Conv2D(classes, (1, 1), activation='sigmoid')(x)
+        #enc = Conv2D(classes, (1, 1), activation='sigmoid')(x)
+        enc = Conv2D(ang_aux, (1, 1), activation='sigmoid')(x)
         sed = MaxPooling2D((16, 1), strides=(16, 1))(enc)
         sed = BilinearUpsampling(output_size=(1, input_shape[1]))(sed)
         x = concatenate([enc, x], axis=-1)
