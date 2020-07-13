@@ -2,90 +2,60 @@ import CNN, Unet, Deeplab
 import tensorflow as tf
 from keras.utils import multi_gpu_model
 
-def read_model(Model, gpu_count, classes, image_size, channel, ang_reso, aux, sed_model, trainable, ang_aux):
+def read_model(Model, gpu_count, classes, image_size, channel, ang_reso, sed_model, ang_aux):
     if gpu_count == 1:
         device = '/gpu:0'
     else:
         device = '/cpu:0'
     
     with tf.device(device):            
-        if Model == "aux_Mask_UNet":
+        if Model == "Mask_UNet":
             model = Unet.UNet(n_classes=classes, input_height=256, 
                               input_width=image_size, nChannels=channel, 
-                              trainable=trainable, 
-                              sed_model=sed_model, aux=aux,
-                              mask=True, RNN=0, freq_pool=False)
-        elif Model == "aux_enc_UNet":
-            model = Unet.UNet(n_classes=classes, input_height=256, 
-                              input_width=image_size, nChannels=channel,
-                              trainable=False, 
-                              sed_model=None, aux=aux,
-                              mask=False, RNN=0, freq_pool=False, enc=True)   
-
-        elif Model == "Mask_UNet":
-            model = Unet.UNet(n_classes=classes, input_height=256, 
-                              input_width=image_size, nChannels=channel, 
-                              trainable=trainable, 
-                              sed_model=sed_model, aux=aux,
-                              mask=True, RNN=0, freq_pool=False)
+                              mask=True, sed_model=sed_model,
+                              RNN=0, freq_pool=False)
             
         elif Model == "UNet":
             model = Unet.UNet(n_classes=classes*ang_reso, input_height=256, 
                               input_width=image_size, nChannels=channel,
-                              trainable=False, 
-                              sed_model=None, aux=False,
-                              mask=False, RNN=0, freq_pool=False)
+                              RNN=0, freq_pool=False)
      
         elif Model == "CR_UNet":
             model = Unet.UNet(n_classes=classes*ang_reso, input_height=256, 
                               input_width=image_size, nChannels=channel,
-                              trainable=False, 
-                              sed_model=None, aux=False,
-                              mask=False, RNN=2, freq_pool=True)   
-               
-        elif Model == "Deeplab":
-            model = Deeplab.Deeplabv3(weights=None, input_tensor=None, 
-                                      input_shape=(256, image_size, channel), 
-                                      classes=classes * ang_reso, OS=16, 
-                                      aux=False)  
+                              mask=False, RNN=2, freq_pool=True)
 
-        elif Model == "aux_enc_Deeplab":
+        elif Model == "multi_purpose_UNet":
+            model = Unet.UNet(n_classes=classes, input_height=256, 
+                              input_width=image_size, nChannels=channel,
+                              RNN=0, freq_pool=False,
+                              ssl_enc=False, ssls_out=True, ang_aux=ang_aux)
+               
+        elif Model == "multi_purpose_Deeplab":
             model = Deeplab.Deeplabv3(weights=None, input_tensor=None, 
                                       input_shape=(256, image_size, channel), 
-                                      classes=classes * ang_reso, OS=16, 
-                                      aux=aux, enc=True)
+                                      classes=classes, OS=16, 
+                                      ssl_enc=False, ssls_out=True, ang_aux=ang_aux)
         
-        elif Model == "aux_ssls_enc_Deeplab":
+        elif Model == "ssl_enc_Deeplab":
             model = Deeplab.Deeplabv3(weights=None, input_tensor=None, 
                                       input_shape=(256, image_size, channel), 
-                                      classes=classes * ang_reso, OS=16, 
-                                      aux=aux, enc=True, ang_aux=ang_aux)
+                                      classes=classes, OS=16, 
+                                      ssls_out=False, ang_aux=ang_aux)
             
         elif Model == "WUNet":
             model = Unet.WNet(n_classes=classes, input_height=256, 
                               input_width=image_size, nChannels=channel,
-                              trainable=False, 
-                              sed_model=None, aux=False,
-                              mask=False, RNN=0, freq_pool=False, ang_reso=8)   
+                              RNN=0, freq_pool=False, ang_reso=8)   
         
-        elif Model == "WDeeplab":
-            model = Unet.UNet_Deeplab(n_classes=classes, input_height=256, 
-                              input_width=image_size, nChannels=channel,
-                              trainable=False, 
-                              sed_model=None, aux=False,
-                              mask=False, RNN=0, freq_pool=False, ang_reso=8)
         elif Model == "UNet_CNN":
             model = Unet.UNet_CNN(n_classes=classes, input_height=256, 
                               input_width=image_size, nChannels=channel,
-                              trainable=False, 
-                              sed_model=None, aux=False,
-                              mask=False, RNN=0, freq_pool=False, ang_reso=72) 
+                              RNN=0, freq_pool=False, ang_reso=72) 
         elif Model == "Deeplab_CNN":
             model = Unet.Deeplab_CNN(n_classes=classes, input_height=256, 
                               input_width=image_size, nChannels=channel,
-                              trainable=False, 
-                              sed_model=None, aux=False,
-                              mask=False, RNN=0, freq_pool=False, ang_reso=72) 
+                              RNN=0, freq_pool=False, ang_reso=72) 
             
 
         elif Model == "CNN8":

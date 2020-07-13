@@ -33,11 +33,6 @@ from keras.utils.data_utils import get_file
 from keras.layers.merge import concatenate
 from keras.layers import RepeatVector, Flatten, Reshape, GRU, LSTM
 from keras.layers.merge import multiply
-import os
-import CNN
-
-from keras.layers import add
-from attention import PAM, CAM
 
 
 class BilinearUpsampling(Layer):
@@ -195,7 +190,7 @@ def xception_block(inputs, depth_list, prefix, skip_connection_type, stride,
 
 
 def Deeplabv3(weights='None', input_tensor=None, input_shape=(256, 256, 1), 
-              classes=75, OS=16, aux=False, enc=False, ang_aux=1):    
+              classes=75, OS=16, ssl_enc=False, ssls_out=False, ang_aux=1):    
     """ Instantiates the Deeplabv3+ architecture
 
     Optionally loads weights pre-trained on PASCAL VOC. 
@@ -278,20 +273,16 @@ def Deeplabv3(weights='None', input_tensor=None, input_shape=(256, 256, 1),
     # end of feature extractor
 
     # branching for Atrous Spatial Pyramid Pooling
-    # simple 1x1
     b0 = Conv2D(256, (1, 1), padding='same', use_bias=False, name='aspp0')(x)
     b0 = BatchNormalization(name='aspp0_BN', epsilon=1e-5)(b0)
     b0 = Activation('relu', name='aspp0_activation')(b0)
 
     # rate = 6 (12)
-    b1 = SepConv_BN(x, 256, 'aspp1',
-                    rate=atrous_rates[0], depth_activation=True, epsilon=1e-5)
+    b1 = SepConv_BN(x, 256, 'aspp1', rate=atrous_rates[0], depth_activation=True, epsilon=1e-5)
     # rate = 12 (24)
-    b2 = SepConv_BN(x, 256, 'aspp2',
-                    rate=atrous_rates[1], depth_activation=True, epsilon=1e-5)
+    b2 = SepConv_BN(x, 256, 'aspp2', rate=atrous_rates[1], depth_activation=True, epsilon=1e-5)
     # rate = 18 (36)
-    b3 = SepConv_BN(x, 256, 'aspp3',
-                    rate=atrous_rates[2], depth_activation=True, epsilon=1e-5)
+    b3 = SepConv_BN(x, 256, 'aspp3',rate=atrous_rates[2], depth_activation=True, epsilon=1e-5)
 
     # Image Feature branch
     out_shape = int(np.ceil(input_shape[0] / OS))
@@ -302,29 +293,6 @@ def Deeplabv3(weights='None', input_tensor=None, input_shape=(256, 256, 1),
     b4 = Activation('relu')(b4)
     b4 = BilinearUpsampling((out_shape, out_shape))(b4)
 
-    """
-    # Dual Attention module     
-    pam = PAM()(x)
-    pam = Conv2D(512, 3, padding='same', use_bias=False, kernel_initializer='he_normal')(pam)
-    pam = BatchNormalization(axis=3)(pam)
-    pam = Activation('relu')(pam)
-    pam = Dropout(0.5)(pam)
-    pam = Conv2D(512, 3, padding='same', use_bias=False, kernel_initializer='he_normal')(pam)
-
-    cam = CAM()(x)
-    cam = Conv2D(512, 3, padding='same', use_bias=False, kernel_initializer='he_normal')(cam)
-    cam = BatchNormalization(axis=3)(cam)
-    cam = Activation('relu')(cam)
-    cam = Dropout(0.5)(cam)
-    cam = Conv2D(512, 3, padding='same', use_bias=False, kernel_initializer='he_normal')(cam)
-
-    feature_sum = add([pam, cam])
-    feature_sum = Dropout(0.5)(feature_sum)
-    da = Conv2D(512, 1, padding="same", strides=1, kernel_initializer='he_normal')(feature_sum)
-    da = BatchNormalization(axis=3)(da)
-    da = Activation('relu')(da)
-    """
-
     # concatenate ASPP branches & project
     x = Concatenate()([b4, b0, b1, b2, b3])
     x = Conv2D(256, (1, 1), padding='same',
@@ -334,16 +302,13 @@ def Deeplabv3(weights='None', input_tensor=None, input_shape=(256, 256, 1),
     x = Dropout(0.1)(x)
     
 #################################### 
-    if enc == True:
-        #enc = Conv2D(classes, (1, 1), activation='sigmoid')(x)
+    if ssl_enc == True:
         enc = Conv2D(ang_aux, (1, 1), activation='sigmoid')(x)
-        sed = MaxPooling2D((16, 1), strides=(16, 1))(enc)
-        sed = BilinearUpsampling(output_size=(1, input_shape[1]))(sed)
-        x = concatenate([enc, x], axis=-1)
-####################################     
+        ssl = MaxPooling2D((16, 1), strides=(16, 1))(enc)
+        ssl = BilinearUpsampling(output_size=(1, input_shape[1]))(ssl)
+####################################
         
     # DeepLab v.3+ decoder
-
     # Feature projection
     # x4 (x2) block
     x = BilinearUpsampling(output_size=(int(np.ceil(input_shape[0] / 4)),
@@ -357,17 +322,13 @@ def Deeplabv3(weights='None', input_tensor=None, input_shape=(256, 256, 1),
     x = SepConv_BN(x, 256, 'decoder_conv0', depth_activation=True, epsilon=1e-5)
     x = SepConv_BN(x, 256, 'decoder_conv1', depth_activation=True, epsilon=1e-5)
 
-    # you can use it with arbitary number of classes
-    if classes == 21:
-        last_layer_name = 'logits_semantic'
-    else:
-        last_layer_name = 'custom_logits_semantic'
+    if ssls_out:
+        ssls = Conv2D(ang_aux, (1, 1), padding='same')(x)
+        ssls = BilinearUpsampling(output_size=(input_shape[0], input_shape[1]))(ssls)
 
-    x = Conv2D(classes, (1, 1), padding='same', name=last_layer_name)(x)
+    x = Conv2D(classes, (1, 1), padding='same', name='custom_logits_semantic')(x)
     x = BilinearUpsampling(output_size=(input_shape[0], input_shape[1]))(x)
 
-    # Ensure that the model takes into account
-    # any potential predecessors of `input_tensor`.
     if input_tensor is not None:
         inputs = get_source_inputs(input_tensor)
     else:
@@ -375,24 +336,18 @@ def Deeplabv3(weights='None', input_tensor=None, input_shape=(256, 256, 1),
     
     if input_shape[2] == 1:
         x = multiply([inputs, x])
-        if aux == True:
-            model = Model(input=inputs, output=[sed, x])
-        else:
-            model = Model(inputs, x, name='deeplabv3_plus')
+        model = Model(inputs, x, name='deeplabv3_plus')
     else:
         inputs2 = Input((256, 256, 1))
         x = multiply([inputs2, x])
-        if aux == True:
-            model = Model(input=[inputs, inputs2], output=[sed, x])
+        if ssl_enc:
+            model = Model(input=[inputs, inputs2], output=[ssl, x])
+        elif ssls_out:
+            ssls = multiply([inputs2, ssls])
+            model = Model(input=[inputs, inputs2], output=[ssls, x])
+
         else:
             model = Model([inputs, inputs2], x, name='deeplabv3_plus')
-
-    # load weights
-    #if weights == 'pascal_voc':
-        #weights_path = get_file('deeplabv3_xception_tf_dim_ordering_tf_kernels.h5',
-        #                        TF_WEIGHTS_PATH, cache_subdir='models')
-        #model.load_weights(weights_path, by_name=True)        
-        #model.load_weights('deeplabv3_xception_tf_dim_ordering_tf_kernels.h5')
         
     return model
 

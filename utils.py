@@ -143,6 +143,8 @@ def plot_stft(Y_true, Y_pred, no, results_dir, image_size, ang_reso, classes, la
             plt.colorbar()
             if ang_reso == 1:
                 plt.savefig(pred_dir + label.index[i] + "_true.png")
+            elif ang_reso > 1 and classes == 1:
+                plt.savefig(pred_dir + str((360 // ang_reso) * (i % ang_reso)) + "deg_true.png")
             else:
                 plt.savefig(pred_dir + label.index[i // ang_reso] + "_" + str((360 // ang_reso) * (i % ang_reso)) + "deg_true.png")
             plt.close()
@@ -183,12 +185,12 @@ def plot_stft(Y_true, Y_pred, no, results_dir, image_size, ang_reso, classes, la
 
     
 
-def RMS(Y_true, Y_pred, results_dir, classes, max):
+def RMS(Y_true, Y_pred, results_dir, classes, max_magnitude):
     Y_pred = Y_pred.transpose(0, 3, 1, 2) # (data number, class, freq, time)
     Y_true = Y_true.transpose(0, 3, 1, 2)
         
-    Y_pred_db = (Y_pred * max) # 0~120dB
-    Y_true_db = (Y_true * max)
+    Y_pred_db = (Y_pred * max_magnitude) # 0~120dB
+    Y_true_db = (Y_true * max_magnitude)
     
     total_rmse = np.sqrt(((Y_true_db - Y_pred_db) ** 2).mean())
     print("Total RMSE =", total_rmse)

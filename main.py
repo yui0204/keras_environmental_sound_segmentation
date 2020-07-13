@@ -33,56 +33,53 @@ config.gpu_options.allow_growth = True
 if os.getcwd() == '/home/yui-sudo/document/segmentation/sound_segtest' or os.getcwd() == '/home/sudou/python/sound_segtest':
     config.gpu_options.visible_device_list = "0"
 else:
-    config.gpu_options.visible_device_list = "1"
+    config.gpu_options.visible_device_list = "2"
 sess = tf.Session(config=config)
 K.set_session(sess)
 
 
 def normalize(inputs, labels):
-    max = inputs.max()
-    inputs = inputs / max
-    labels = labels / max
+    max_magnitude = inputs.max()
+
+    inputs = inputs / max_magnitude
+    labels = labels / max_magnitude
     
     inputs = np.clip(inputs, 0.0, 1.0)
     labels = np.clip(labels, 0.0, 1.0)
     
-    return inputs, labels, max
+    return inputs, labels, max_magnitude
 
 
 def log(inputs, labels):
     inputs += 10**-7
     labels += 10**-7
-    inputs = 20 * np.log10(inputs)
-    labels = 20 * np.log10(labels)
-
-    inputs = np.nan_to_num(inputs) + 120
-    labels = np.nan_to_num(labels) + 120
     
-    return inputs, labels
+    inputs = 20 * np.log10(inputs)
+    labels = 20 * np.log10(labels)  
+    #inputs = np.nan_to_num(inputs)
+    #labels = np.nan_to_num(labels)
+    
+    return inputs + 120, labels + 120
 
 
 def load(segdata_dir, n_classes=8, load_number=99999, input_dim=1):   
-    print("data loading\n")   
-        
+    print("data loading\n")          
     inputs = np.zeros((load_number, input_dim, 256, image_size), dtype=np.float16)
-    if task == "event":
+    if task == "sed" or task == "ssl" or task == "seld":
         inputs_phase = 1
     else:    
         inputs_phase = np.zeros((load_number, 512, image_size), dtype=np.float16)
         
-    if n_classes > 1 and ang_reso == 1:
-        if task == "event":
-            labels = np.zeros((load_number, n_classes, image_size), dtype=np.float16)
-        elif task == "segmentation":
-            labels = np.zeros((load_number, n_classes, 256, image_size), dtype=np.float16)
-    elif ang_reso > 1 and n_classes == 1:
-        if task == "event":
+    if task == "sed":
+        labels = np.zeros((load_number, n_classes, image_size), dtype=np.float16)
+    elif task == "segmentation":
+        labels = np.zeros((load_number, n_classes, 256, image_size), dtype=np.float16)
+    elif task == "ssl":
             labels = np.zeros((load_number, ang_reso, image_size), dtype=np.float16)
-        elif task == "segmentation":
-            labels = np.zeros((load_number, ang_reso, 256, image_size), dtype=np.float16)    
-    else:
-        if task == "event":
-            labels = np.zeros((load_number, n_classes, ang_reso, image_size), dtype=np.float16)
+    elif task == "ssls":
+        labels = np.zeros((load_number, ang_reso, 256, image_size), dtype=np.float16)    
+    elif task == "seld":
+        labels = np.zeros((load_number, n_classes, ang_reso, image_size), dtype=np.float16)
 
     for i in range(load_number):
         data_dir = segdata_dir + str(i) + "/"
@@ -99,7 +96,7 @@ def load(segdata_dir, n_classes=8, load_number=99999, input_dim=1):
                     if mic_num == 1:
                         _, _, stft = signal.stft(x=waveform, fs=fs, nperseg=512, return_onesided=False)
                         stft = stft[:, 1:len(stft.T) - 1]
-                        if not task == "event":
+                        if task == "segmentation":
                             inputs_phase[i] = np.angle(stft)
                         if complex_input:
                             inputs[i][1] = stft[:256].real
@@ -110,7 +107,7 @@ def load(segdata_dir, n_classes=8, load_number=99999, input_dim=1):
                     if mic_num == 8:
                         _, _, stft = signal.stft(x=waveform.T, fs=fs, nperseg=512, return_onesided=False)
                         stft = stft[:, :, 1:len(stft.T) - 1]
-                        if not task == "event":
+                        if task == "ssls":
                             inputs_phase[i] = np.angle(stft[0])
                         for nchan in range(mic_num):
                             if ipd:
@@ -130,22 +127,18 @@ def load(segdata_dir, n_classes=8, load_number=99999, input_dim=1):
                     _, _, stft = signal.stft(x=waveform, fs=fs, nperseg = 512, return_onesided=False)
                     stft = stft[:, 1:len(stft.T) - 1]
 
-                    if ang_reso == 1:
-                        if n_classes > 1:
-                            if task == "event":                             # SED
-                                labels[i][label.T[filelist[n][:-4]][0]] += abs(stft[:256]).max(0)
-                            elif task == "segmentation":                    # segmentation
-                                labels[i][label.T[filelist[n][:-4]][0]] += abs(stft[:256])                        
-                    elif ang_reso > 1:
+                    if task == "sed":
+                        labels[i][label.T[filelist[n][:-4]][0]] += abs(stft[:256]).max(0)
+                    elif task == "segmentation":
+                        labels[i][label.T[filelist[n][:-4]][0]] += abs(stft[:256])
+                    elif task == "ssl" or task == "ssls" or task == "seld":
                         angle = int(re.sub("\\D", "", direction[direction_index].split("_")[1])) // (360 // ang_reso)
-                        if n_classes == 1:
-                            if task == "event":          # SSL
-                                labels[i][angle] += abs(stft[:256]).max(0)     
-                            elif task == "segmentation": # SSLS
-                                labels[i][angle] += abs(stft[:256])
-                        else: # n_classes > 1
-                            if task == "event":                           # SELD
-                                labels[i][label.T[filelist[n][:-4]][0]][angle] += abs(stft[:256]).max(0)
+                        if task == "ssl":
+                            labels[i][angle] += abs(stft[:256]).max(0)     
+                        elif task == "ssls":
+                            labels[i][angle] += abs(stft[:256])
+                        elif task == "seld":
+                            labels[i][label.T[filelist[n][:-4]][0]][angle] += abs(stft[:256]).max(0)
                         direction_index += 1                   
     
     if complex_input == True and ipd == False:
@@ -156,42 +149,30 @@ def load(segdata_dir, n_classes=8, load_number=99999, input_dim=1):
     if ipd:
         inputs = inputs.transpose(1,0,2,3)
         inputs[0], labels = log(inputs[0], labels)   
-        inputs[0], labels, max = normalize(inputs[0], labels)
+        inputs[0], labels, max_magnitude = normalize(inputs[0], labels)
         inputs = inputs.transpose(1,0,2,3)
     else:
         inputs, labels = log(inputs, labels)   
-        inputs, labels, max = normalize(inputs, labels)
-
+        inputs, labels, max_magnitude = normalize(inputs, labels)
 
     if complex_input == True and ipd == False:
         inputs = inputs * sign
     
-    if task == "event":
+    if task == "sed" or task == "ssl" or task == "seld":
         labels = ((labels > 0.1) * 1)
 
     inputs = inputs.transpose(0, 2, 3, 1)
-    if n_classes > 1 and ang_reso == 1:
-        if task == "event":                                 # SED
-            labels = labels.transpose(0, 2, 1)[:,np.newaxis,:,:]
-        elif task == "segmentation":                        # segmentation
-            labels = labels.transpose(0, 2, 3, 1)  
-    elif ang_reso > 1 and n_classes == 1:
-        if task == "event":                                 # SSL
-            labels = labels.transpose(0, 2, 1)[:,np.newaxis,:,:]
-        elif task == "segmentation":                        # SSLS
-            labels = labels.transpose(0, 2, 3, 1)  
+    if task == "sed" or task == "ssl":
+        labels = labels.transpose(0, 2, 1)[:,np.newaxis,:,:]
     else:
-        if task == "event":                                 # SELD
-            labels = labels.transpose(0, 2, 3, 1)
-        
-    return inputs, labels, max, inputs_phase
+        labels = labels.transpose(0, 2, 3, 1)  
+
+    return inputs, labels, max_magnitude, inputs_phase
 
 
-def load_ssld(segdata_dir, load_number, max):   
+def load_ssld(segdata_dir, load_number, max_magnitude):   
     print("ssls label loading\n")   
-    ssls_labels = np.zeros((load_number, ang_aux, image_size), dtype=np.float16)
-    #ssls_labels = np.zeros((load_number, ang_aux, 256, image_size), dtype=np.float16)
-    #seld_labels = np.zeros((load_number, classes, ang_aux, image_size), dtype=np.float16)
+    ssls_labels = np.zeros((load_number, ang_aux, 256, image_size), dtype=np.float16)
     
     for i in range(load_number):
         data_dir = segdata_dir + str(i) + "/"
@@ -209,28 +190,16 @@ def load_ssld(segdata_dir, load_number, max):
                     stft = stft[:, 1:len(stft.T) - 1]
 
                     angle = int(re.sub("\\D", "", direction[direction_index].split("_")[1])) // (360 // ang_aux)
-                    ssls_labels[i][angle] += abs(stft[:256]).max(0)
-                    #seld_labels[i][label.T[filelist[n][:-4]][0]][angle] += abs(stft[:256]).max(0)
+                    ssls_labels[i][angle] += abs(stft[:256])
                     direction_index += 1
 
     ssls_labels += 10**-7
     ssls_labels = 20 * np.log10(ssls_labels)
-    ssls_labels = np.nan_to_num(ssls_labels) + 120
-    ssls_labels = ssls_labels / max
-    ssls_labels = np.clip(ssls_labels, 0.0, 1.0)
-    ssls_labels = ((ssls_labels > 0.1) * 1)[:,:,np.newaxis,:]
-    ssls_labels = ssls_labels.transpose(0, 2, 3, 1)
-    """
-    seld_labels += 10**-7
-    seld_labels = 20 * np.log10(seld_labels)
-    seld_labels = np.nan_to_num(seld_labels) + 120
-    seld_labels = seld_labels / max
-    seld_labels = np.clip(seld_labels, 0.0, 1.0)
-    seld_labels = ((seld_labels > 0.1) * 1)
-    seld_labels = seld_labels.transpose(0, 2, 3, 1)  
-    """
+    #ssls_labels = np.nan_to_num(ssls_labels)
+    ssls_labels = (ssls_labels + 120) / max_magnitude
+    ssls_labels = np.clip(ssls_labels, 0.0, 1.0).transpose(0, 2, 3, 1)
         
-    return ssls_labels#, seld_labels
+    return ssls_labels
 
 
 def load_desed(segdata_dir):
@@ -239,12 +208,9 @@ def load_desed(segdata_dir):
     datanum = len(folderlist)
     print(datanum, "data loading\n")  
     inputs = np.zeros((datanum, 1, 256, image_size), dtype=np.float16)
-    if task == "event":
-        inputs_phase = 1
-    else:    
-        inputs_phase = np.zeros((datanum, 512, image_size), dtype=np.float16)
+    inputs_phase = np.zeros((datanum, 512, image_size), dtype=np.float16)
         
-    if task == "event":
+    if task == "sed" or task == "ssl" or task == "seld":
         labels = np.zeros((datanum, 10, image_size), dtype=np.float16)
     elif task == "segmentation":
         labels = np.zeros((datanum, 10, 256, image_size), dtype=np.float16)
@@ -279,41 +245,43 @@ def load_desed(segdata_dir):
                         elif cls_name == "Running_water_nOn_nOff" or cls_name == "Running_water_nOn":
                             cls_name ="Running_water"
 
-                        if task == "event":                             # SED
+                        if task == "sed":
                             labels[i][label.T[cls_name][0]] += abs(stft[:256]).max(0)
-                        elif task == "segmentation":                    # segmentation
+                        elif task == "segmentation":
                             labels[i][label.T[cls_name][0]] += abs(stft[:256]) 
 
                     elif len(filelist[n]) < 9:
-                        if not task == "event":
+                        if task == "segmentation":
                             inputs_phase[i] = np.angle(stft)                   
                         inputs[i][0] = abs(stft[:256])         
 
     inputs, labels = log(inputs, labels)   
-    inputs, labels, max = normalize(inputs, labels)
+    inputs, labels, max_magnitude = normalize(inputs, labels)
 
     inputs = inputs.transpose(0, 2, 3, 1)
-    if task == "event":                                 # SED
+    if task == "sed":                                 # SED
         labels = ((labels > 0.1) * 1)
         labels = labels.transpose(0, 2, 1)[:,np.newaxis,:,:]
     elif task == "segmentation":                        # segmentation
         labels = labels.transpose(0, 2, 3, 1) 
         
-    return inputs, labels, max, inputs_phase
+    return inputs, labels, max_magnitude, inputs_phase
 
 
 
 def train(X_train, Y_train, Model):
     model, multi_model = read_model.read_model(Model, gpu_count=gpu_count, classes=classes, image_size=image_size, 
-                                               channel=channel, ang_reso=ang_reso, aux=aux, sed_model=sed_model, trainable=trainable, 
-                                               ang_aux=ang_aux)
+                                               channel=channel, ang_reso=ang_reso, sed_model=sed_model, ang_aux=ang_aux)
     
-    if aux == False:
-        multi_model.compile(loss=loss, optimizer=Adam(lr=lr),metrics=["accuracy"])
-    else:
+    if Model == "ssl_enc_Deeplab":
         multi_model.compile(loss=["binary_crossentropy", "mean_squared_error"],
-                            loss_weights=[0.01, 1.0], optimizer=Adam(lr=lr),metrics=["accuracy"])
-        
+                            loss_weights=[1.0, 1.0], optimizer=Adam(lr=lr),metrics=["accuracy"])
+    elif Model == "multi_purpose_UNet" or Model == "multi_purpose_Deeplab":
+        multi_model.compile(loss=["mean_squared_error", "mean_squared_error"],
+                            loss_weights=[1.0, 1.0], optimizer=Adam(lr=lr),metrics=["accuracy"])
+    else:
+        multi_model.compile(loss=loss, optimizer=Adam(lr=lr),metrics=["accuracy"])
+
     plot_model(model, to_file = results_dir + model_name + '.png')
     model.summary()
 
@@ -323,12 +291,11 @@ def train(X_train, Y_train, Model):
     if task == "segmentation":
         if complex_input == True  or mic_num > 1 or ipd == True:
             X_train = [X_train, 
-                       X_train.transpose(3,0,1,2)[0][np.newaxis,:,:,:].transpose(1,2,3,0)]
+                       X_train[:,:,:,0][:,:,:,np.newaxis]]
         
-        if Model == "aux_Mask_UNet" or Model == "aux_enc_UNet" or Model == "aux_enc_Deeplab":
-            Y_train = [((Y_train.transpose(3,0,1,2).max(2)[:,:,np.newaxis,:] > 0.1) * 1).transpose(1,2,3,0), 
-                       Y_train]
-        elif Model == "aux_ssls_enc_Deeplab":
+        if Model == "ssl_enc_Deeplab":
+            Y_train = [(ssls_labels.max(1) > 0) * 1, Y_train]
+        elif Model == "multi_purpose_UNet" or Model == "multi_purpose_Deeplab":
             Y_train = [ssls_labels, Y_train]
         
 
@@ -361,22 +328,21 @@ def plot_history(history, model_name):
 
 def predict(X_test, Model):
     model, _ = read_model.read_model(Model, gpu_count=gpu_count, classes=classes, image_size=image_size, 
-                                    channel=channel, ang_reso=ang_reso, aux=aux, sed_model=sed_model, trainable=trainable,
-                                    ang_aux=ang_aux)
+                                    channel=channel, ang_reso=ang_reso, sed_model=sed_model, ang_aux=ang_aux)
     model.load_weights(results_dir + model_name + '_weights.hdf5')
-    print(utils.get_flops())
+    #print(utils.get_flops())
 
     if task == "segmentation":
         if complex_input == True or mic_num > 1:
             X_test = [X_test, 
-                      X_test.transpose(3,0,1,2)[0][np.newaxis,:,:,:].transpose(1,2,3,0)]
+                      X_test[:,:,:,0][:,:,:,np.newaxis]]
     Y_pred = model.predict(X_test, BATCH_SIZE * gpu_count)
     
     return Y_pred
 
 
 
-def restore(Y_true, Y_pred, max, phase, no=0, class_n=1, save=False, calc_sdr=False):
+def restore(Y_true, Y_pred, max_magnitude, phase, no=0, class_n=1, save=False, calc_sdr=False):
     plot_num = classes * ang_reso
     if save:
         pred_dir = utils.pred_dir_make(no, results_dir)
@@ -394,7 +360,7 @@ def restore(Y_true, Y_pred, max, phase, no=0, class_n=1, save=False, calc_sdr=Fa
 
     for index_num in range(plot_num):
         if Y_true[no][index_num].max() > 0:
-            Y_linear = 10 ** ((Y_pred[no][index_num] * max - 120) / 20)
+            Y_linear = 10 ** ((Y_pred[no][index_num] * max_magnitude - 120) / 20)
             Y_linear = np.vstack((Y_linear, Y_linear[::-1]))
 
             Y_complex = np.zeros((512, image_size), dtype=np.complex128)
@@ -439,21 +405,21 @@ def restore(Y_true, Y_pred, max, phase, no=0, class_n=1, save=False, calc_sdr=Fa
     
 
 
-def save_npy(X, Y, max, phase, name):    
+def save_npy(X, Y, max_magnitude, phase, name):    
     np.save(dataset+"X_"+name+".npy", X)
-    np.save(dataset+"max_"+name+".npy", max)
+    np.save(dataset+"max_"+name+".npy", max_magnitude)
     np.save(dataset+"phase_"+name+".npy", phase)
     np.save(dataset+"Y_"+name+".npy", Y)
     print("npy files were saved\n")
         
 def load_npy(name):
     X = np.load(dataset+"X_"+name+".npy")
-    max = np.load(dataset+"max_"+name+".npy")
+    max_magnitude = np.load(dataset+"max_"+name+".npy")
     phase = np.load(dataset+"phase_"+name+".npy")
     Y = np.load(dataset+"Y_"+name+".npy")
     print("npy files were loaded\n")
     
-    return X, Y, max, phase
+    return X, Y, max_magnitude, phase
 
 
 def load_sed_model(Model):
@@ -503,8 +469,8 @@ def load_cascade(segdata_dir, load_number=9999999):
                 
     inputs = 20 * np.log10(inputs)
     inputs = np.nan_to_num(inputs) + 120
-    max = inputs.max()
-    inputs = inputs / max
+    max_magnitude = inputs.max()
+    inputs = inputs / max_magnitude
     inputs = np.clip(inputs, 0.0, 1.0)
     
     return inputs[1:][:, :, :, np.newaxis], sep_num
@@ -538,12 +504,12 @@ if __name__ == '__main__':
         gpu_count = 1
     else:
         gpu_count = 1
-    BATCH_SIZE = 16 * gpu_count
+    BATCH_SIZE = 48 * gpu_count
     NUM_EPOCH = 100
     lr = 0.001
     
     loss = "mean_squared_error"
-    if task == "event":
+    if task == "sed" or task == "ssl" or task == "seld":
         loss = "binary_crossentropy"
 
     mode = "train"
@@ -574,10 +540,9 @@ if __name__ == '__main__':
         
         for Model in [#"CNN8", "BiCRNN8", 
                       #"SELD_CNN8", #"SELD_BiCRNN8", 
-                      #"UNet", 
-                      #"UNet", #"CR_UNet", #"Deeplab", 
-                      #"aux_enc_UNet", 
-                      "aux_ssls_enc_Deeplab", 
+                      #"UNet", "CR_UNet", "Deeplab", 
+                      #"multi_purpose_UNet", 
+                      "multi_purpose_Deeplab", 
                       #"Cascade"
                       ]:
             
@@ -585,219 +550,204 @@ if __name__ == '__main__':
                 loss = "categorical_crossentropy"
 
             vonMises = False
-            for ipd in [False]:
-                for mic_num in [1]: # 1 or 8                        
-                    for complex_input in [False]:
-                        channel = 0
-                        if mic_num == 1:
-                            channel = 1
-                        else:                                
-                            if complex_input:
-                                if ipd:
-                                    channel = 15
-                                elif ipd == False:
-                                    channel = 24
-                                else:
-                                    continue
-                        
-                        for Sed_Model in ["BiCRNN8"]:
-                            if Model == "Mask_UNet":
-                                sed_model = load_sed_model(Sed_Model)
-                                mask=True
-                                aux = False
-                                trainable = False # SED mask
-                            elif Model == "aux_Mask_UNet":
-                                sed_model = load_sed_model(Sed_Model)
-                                mask = True
-                                aux = True
-                                trainable = True # SED mask
-                            elif Model == "aux_enc_UNet" or Model == "aux_enc_Deeplab" or ang_aux > 1:
-                                sed_model = None
-                                mask = False
-                                aux = True
-                                trainable = True
-                            else:
-                                sed_model = None
-                                mask = False
-                                aux = False
-                                trainable = False
-                                            
-                            load_number = 10000
+            ipd = True
+            mic_num = 8
+            complex_input = True
+
+            channel = 1
+            if complex_input:                                
+                if ipd:
+                    channel = 2 * mic_num - 1
+                else:
+                    channel = 3 * mic_num
+        
+            if Model == "Mask_UNet":
+                Sed_Model = "BiCRNN8"
+                sed_model = load_sed_model(Sed_Model)
+                mask=True
+            else:
+                sed_model = None
+                mask = False
                             
-                            model_name = Model+"_"+str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_cin"+str(complex_input) + "_ipd"+str(ipd) + "_vonMises"+str(vonMises)
-                            if mask:
-                                model_name = model_name + "_"+Sed_Model + "_aux" + str(aux)
-                            dir_name = model_name + "_"+datadir
-                            date = datetime.datetime.today().strftime("%Y_%m%d")
-                            results_dir = "./model_results/" + date + "/" + dir_name
-                            
-                            if mode == "train":
-                                print("\nTraining start...")
-                                if not os.path.exists(results_dir + "prediction"):
-                                    os.makedirs(results_dir + "prediction/")
+            load_number = 10000
+            
+            model_name = Model+"_"+str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_cin"+str(complex_input) + "_ipd"+str(ipd) + "_vonMises"+str(vonMises)
+            if mask:
+                model_name = model_name + "_"+Sed_Model
+            dir_name = model_name + "_"+datadir
+            date = datetime.datetime.today().strftime("%Y_%m%d")
+            results_dir = "./model_results/" + date + "/" + dir_name
+            
+            if mode == "train":
+                print("\nTraining start...")
+                if not os.path.exists(results_dir + "prediction"):
+                    os.makedirs(results_dir + "prediction/")
 
-                                npy_name = "train_" + task + "_" +str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_cin"+str(complex_input) + "_ipd"+str(ipd)  + "_vonMises"+str(vonMises) + "_"+str(load_number)
-                                if not os.path.exists(dataset+"X_"+npy_name+".npy"):
-                                    #X_train, Y_train, max, phase = load_desed(segdata_dir)
-                                    X_train, Y_train, max, phase = load(segdata_dir, n_classes=classes, load_number=load_number, input_dim=channel)
-                                    save_npy(X_train, Y_train, max, phase, npy_name)
-                                else:
-                                    X_train, Y_train, max, phase = load_npy(npy_name)
+                npy_name = "train_" + task + "_" +str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_cin"+str(complex_input) + "_ipd"+str(ipd)  + "_vonMises"+str(vonMises) + "_"+str(load_number)
+                if not os.path.exists(dataset+"X_"+npy_name+".npy"):
+                    #X_train, Y_train, max, phase = load_desed(segdata_dir)
+                    X_train, Y_train, max_magnitude, phase = load(segdata_dir, n_classes=classes, load_number=load_number, input_dim=channel)
+                    save_npy(X_train, Y_train, max_magnitude, phase, npy_name)
+                else:
+                    X_train, Y_train, max_magnitude, phase = load_npy(npy_name)
 
-                                if ang_aux > 1:
-                                    ssls_labels = load_ssld(segdata_dir, load_number=load_number, max=max)
-                                
-                                if Model == "Cascade":
-                                    X_train, Y_train = Segtoclsdata(Y_train)
-                                
-                                # save train condition
-                                train_condition = date + "\t" + results_dir                     + "\n" + \
-                                                    "\t"+" "                          + "\n" + \
-                                                    "\t\t segdata_dir, " + segdata_dir            + "\n" + \
-                                                    "\t\t valdata_dir, " + valdata_dir            + "\n" + \
-                                                    "\t\t X"+str(X_train.shape)+" Y"+str(Y_train.shape)+"\n" \
-                                                    "\t\t data_byte,      " + str(X_train.dtype)  + "\n" + \
-                                                    "\t\t BATCH_SIZE,     " + str(BATCH_SIZE)     + "\n" + \
-                                                    "\t\t NUM_EPOCH,      " + str(NUM_EPOCH)      + "\n" + \
-                                                    "\t\t Loss function,  " + loss                + "\n" + \
-                                                    "\t\t Learning_rate,  " + str(lr)             + "\n" + \
-                                                    "\t\t Mic num,        " + str(mic_num)        + "\n" + \
-                                                    "\t\t Complex_input,  " + str(complex_input)  + "\n" + \
-                                                    "\t\t IPD input,      " + str(ipd) + "\n" + \
-                                                    "\t\t task     ,      " + task + "\n" + \
-                                                    "\t\t Angle reso,     " + str(360 // ang_reso) + "\n" + \
-                                                    "\t\t Model,          " + Model               + "\n" + \
-                                                    "\t\t classes,        " + str(classes)        + "\n\n\n"
-                                print(train_condition)
-                                
-                                with open(results_dir + 'train_condition.txt','w') as f:
-                                    f.write(train_condition)
-                                
-                                history = train(X_train, Y_train, Model)
-                                plot_history(history, model_name)
+                if ang_aux > 1:
+                    #ssls_labels = load_ssld(segdata_dir, load_number=load_number, max_magnitude=max_magnitude)
+                    #np.save(dataset+"ssls_labels_ang_aux_" + str(ang_aux) + ".npy", ssls_labels)
+                    ssls_labels = np.load(dataset+"ssls_labels_ang_aux_" + str(ang_aux) + ".npy")
+                
+                if Model == "Cascade":
+                    X_train, Y_train = Segtoclsdata(Y_train)
+                
+                # save train condition
+                train_condition = date + "\t" + results_dir                     + "\n" + \
+                                    "\t"+" "                          + "\n" + \
+                                    "\t\t segdata_dir, " + segdata_dir            + "\n" + \
+                                    "\t\t valdata_dir, " + valdata_dir            + "\n" + \
+                                    "\t\t X"+str(X_train.shape)+" Y"+str(Y_train.shape)+"\n" \
+                                    "\t\t data_byte,      " + str(X_train.dtype)  + "\n" + \
+                                    "\t\t BATCH_SIZE,     " + str(BATCH_SIZE)     + "\n" + \
+                                    "\t\t NUM_EPOCH,      " + str(NUM_EPOCH)      + "\n" + \
+                                    "\t\t Loss function,  " + loss                + "\n" + \
+                                    "\t\t Learning_rate,  " + str(lr)             + "\n" + \
+                                    "\t\t Mic num,        " + str(mic_num)        + "\n" + \
+                                    "\t\t Complex_input,  " + str(complex_input)  + "\n" + \
+                                    "\t\t IPD input,      " + str(ipd) + "\n" + \
+                                    "\t\t task     ,      " + task + "\n" + \
+                                    "\t\t Angle reso,     " + str(360 // ang_reso) + "\n" + \
+                                    "\t\t Model,          " + Model               + "\n" + \
+                                    "\t\t classes,        " + str(classes)        + "\n\n\n"
+                print(train_condition)
+                
+                with open(results_dir + 'train_condition.txt','w') as f:
+                    f.write(train_condition)
+                
+                history = train(X_train, Y_train, Model)
+                plot_history(history, model_name)
 
-                    
-                            # prediction mode         
-                            elif not mode == "train":
-                                print("Prediction mode\n")
-                                date = mode
-                                results_dir = "./model_results/" + date + "/" + dir_name
-                                with open(results_dir + 'train_condition.txt','r') as f:
-                                    train_condition = f.read() 
-                                    print(train_condition)
+    
+            # prediction mode         
+            elif not mode == "train":
+                print("Prediction mode\n")
+                date = mode
+                results_dir = "./model_results/" + date + "/" + dir_name
+                with open(results_dir + 'train_condition.txt','r') as f:
+                    train_condition = f.read() 
+                    print(train_condition)
 
-                            #for eval_dir in ["500ms", "fbsnr_0dB", "ls_0dB"]: 
+            #for eval_dir in ["500ms", "fbsnr_0dB", "ls_0dB"]: 
 #                                for eval_dir in ["500ms", "5500ms", "9500ms", "fbsnr_0dB", "fbsnr_15dB", "fbsnr_24dB", "fbsnr_30dB", "ls_0dB", "ls_15dB", "ls_30dB"]: 
-                            #    valdata_dir = dataset + "eval/" + eval_dir + "/"
+            #    valdata_dir = dataset + "eval/" + eval_dir + "/"
 
-                            load_number = 1000
-                                
-                            npy_name = "test_" + "_" + task+ "_" +str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_cin"+str(complex_input) + "_ipd"+str(ipd)  + "_vonMises"+str(vonMises) + "_"+str(load_number)
-                            if not os.path.exists(dataset+"X_"+npy_name+".npy"):
-                                #X_test, Y_test, max, phase = load_desed(valdata_dir)
-                                X_test, Y_test, max, phase = load(valdata_dir, n_classes=classes, load_number=load_number, input_dim=channel)
-                                save_npy(X_test, Y_test, max, phase, npy_name)
+            load_number = 1000
+                
+            npy_name = "test_" + "_" + task+ "_" +str(classes)+"class_"+str(ang_reso)+"direction_" + str(mic_num)+"ch_cin"+str(complex_input) + "_ipd"+str(ipd)  + "_vonMises"+str(vonMises) + "_"+str(load_number)
+            if not os.path.exists(dataset+"X_"+npy_name+".npy"):
+                #X_test, Y_test, max_magnitude, phase = load_desed(valdata_dir)
+                X_test, Y_test, max_magnitude, phase = load(valdata_dir, n_classes=classes, load_number=load_number, input_dim=channel)
+                save_npy(X_test, Y_test, max_magnitude, phase, npy_name)
 
-                            else:
-                                X_test, Y_test, max, phase  = load_npy(npy_name)
+            else:
+                X_test, Y_test, max_magnitude, phase  = load_npy(npy_name)
 
-                            if ang_aux > 1:
-                                ssls_labels = load_ssld(valdata_dir, load_number=load_number, max=max)
-                            
-                            if Model == "Cascade":
-                                X_origin = X_test
-                                X_test, sep_num = load_cascade(dataset + "val_hark/", load_number=load_number)
-                            
-                            start = time.time()
-                            Y_pred = predict(X_test, Model)
-                            elapsed_time = time.time() - start
-                            print("prediction time = ", elapsed_time)
-                            
-                            if Model == "aux_Mask_UNet" or Model == "aux_enc_UNet" or Model == "aux_enc_Deeplab":
-                                Y_sedp = Y_pred[0]
-                                Y_pred = Y_pred[1]
-                                Y_sedt = ((Y_test.transpose(3,0,1,2).max(2)[:,:,np.newaxis,:] > 0.1) * 1).transpose(1,2,3,0)
-                            elif Model == "aux_ssls_enc_Deeplab":
-                                Y_sedp = Y_pred[0]
-                                Y_pred = Y_pred[1]
-                                Y_sedt = ssls_labels
-                                
-                            elif Model == "Cascade":
-                                Y_argmax = np.argmax(Y_pred, axis=1)
-                                Y_pred = np.zeros((load_number, classes, 256, image_size))
-                                datanum = 0
-                                for n in range(load_number):
-                                    for sep in range(sep_num[n]):
-                                        Y_pred[n][Y_argmax[datanum]] = X_test[datanum].transpose(2,0,1)[0]
-                                        datanum += 1
-                                Y_pred = Y_pred.transpose(0,2,3,1)
-                                X_test = X_origin
-                                
-                            # plot and SDR
-                            sdr_array, sir_array, sar_array, sdr_num = np.zeros((classes, 1)), np.zeros((classes, 1)), np.zeros((classes, 1)), np.zeros((classes, 1))             
-                            for i in range (0, load_number):
-                            #folderlist = os.listdir(segdata_dir)
-                            #for i, folder in enumerate(folderlist):
-                                save = False
-                                if i < graph_num:
-                                    save = True
-                                    utils.origin_stft(X_test, no=i, results_dir=results_dir)
-                                    if task == "event":
-                                        utils.event_plot(Y_test, Y_pred, no=i, results_dir=results_dir, image_size=image_size, ang_reso=ang_reso, classes=classes, label=label)
-                                    else:
-                                        utils.plot_stft(Y_test, Y_pred, no=i, results_dir=results_dir, image_size=image_size, ang_reso=ang_reso, classes=classes, label=label)
-                                        if Model == "aux_Mask_UNet" or Model == "aux_enc_UNet" or Model == "aux_enc_Deeplab":
-                                            utils.event_plot(Y_sedt, Y_sedp, no=i, results_dir=results_dir, image_size=image_size, ang_reso=ang_reso, classes=classes, label=label)
-                                        elif Model == "aux_ssls_enc_Deeplab":
-                                            utils.event_plot(Y_sedt, Y_sedp, no=i, results_dir=results_dir, image_size=image_size, ang_reso=ang_reso, classes=classes, label=label)
+            if ang_aux > 1:
+                ssls_labels = load_ssld(valdata_dir, load_number=load_number, max_magnitude=max_magnitude)
+            
+            if Model == "Cascade":
+                X_origin = X_test
+                X_test, sep_num = load_cascade(dataset + "val_hark/", load_number=load_number)
+            
+            start = time.time()
+            Y_pred = predict(X_test, Model)
+            elapsed_time = time.time() - start
+            print("prediction time = ", elapsed_time)
+            
+            if Model == "multi_purpose_UNet" or Model == "multi_purpose_Deeplab":
+                Y_sslsp = Y_pred[0]
+                Y_pred = Y_pred[1]
+                Y_sslst = ssls_labels
 
-                                calc_sdr = False
-                                if save == True or calc_sdr == True:
-                                    sdr, sir, sar = restore(Y_test, Y_pred, max, phase, no=i, save=save, calc_sdr=calc_sdr)
-                                    sdr_array += sdr
-                                    sir_array += sir
-                                    sar_array += sar
-                                    sdr_num += (sdr != 0.000) * 1                            
+            elif Model == "ssl_enc_Deeplab":
+                Y_sslp = Y_pred[0]
+                Y_pred = Y_pred[1]
+                Y_sslt = (ssls_labels.max(1) > 0) * 1
+                
+            elif Model == "Cascade":
+                Y_argmax = np.argmax(Y_pred, axis=1)
+                Y_pred = np.zeros((load_number, classes, 256, image_size))
+                datanum = 0
+                for n in range(load_number):
+                    for sep in range(sep_num[n]):
+                        Y_pred[n][Y_argmax[datanum]] = X_test[datanum][:,:,0]
+                        datanum += 1
+                Y_pred = Y_pred.transpose(0,2,3,1)
+                X_test = X_origin
+                
+            # plot and SDR
+            sdr_array, sir_array, sar_array, sdr_num = np.zeros((classes, 1)), np.zeros((classes, 1)), np.zeros((classes, 1)), np.zeros((classes, 1))             
+            for i in range (0, load_number):
+            #folderlist = os.listdir(segdata_dir)
+            #for i, folder in enumerate(folderlist):
+                save = False
+                if i < graph_num:
+                    save = True
+                    utils.origin_stft(X_test, no=i, results_dir=results_dir)
+                    if task == "sed" or task == "ssl" or task == "seld":
+                        utils.event_plot(Y_test, Y_pred, no=i, results_dir=results_dir, image_size=image_size, ang_reso=ang_reso, classes=classes, label=label)
+                    else:
+                        utils.plot_stft(Y_test, Y_pred, no=i, results_dir=results_dir, image_size=image_size, ang_reso=ang_reso, classes=classes, label=label)
+                        if Model == "multi_purpose_UNet" or Model == "multi_purpose_Deeplab":
+                            utils.plot_stft(Y_sslst, Y_sslsp, no=i, results_dir=results_dir, image_size=image_size, ang_reso=ang_aux, classes=1, label=label)
+                        elif Model == "ssl_enc_Deeplab":
+                            utils.event_plot(Y_sslt, Y_sslp, no=i, results_dir=results_dir, image_size=image_size, ang_reso=ang_reso, classes=classes, label=label)
 
-                            if calc_sdr:    
-                                sdr_array = sdr_array / sdr_num
-                                sir_array = sir_array / sdr_num
-                                sar_array = sar_array / sdr_num
-                                sdr_array = np.append(sdr_array, sdr_array.mean())
-                                sir_array = np.append(sir_array, sir_array.mean())
-                                sar_array = np.append(sar_array, sar_array.mean())
-                                
-                                np.savetxt(results_dir+"prediction/sdr_"+str(load_number)+".csv", sdr_array, fmt ='%.3f')
-                                print("SDR\n", sdr_array, "\n")   
+                calc_sdr = False
+                if save == True or calc_sdr == True:
+                    sdr, sir, sar = restore(Y_test, Y_pred, max_magnitude, phase, no=i, save=save, calc_sdr=calc_sdr)
+                    sdr_array += sdr
+                    sir_array += sir
+                    sar_array += sar
+                    sdr_num += (sdr != 0.000) * 1                            
 
-                            # Metrics
-                            if task == "event":
-                                Y_pred = (Y_pred > 0.5) * 1
-                                f1 = f1_score(Y_test.ravel(), Y_pred.ravel())
-                                Y_pred = np.argmax(Y_pred, axis=3)
-                                print("F_score", f1)
-                                with open(results_dir + "f1_" + str(f1) + ".txt","w") as f:
-                                    f.write(str(f1))   
-                                    
-                            elif task == "segmentation":
-                                utils.RMS(Y_test, Y_pred, results_dir=results_dir, classes=classes, max=max) 
-                                if Model == "aux_Mask_UNet" or Model == "aux_enc_UNet" or Model == "aux_enc_Deeplab" or Model == "aux_ssls_enc_Deeplab":
-                                    Y_sedp = (Y_sedp > 0.5) * 1
-                                    f1 = f1_score(Y_sedt.ravel(), Y_sedp.ravel())
-                                    Y_sedp = np.argmax(Y_sedp, axis=3)
-                                    print("aux_F_score", f1)
-                                    with open(results_dir + "aux_f1_" + str(f1) + ".txt","w") as f:
-                                        f.write(str(f1)) 
-                                
-                                f1 = f1_score(((Y_test.max(1) > 0.1) * 1).ravel(),
-                                            ((Y_pred.max(1) > 0.1) * 1).ravel())
-                                print("segmentation F-score =", f1)
-                                with open(results_dir + "segmentation_f1_" + str(f1) + ".txt","w") as f:
-                                    f.write(str(f1))  
-                                
-                            shutil.copy("main.py", results_dir)
-                            shutil.copy("Unet.py", results_dir)
-                            shutil.copy("Deeplab.py", results_dir)
-                            shutil.copy("CNN.py", results_dir)    
-                            if os.path.exists(os.getcwd() + "/nohup.out"):
-                                shutil.copy("nohup.out", results_dir)
+            if calc_sdr:    
+                sdr_array = sdr_array / sdr_num
+                sir_array = sir_array / sdr_num
+                sar_array = sar_array / sdr_num
+                sdr_array = np.append(sdr_array, sdr_array.mean())
+                sir_array = np.append(sir_array, sir_array.mean())
+                sar_array = np.append(sar_array, sar_array.mean())
+                
+                np.savetxt(results_dir+"prediction/sdr_"+str(load_number)+".csv", sdr_array, fmt ='%.3f')
+                print("SDR\n", sdr_array, "\n")   
+
+            # Metrics
+            if task == "sed" or task == "ssl" or task == "seld":
+                Y_pred = (Y_pred > 0.5) * 1
+                f1 = f1_score(Y_test.ravel(), Y_pred.ravel())
+                Y_pred = np.argmax(Y_pred, axis=3)
+                print("F_score", f1)
+                with open(results_dir + "f1_" + str(f1) + ".txt","w") as f:
+                    f.write(str(f1))   
+                    
+            elif task == "segmentation" or task == "ssls":
+                utils.RMS(Y_test, Y_pred, results_dir=results_dir, classes=classes, max_magnitude=max_magnitude) 
+                if Model == "ssl_enc_Deeplab":
+                    Y_sedp = (Y_sedp > 0.5) * 1
+                    f1 = f1_score(Y_sedt.ravel(), Y_sedp.ravel())
+                    Y_sedp = np.argmax(Y_sedp, axis=3)
+                    print("aux_F_score", f1)
+                    with open(results_dir + "aux_f1_" + str(f1) + ".txt","w") as f:
+                        f.write(str(f1)) 
+                
+                f1 = f1_score(((Y_test.max(1) > 0.1) * 1).ravel(),
+                            ((Y_pred.max(1) > 0.1) * 1).ravel())
+                print("segmentation F-score =", f1)
+                with open(results_dir + "segmentation_f1_" + str(f1) + ".txt","w") as f:
+                    f.write(str(f1))  
+                
+            shutil.copy("main.py", results_dir)
+            shutil.copy("Unet.py", results_dir)
+            shutil.copy("Deeplab.py", results_dir)
+            shutil.copy("CNN.py", results_dir)    
+            if os.path.exists(os.getcwd() + "/nohup.out"):
+                shutil.copy("nohup.out", results_dir)
