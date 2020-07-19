@@ -30,6 +30,12 @@ def read_model(Model, gpu_count, classes, image_size, channel, ang_reso, sed_mod
                               input_width=image_size, nChannels=channel,
                               RNN=0, freq_pool=False,
                               ssl_enc=False, ssls_out=True, ang_aux=ang_aux)
+
+        elif Model == "Deeplab":
+            model = Deeplab.Deeplabv3(weights=None, input_tensor=None, 
+                                      input_shape=(256, image_size, channel), 
+                                      classes=classes, OS=16, 
+                                      ssl_enc=False, ssls_out=False, ang_aux=ang_aux)
                
         elif Model == "multi_purpose_Deeplab":
             model = Deeplab.Deeplabv3(weights=None, input_tensor=None, 

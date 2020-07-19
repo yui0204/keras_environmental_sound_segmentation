@@ -23,7 +23,7 @@ import os
 def UNet(n_classes, input_height=256, input_width=512, nChannels=1,
          mask=False, sed_model=None, ssl_mask=False, ssl_model=None, 
          RNN=0, freq_pool=False,
-         ssl_enc=False, ssls_out=True, ang_aux=1):
+         ssl_enc=False, ssls_out=False, ang_aux=1):
 
     if freq_pool:
         stride = (2, 1)
