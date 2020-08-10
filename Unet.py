@@ -167,7 +167,7 @@ def WNet(n_classes, input_height=256, input_width=512, nChannels=1,
                      RNN=RNN, freq_pool=freq_pool)
     
     # pretrained SSS U-Net
-    sss_model.load_weights(os.getcwd()+"/model_results/iros2020/UNet_1class_8direction_"+str(ang_reso)+"ch_cinTrue_ipdTrue_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/UNet_1class_"+str(ang_reso)+"direction_8ch_cinTrue_ipdTrue_vonMisesFalse_weights.hdf5")
+    sss_model.load_weights(os.getcwd()+"/model_results/applied_intelligence/UNet_1class_"+str(ang_reso)+"direction_8ch_cinTrue_ipdTrue_vonMisesFalse_multi_segdata75_256_-20dB_random_sep_72/UNet_1class_"+str(ang_reso)+"direction_8ch_cinTrue_ipdTrue_vonMisesFalse_weights.hdf5")
     
     for i in range(0, len(sss_model.layers)):
         sss_model.layers[i].trainable = False # fixed weight
@@ -177,7 +177,9 @@ def WNet(n_classes, input_height=256, input_width=512, nChannels=1,
     unet = UNet(n_classes=n_classes, input_height=256, 
                               input_width=input_width, nChannels=1,
                               RNN=0, freq_pool=False)
-    unet.load_weights(os.getcwd()+"/model_results/iros2020/UNet_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/UNet_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_weights.hdf5")
+    unet.load_weights(os.getcwd()+"/model_results/applied_intelligence/UNet_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_-20dB_random_sep_72/UNet_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_weights.hdf5")
+
+
 
     netlist = []
     for i in range(ang_reso):
@@ -202,7 +204,7 @@ def UNet_Deeplab(n_classes, input_height=256, input_width=512, nChannels=1,
                      RNN=RNN, freq_pool=freq_pool)
 
     # pretrained SSS U-Net
-    sss_model.load_weights(os.getcwd()+"/model_results/iros2020/UNet_1class_"+str(ang_reso)+"direction_8ch_cinTrue_ipdTrue_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/UNet_1class_"+str(ang_reso)+"direction_8ch_cinTrue_ipdTrue_vonMisesFalse_weights.hdf5")
+    sss_model.load_weights(os.getcwd()+"/model_results/applied_intelligence/UNet_1class_"+str(ang_reso)+"direction_8ch_cinTrue_ipdTrue_vonMisesFalse_multi_segdata75_256_-20dB_random_sep_72/UNet_1class_"+str(ang_reso)+"direction_8ch_cinTrue_ipdTrue_vonMisesFalse_weights.hdf5")
     
     for i in range(0, len(sss_model.layers)):
         sss_model.layers[i].trainable = False # fixed weight
@@ -213,7 +215,7 @@ def UNet_Deeplab(n_classes, input_height=256, input_width=512, nChannels=1,
                                 input_shape=(256, input_width, 1), # + 1), # number of direction resoluton
                                 classes=n_classes,                            # number of classes
                                 OS=16)
-    deeplab.load_weights(os.getcwd()+"/model_results/iros2020/Deeplab_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/Deeplab_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_weights.hdf5")
+    deeplab.load_weights(os.getcwd()+"/model_results/applied_intelligence/Deeplab_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_-20dB_random_sep_72/Deeplab_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_weights.hdf5")
 
     netlist = []
     for i in range(ang_reso):
@@ -238,7 +240,7 @@ def UNet_CNN(n_classes, input_height=256, input_width=512, nChannels=1,
                      RNN=RNN, freq_pool=freq_pool)
     
     # pretrained SSS U-Net
-    sss_model.load_weights(os.getcwd()+"/model_results/iros2020/UNet_1class_"+str(ang_reso)+"direction_8ch_cinTrue_ipdTrue_vonMisesFalse_multi_segdata75_256_no_sound_random_sep_72/UNet_1class_"+str(ang_reso)+"direction_8ch_cinTrue_ipdTrue_vonMisesFalse_weights.hdf5")
+    sss_model.load_weights(os.getcwd()+"/model_results/applied_intelligence/UNet_1class_"+str(ang_reso)+"direction_8ch_cinTrue_ipdTrue_vonMisesFalse_multi_segdata75_256_-20dB_random_sep_72/UNet_1class_"+str(ang_reso)+"direction_8ch_cinTrue_ipdTrue_vonMisesFalse_weights.hdf5")
     
     for i in range(0, len(sss_model.layers)):
         sss_model.layers[i].trainable = False # fixed weight
@@ -247,9 +249,9 @@ def UNet_CNN(n_classes, input_height=256, input_width=512, nChannels=1,
 
     cnn = CNN.CNNtag(n_classes, input_height=256, input_width=input_width, nChannels=1, 
                        filter_list=[64, 64, 128, 128, 256, 256, 512, 512])
-    cnn.load_weights(os.getcwd()+"/model_results/iros2020/Cascade_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/Cascade_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_weights.hdf5")
+    cnn.load_weights(os.getcwd()+"/model_results/applied_intelligence/Cascade_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_-20dB_random_sep_72/Cascade_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_weights.hdf5")
     for i in range(0, len(cnn.layers)):
-        cnn.layers[i].trainable = False # fixed weight
+        cnn.layers[i].trainable = True # fixed weight
         
     netlist = []
     for i in range(ang_reso):
@@ -273,7 +275,7 @@ def Deeplab_CNN(n_classes, input_height=256, input_width=512, nChannels=1,
                                   classes=ang_reso, OS=16, RNN=0)
     
     # pretrained SSS U-Net
-    sss_model.load_weights("/misc/export3/sudou/model_results/iros2020/Deeplab_1class_"+str(ang_reso)+"direction_8ch_cinTrue_ipdTrue_vonMisesFalse_multi_segdata75_256_no_sound_random_sep_72/Deeplab_1class_"+str(ang_reso)+"direction_8ch_cinTrue_ipdTrue_vonMisesFalse_weights.hdf5")
+    sss_model.load_weights(os.getcwd()+"/model_results/applied_intelligence/Deeplab_1class_"+str(ang_reso)+"direction_8ch_cinTrue_ipdTrue_vonMisesFalse_multi_segdata75_256_-20dB_random_sep_72/Deeplab_1class_"+str(ang_reso)+"direction_8ch_cinTrue_ipdTrue_vonMisesFalse_weights.hdf5")
     
     for i in range(0, len(sss_model.layers)):
         sss_model.layers[i].trainable = False # fixed weight
@@ -281,9 +283,9 @@ def Deeplab_CNN(n_classes, input_height=256, input_width=512, nChannels=1,
     x = sss_model.output
 
     cnn = CNN.CNNtag(n_classes, input_height=256, input_width=input_width, nChannels=1, filter_list=[64, 64, 128, 128, 256, 256, 512, 512])
-    cnn.load_weights("/misc/export3/sudou/model_results/iros2020/Cascade_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_no_sound_random_sep/Cascade_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_weights.hdf5")
+    cnn.load_weights("/misc/export3/sudou/model_results/applied_intelligence/Cascade_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_-20dB_random_sep/Cascade_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_weights.hdf5")
     for i in range(0, len(cnn.layers)):
-        cnn.layers[i].trainable = False # fixed weight
+        cnn.layers[i].trainable = True # fixed weight
         
     netlist = []
     for i in range(ang_reso):

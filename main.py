@@ -116,7 +116,7 @@ def load(segdata_dir, n_classes=8, load_number=99999, input_dim=1):
                                 else:
                                     inputs[i][nchan*2-1] = np.cos(np.angle(stft[0][:256]) - np.angle(stft[nchan][:256]))
                                     inputs[i][nchan*2] = np.sin(np.angle(stft[0][:256]) - np.angle(stft[nchan][:256]))
-                            if ipd_angle:
+                            elif ipd_angle:
                                 if nchan == 0:
                                     inputs[i][nchan] = abs(stft[nchan][:256])
                                 else:
@@ -293,16 +293,16 @@ def train(X_train, Y_train, Model):
     early_stopping = EarlyStopping(monitor="val_loss", patience=20, verbose=1,mode="auto")
 #    tensorboard = TensorBoard(log_dir=results_dir, histogram_freq=0, write_graph=True)
 
-    if complex_input == True or mic_num > 1 or ipd == True:
-        X_train = [X_train, 
-                    X_train[:,:,:,0][:,:,:,np.newaxis]]
-        
+    if not task == "sed" and not task == "ssl" and not task == "seld":
+        if complex_input == True or mic_num > 1:
+            X_train = [X_train, 
+                        X_train[:,:,:,0][:,:,:,np.newaxis]]
+            
     if Model == "ssl_enc_Deeplab":
         Y_train = [(ssls_labels.max(1) > 0) * 1, Y_train]
     elif Model == "multi_purpose_UNet" or Model == "multi_purpose_Deeplab":
         Y_train = [ssls_labels, Y_train]
     
-
     history = multi_model.fit(X_train, Y_train, batch_size=BATCH_SIZE, epochs=NUM_EPOCH, verbose=1, validation_split=0.1, callbacks=[early_stopping])
 
     with open(results_dir + "history.pickle", mode="wb") as f:
@@ -336,9 +336,10 @@ def predict(X_test, Model):
     model.load_weights(results_dir + model_name + '_weights.hdf5')
     #print(utils.get_flops())
 
-    if complex_input == True or mic_num > 1:
-        X_test = [X_test, 
-                  X_test[:,:,:,0][:,:,:,np.newaxis]]
+    if not task == "sed" and not task == "ssl" and not task == "seld":
+        if complex_input == True or mic_num > 1:
+            X_test = [X_test, 
+                    X_test[:,:,:,0][:,:,:,np.newaxis]]
     Y_pred = model.predict(X_test, BATCH_SIZE * gpu_count)
     
     return Y_pred
@@ -498,10 +499,10 @@ def Segtoclsdata(Y_in):
 
 
 if __name__ == '__main__':
-    classes = 1#10
+    classes = 75#10
     image_size = 256#512#624
-    task = "ssls"
-    ang_reso = 8
+    task = "segmentation"
+    ang_reso = 1
     
     if os.getcwd() == '/home/yui-sudo/document/segmentation/sound_segtest' or os.getcwd() == '/home/sudou/python/sound_segtest':
         gpu_count = 1
@@ -509,7 +510,7 @@ if __name__ == '__main__':
         gpu_count = 2
     BATCH_SIZE = 24 * gpu_count
     NUM_EPOCH = 100
-    lr = 0.001
+    lr = 0.0001
     
     loss = "mean_squared_error"
     if task == "sed" or task == "ssl" or task == "seld":
@@ -530,11 +531,7 @@ if __name__ == '__main__':
     else:
         datasets_dir = "/misc/export3/sudou/sound_data/datasets/"
     
-    #datadir = "multi_segdata"+str(classes + 74) + "_"+str(image_size)+"_no_sound_random_sep/"
-            #    "multi_segdata"+str(classes + 74) + "_"+str(image_size)+"_-20dB_random_sep_72/"
-              #"dcase2019/dataset/audio/"
-    for datadir in ["multi_segdata"+str(classes + 74) + "_"+str(image_size)+"_no_sound_random_sep/",
-                    "multi_segdata"+str(classes + 74) + "_"+str(image_size)+"_no_sound_random_sep_72/"]:
+    for datadir in ["multi_segdata"+str(classes + 0) + "_"+str(image_size)+"_-20dB_random_sep_72/"]: #"dcase2019/dataset/audio/"
 
         dataset = datasets_dir + datadir    
         segdata_dir = dataset + "train/"
@@ -545,9 +542,11 @@ if __name__ == '__main__':
         label = pd.read_csv(filepath_or_buffer=labelfile, sep=",", index_col=0)            
         
         for Model in [#"CNN8", "BiCRNN8", 
-                        #"SELD_CNN8", #"SELD_BiCRNN8", 
-                        "UNet", #"CR_UNet", "Deeplab", 
-                        #"multi_purpose_UNet", 
+                        #"SSL_CNN8", "SSL_BiCRNN8",
+                        #"UNet", #"CR_UNet", 
+                        "UNet_CNN",
+                        "Deeplab_CNN", 
+                        "WUNet", #"multi_purpose_UNet", 
                         #"multi_purpose_Deeplab", 
                         #"Cascade"
                         ]:
@@ -555,11 +554,13 @@ if __name__ == '__main__':
             if Model == "Cascade":
                 loss = "categorical_crossentropy"
 
-            vonMises = False
-            ipd = False
-            for ipd_angle in [True, False]:
-                mic_num = 8
-                complex_input = True
+            mic_num = 8
+            complex_input = True
+            vonMises = False            
+            for experiment in range(1):
+                if experiment == 0:
+                    ipd = True
+                    ipd_angle = False
 
                 channel = 1
                 if complex_input:                                
@@ -716,12 +717,14 @@ if __name__ == '__main__':
                                 utils.event_plot(Y_sslt, Y_sslp, no=i, results_dir=results_dir, image_size=image_size, ang_reso=ang_reso, classes=classes, label=label)
 
                     calc_sdr = False
-                    if save == True or calc_sdr == True:
-                        sdr, sir, sar = restore(Y_test, Y_pred, max_magnitude, phase, no=i, save=save, calc_sdr=calc_sdr)
-                        sdr_array += sdr
-                        sir_array += sir
-                        sar_array += sar
-                        sdr_num += (sdr != 0.000) * 1                            
+                    if task == "segmentation" or task == "ssls":
+                        if save == True or calc_sdr == True:
+                            sdr, sir, sar = restore(Y_test, Y_pred, max_magnitude, phase, no=i, save=save, calc_sdr=calc_sdr)
+                            if calc_sdr:
+                                sdr_array += sdr
+                                sir_array += sir
+                                sar_array += sar
+                                sdr_num += (sdr != 0.000) * 1                            
 
                 if calc_sdr:    
                     sdr_array = sdr_array / sdr_num
