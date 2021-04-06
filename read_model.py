@@ -42,17 +42,11 @@ def read_model(Model, gpu_count, classes, image_size, channel, ang_reso, sed_mod
                                       input_shape=(256, image_size, channel), 
                                       classes=classes, OS=16, 
                                       ssl_enc=False, ssls_out=True, ang_aux=ang_aux)
-        
-        elif Model == "ssl_enc_Deeplab":
-            model = Deeplab.Deeplabv3(weights=None, input_tensor=None, 
-                                      input_shape=(256, image_size, channel), 
-                                      classes=classes, OS=16, 
-                                      ssls_out=False, ang_aux=ang_aux)
             
         elif Model == "WUNet":
             model = Unet.WNet(n_classes=classes, input_height=256, 
                               input_width=image_size, nChannels=channel,
-                              RNN=0, freq_pool=False, ang_reso=8)   
+                              RNN=0, freq_pool=False, ang_reso=8)
         
         elif Model == "UNet_CNN":
             model = Unet.UNet_CNN(n_classes=classes, input_height=256, 

@@ -9,12 +9,14 @@ from keras.layers.merge import concatenate
 from keras.layers.merge import multiply, add, average, subtract, maximum
 
 from keras.layers.convolutional import ZeroPadding2D, Conv2DTranspose
-from keras.layers import BatchNormalization, Activation, Dense, GlobalAveragePooling2D
+from keras.layers import BatchNormalization, Activation, Dense, GlobalAveragePooling2D, GlobalMaxPooling2D
 
 from keras.applications.vgg16 import VGG16
 
 from keras.layers.advanced_activations import LeakyReLU
 from keras.layers.core import Lambda
+
+import keras.backend as K
 
 import CNN, Deeplab
 import os
@@ -42,7 +44,7 @@ def UNet(n_classes, input_height=256, input_width=512, nChannels=1,
             num_layer = len(sed_model.layers)
             for i in range(1, num_layer):
                 x = sed_model.layers[i](x)
-                sed_model.layers[i].trainable = False # fixed weight       
+                sed_model.layers[i].trainable = True # fixed weight       
             sed = x
             
         elif ssl_mask:
@@ -144,6 +146,7 @@ def UNet(n_classes, input_height=256, input_width=512, nChannels=1,
 
     if nChannels == 1:
         d0 = multiply([inputs, d0])
+#        model = Model(input=inputs, output=[sed, d0])
         model = Model(input=inputs, output=d0)
     else:
         d0 = multiply([inputs2, d0])
@@ -175,17 +178,17 @@ def WNet(n_classes, input_height=256, input_width=512, nChannels=1,
     x = sss_model.output
 
     unet = UNet(n_classes=n_classes, input_height=256, 
-                              input_width=input_width, nChannels=1,
+                              input_width=input_width, nChannels=2,
                               RNN=0, freq_pool=False)
-    unet.load_weights(os.getcwd()+"/model_results/applied_intelligence/UNet_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_-20dB_random_sep_72/UNet_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_weights.hdf5")
-
-
+    unet.load_weights(os.getcwd()+"/model_results/applied_intelligence/Separated_UNet_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_-20dB_random_sep_72/UNet_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_weights.hdf5")
+    for i in range(0, len(unet.layers)):
+        unet.layers[i].trainable = False # fixed weight
 
     netlist = []
     for i in range(ang_reso):
         o = Lambda(lambda y: y[:,:,:, i:i+1])(x)                # select 1ch
-        o = unet(o)
-        o = multiply([sss_model.input[1], o])
+        o = concatenate([sss_model.input[1], o], axis=-1)
+        o = unet([o, sss_model.input[1]])
         netlist.append(o)
 
     out = add(netlist)
@@ -193,43 +196,6 @@ def WNet(n_classes, input_height=256, input_width=512, nChannels=1,
     model = Model(inputs=[sss_model.input[0], sss_model.input[1]], outputs=out)    
                         
     return model
-
-
-
-def UNet_Deeplab(n_classes, input_height=256, input_width=512, nChannels=1,
-                 RNN=0, freq_pool=False, ang_reso=8):
-
-    sss_model = UNet(n_classes = ang_reso,  # direction resolution
-                     input_height=256, input_width=input_width, nChannels=nChannels,
-                     RNN=RNN, freq_pool=freq_pool)
-
-    # pretrained SSS U-Net
-    sss_model.load_weights(os.getcwd()+"/model_results/applied_intelligence/UNet_1class_"+str(ang_reso)+"direction_8ch_cinTrue_ipdTrue_vonMisesFalse_multi_segdata75_256_-20dB_random_sep_72/UNet_1class_"+str(ang_reso)+"direction_8ch_cinTrue_ipdTrue_vonMisesFalse_weights.hdf5")
-    
-    for i in range(0, len(sss_model.layers)):
-        sss_model.layers[i].trainable = False # fixed weight
-    
-    x = sss_model.output
-    
-    deeplab = Deeplab.Deeplabv3(weights=None, input_tensor=None, 
-                                input_shape=(256, input_width, 1), # + 1), # number of direction resoluton
-                                classes=n_classes,                            # number of classes
-                                OS=16)
-    deeplab.load_weights(os.getcwd()+"/model_results/applied_intelligence/Deeplab_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_-20dB_random_sep_72/Deeplab_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_weights.hdf5")
-
-    netlist = []
-    for i in range(ang_reso):
-        o = Lambda(lambda y: y[:,:,:, i:i+1])(x)
-        o = deeplab(o)
-        o = multiply([sss_model.input[1], o])
-        netlist.append(o)
-
-    out = add(netlist)
-
-    model = Model(inputs=[sss_model.input[0], sss_model.input[1]], outputs=out)    
-                        
-    return model
-
 
 
 def UNet_CNN(n_classes, input_height=256, input_width=512, nChannels=1,
@@ -251,12 +217,12 @@ def UNet_CNN(n_classes, input_height=256, input_width=512, nChannels=1,
                        filter_list=[64, 64, 128, 128, 256, 256, 512, 512])
     cnn.load_weights(os.getcwd()+"/model_results/applied_intelligence/Cascade_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_-20dB_random_sep_72/Cascade_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_weights.hdf5")
     for i in range(0, len(cnn.layers)):
-        cnn.layers[i].trainable = True # fixed weight
+        cnn.layers[i].trainable = False # fixed weight
         
     netlist = []
     for i in range(ang_reso):
         s = Lambda(lambda y: y[:,:,:, i:i+1])(x)                # select 1ch
-        o = cnn(s)        
+        o = cnn(s)
         o = multiply([s, o])
         netlist.append(o)
 
@@ -272,7 +238,7 @@ def Deeplab_CNN(n_classes, input_height=256, input_width=512, nChannels=1,
                 RNN=0, freq_pool=False, ang_reso=8):
 
     sss_model = Deeplab.Deeplabv3(weights=None, input_tensor=None, input_shape=(256, input_width, nChannels),
-                                  classes=ang_reso, OS=16, RNN=0)
+                                  classes=ang_reso, OS=16)
     
     # pretrained SSS U-Net
     sss_model.load_weights(os.getcwd()+"/model_results/applied_intelligence/Deeplab_1class_"+str(ang_reso)+"direction_8ch_cinTrue_ipdTrue_vonMisesFalse_multi_segdata75_256_-20dB_random_sep_72/Deeplab_1class_"+str(ang_reso)+"direction_8ch_cinTrue_ipdTrue_vonMisesFalse_weights.hdf5")
@@ -283,9 +249,9 @@ def Deeplab_CNN(n_classes, input_height=256, input_width=512, nChannels=1,
     x = sss_model.output
 
     cnn = CNN.CNNtag(n_classes, input_height=256, input_width=input_width, nChannels=1, filter_list=[64, 64, 128, 128, 256, 256, 512, 512])
-    cnn.load_weights("/misc/export3/sudou/model_results/applied_intelligence/Cascade_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_-20dB_random_sep/Cascade_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_weights.hdf5")
+    cnn.load_weights(os.getcwd()+"/model_results/applied_intelligence/Cascade_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_multi_segdata75_256_-20dB_random_sep_72/Cascade_75class_1direction_1ch_cinFalse_ipdFalse_vonMisesFalse_weights.hdf5")
     for i in range(0, len(cnn.layers)):
-        cnn.layers[i].trainable = True # fixed weight
+        cnn.layers[i].trainable = False # fixed weight
         
     netlist = []
     for i in range(ang_reso):

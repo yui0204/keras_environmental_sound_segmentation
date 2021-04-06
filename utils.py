@@ -131,7 +131,7 @@ def plot_stft(Y_true, Y_pred, no, results_dir, image_size, ang_reso, classes, la
     Y_true_total = np.zeros((256, image_size))
     Y_pred_total = np.zeros((256, image_size))
     for i in range(plot_num):
-        if Y_true[no][i].max() > 0:
+        if Y_true[no][i].max() > 0.2:
             plt.pcolormesh((Y_true[no][i]))
             if ang_reso == 1:
                 plt.title(label.index[i] + "_truth")
@@ -160,12 +160,14 @@ def plot_stft(Y_true, Y_pred, no, results_dir, image_size, ang_reso, classes, la
             plt.colorbar()
             if ang_reso == 1:
                 plt.savefig(pred_dir + label.index[i] + "_pred.png")
+            elif ang_reso > 1 and classes == 1:
+                plt.savefig(pred_dir + str((360 // ang_reso) * (i % ang_reso)) + "deg_pred.png")
             else:
                 plt.savefig(pred_dir + label.index[i // ang_reso] + "_" + str((360 // ang_reso) * (i % ang_reso)) + "deg_pred.png")         
             plt.close()
             
-        Y_true_total += (Y_true[no][i] > 0.45) * (i + 4)
-        Y_pred_total += (Y_pred[no][i] > 0.45) * (i + 4)
+        Y_true_total += (Y_true[no][i] > 0.4) * (i + 4)
+        Y_pred_total += (Y_pred[no][i] > 0.4) * (i + 4)
     
     plt.pcolormesh((Y_true_total), cmap="gist_ncar")
     plt.title(str(no) + "__color_truth")
